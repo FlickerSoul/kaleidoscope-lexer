@@ -6,7 +6,6 @@
 //
 
 import Kaleidoscope
-import KaleidoscopeMacros
 import Testing
 
 @kaleidoscope()

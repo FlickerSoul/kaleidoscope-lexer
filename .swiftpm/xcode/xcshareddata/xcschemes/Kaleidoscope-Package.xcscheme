@@ -83,6 +83,26 @@
                ReferencedContainer = "container:">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "KaleidoscopeMacroSupportNextTests"
+               BuildableName = "KaleidoscopeMacroSupportNextTests"
+               BlueprintName = "KaleidoscopeMacroSupportNextTests"
+               ReferencedContainer = "container:">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "KaleidoscopeMacroTests"
+               BuildableName = "KaleidoscopeMacroTests"
+               BlueprintName = "KaleidoscopeMacroTests"
+               ReferencedContainer = "container:">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

@@ -13,10 +13,6 @@ let package = Package(
             name: "Kaleidoscope",
             targets: ["Kaleidoscope"],
         ),
-        .executable(
-            name: "KaleidoscopeClient",
-            targets: ["KaleidoscopeClient"],
-        ),
     ],
     dependencies: [
         // Depend on the Swift 5.9 release of SwiftSyntax
@@ -40,6 +36,7 @@ let package = Package(
             dependencies: [
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
+                .product(name: "MacroToolkit", package: "swift-macro-toolkit"),
                 "KaleidoscopeLexer",
                 "KaleidoscopeMacroSupport",
             ],
@@ -62,11 +59,16 @@ let package = Package(
         ),
         // tests
         .testTarget(
+            name: "KaleidoscopeMacroTests",
+            dependencies: [
+                .product(name: "MacroTesting", package: "swift-macro-testing"),
+                "KaleidoscopeMacros",
+            ],
+        ),
+        .testTarget(
             name: "KaleidoscopeTests",
             dependencies: [
-                "KaleidoscopeMacros",
                 "Kaleidoscope",
-                .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
             ],
         ),
         .testTarget(

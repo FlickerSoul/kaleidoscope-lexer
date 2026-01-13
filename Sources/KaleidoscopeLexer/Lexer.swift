@@ -30,43 +30,40 @@ public protocol LexerProtocol {
     static func lexer(source: RawSource) -> LexerMachine<Self>
 }
 
-public enum TokenResult<Token: LexerProtocol>: Equatable, Into {
+public enum TokenResult<Token: LexerProtocol> {
     public typealias IntoType = Self
 
     case result(Token)
     case skipped
 
-    public static func == (lhs: TokenResult, rhs: TokenResult) -> Bool {
-        switch (lhs, rhs) {
-        case (.skipped, skipped):
-            true
-        case _:
-            false
+    public var isSkip: Bool {
+        switch self {
+        case .skipped: true
+        default: false
         }
     }
+}
 
-    public static func == (lhs: TokenResult, rhs: TokenResult) -> Bool where Token: Equatable {
-        switch (lhs, rhs) {
-        case (.skipped, .skipped):
-            true
-        case let (.result(lhs), .result(rhs)):
-            lhs == rhs
-        case _:
-            false
-        }
-    }
+extension TokenResult: Equatable where Token: Equatable {}
 
+extension TokenResult: Into {
     public func into() -> TokenResult<Token> {
         self
     }
 }
 
 public struct LexerMachine<Token: LexerProtocol> {
+    @usableFromInline
     let rawSource: Token.RawSource
+    @usableFromInline
     let source: Token.Source
+    @usableFromInline
     var token: TokenResult<Token>?
+    @usableFromInline
     var tokenStart: Int
+    @usableFromInline
     var tokenEnd: Int
+    @usableFromInline
     var failed: Bool
 
     public init(raw: Token.RawSource, token: TokenResult<Token>? = nil, tokenStart: Int = 0, tokenEnd: Int = 0) {
@@ -78,24 +75,24 @@ public struct LexerMachine<Token: LexerProtocol> {
         failed = false
     }
 
-    @inline(__always)
+    @inlinable
     public var boundary: Int {
         source.count
     }
 
-    @inline(__always)
+    @inlinable
     public var span: Range<Int> {
         tokenStart ..< tokenEnd
     }
 
-    @inline(__always)
+    @inlinable
     public var rawSlice: Token.RawSource.SubSequence {
         let start = rawSource.startIndex
         let range = rawSource.index(start, offsetBy: tokenStart) ..< rawSource.index(start, offsetBy: tokenEnd)
         return rawSource[range]
     }
 
-    @inline(__always)
+    @inlinable
     public var rawRemainder: Token.RawSource.SubSequence {
         let start = rawSource.startIndex
         let range = rawSource.index(start, offsetBy: tokenEnd) ..< rawSource.index(start, offsetBy: boundary)
@@ -103,7 +100,7 @@ public struct LexerMachine<Token: LexerProtocol> {
         return rawSource[range]
     }
 
-    @inline(__always)
+    @inlinable
     public mutating func bump(by count: Int) throws {
         tokenEnd += count
         if tokenEnd > boundary {
@@ -111,17 +108,17 @@ public struct LexerMachine<Token: LexerProtocol> {
         }
     }
 
-    @inline(__always)
+    @inlinable
     public mutating func bump() throws {
         try bump(by: 1)
     }
 
-    @inline(__always)
+    @inlinable
     public mutating func reset() {
         tokenStart = tokenEnd
     }
 
-    @inline(__always)
+    @inlinable
     mutating func take() throws -> TokenResult<Token> {
         switch token {
         case .none:
@@ -132,35 +129,35 @@ public struct LexerMachine<Token: LexerProtocol> {
         }
     }
 
-    @inline(__always)
+    @inlinable
     public var spanned: SpannedLexerIter<Token> {
         .init(lexer: self)
     }
 
-    @inline(__always)
+    @inlinable
     public var sliced: SlicedLexerIter<Token> {
         .init(lexer: self)
     }
 
-    @inline(__always)
+    @inlinable
     public var spannedAndSliced: SpannedSlicedLexerIter<Token> {
         .init(lexer: self)
     }
 
-    @inline(__always)
+    @inlinable
     public mutating func setToken(_ token: any Into<TokenResult<Token>>) throws {
-        guard self.token == nil || self.token == .skipped else {
+        guard self.token == nil || self.token?.isSkip == true else {
             throw LexerError.duplicatedToken
         }
         self.token = token.into()
     }
 
-    @inline(__always)
+    @inlinable
     public mutating func error() throws {
         throw LexerError.notMatch
     }
 
-    @inline(__always)
+    @inlinable
     public mutating func skip() throws {
         if tokenStart == tokenEnd {
             tokenEnd += 1
@@ -211,6 +208,11 @@ extension LexerMachine: Sequence, IteratorProtocol {
 public struct SpannedLexerIter<Token: LexerProtocol>: Sequence, IteratorProtocol {
     var lexer: LexerMachine<Token>
 
+    @usableFromInline
+    init(lexer: LexerMachine<Token>) {
+        self.lexer = lexer
+    }
+
     public mutating func next() -> (Result<Token, Error>, Range<Int>)? {
         if let token = lexer.next() {
             (token, lexer.span)
@@ -224,6 +226,11 @@ public struct SlicedLexerIter<Token: LexerProtocol>: Sequence, IteratorProtocol 
     public typealias Element = (Result<Token, Error>, Token.RawSource.SubSequence)
 
     var lexer: LexerMachine<Token>
+
+    @usableFromInline
+    init(lexer: LexerMachine<Token>) {
+        self.lexer = lexer
+    }
 
     public mutating func next() -> Element? {
         if let token = lexer.next() {
@@ -239,6 +246,11 @@ public struct SpannedSlicedLexerIter<Token: LexerProtocol>: Sequence, IteratorPr
 
     var lexer: LexerMachine<Token>
 
+    @usableFromInline
+    init(lexer: LexerMachine<Token>) {
+        self.lexer = lexer
+    }
+
     public mutating func next() -> Element? {
         if let token = lexer.next() {
             (token, lexer.span, lexer.rawSlice)
@@ -249,12 +261,12 @@ public struct SpannedSlicedLexerIter<Token: LexerProtocol>: Sequence, IteratorPr
 }
 
 public extension LexerMachine {
-    @inline(__always)
+    @inlinable
     func peak() -> Token.Source.Element? {
         peak(at: tokenEnd)
     }
 
-    @inline(__always)
+    @inlinable
     func peak(at index: Int) -> Token.Source.Element? {
         if index >= boundary {
             return nil
@@ -263,17 +275,17 @@ public extension LexerMachine {
         return source[index]
     }
 
-    @inline(__always)
+    @inlinable
     func peak(for len: Int) -> Token.Source.SubSequence? {
         peak(at: tokenEnd, for: len)
     }
 
-    @inline(__always)
+    @inlinable
     func peak(at index: Int, for len: Int) -> Token.Source.SubSequence? {
         peak(from: index, to: index + len)
     }
 
-    @inline(__always)
+    @inlinable
     func peak(from start: Int, to end: Int) -> Token.Source.SubSequence? {
         if end > boundary {
             return nil

@@ -7,6 +7,7 @@
 
 import KaleidoscopeMacroSupport
 import SwiftSyntax
+import SwiftSyntaxBuilder
 
 // MARK: - Generator
 
@@ -14,76 +15,56 @@ enum GeneratorError: Error {
     case buildingEmptyNode
 }
 
-extension DefaultStringInterpolation {
-    mutating func appendInterpolation(indented string: String) {
-        let indent = String(description.reversed().prefix { $0 == " " })
-        if indent.isEmpty {
-            appendInterpolation(string)
-        } else {
-            appendLiteral(string.split(separator: "\n", omittingEmptySubsequences: false)
-                .joined(separator: "\n" + indent))
-        }
-    }
-}
-
 /// Generates the lexer code
 struct Generator {
     let graph: Graph
     let enumIdent: String
-    var functionMapping: [Int: String] = [:]
 
-    mutating func buildNodeFunctions() throws {
+    @CodeBlockItemListBuilder
+    mutating func buildFunctions() throws -> CodeBlockItemListSyntax {
         for (nodeId, node) in graph.nodes.enumerated() {
-            let body: String
-            switch node {
-            case let .leaf(content):
-                body = buildLeaf(node: content)
-            case let .branch(content):
-                body = buildBranch(node: content)
-            case let .seq(content):
-                body = buildSeq(node: content)
-            case .none:
-                throw GeneratorError.buildingEmptyNode
-            }
-
             let ident = generateFuncIdent(nodeId: nodeId)
 
-            functionMapping[nodeId] = """
-            func \(ident) (_ lexer: inout LexerMachine<Self>) throws {
-                \(indented: body)
+            try FunctionDeclSyntax("func \(raw: ident)(_ lexer: inout LexerMachine<Self>) throws") {
+                switch node {
+                case let .leaf(content):
+                    buildLeaf(node: content)
+                case let .branch(content):
+                    try buildBranch(node: content)
+                case let .seq(content):
+                    try buildSeq(node: content)
+                case nil:
+                    throw GeneratorError.buildingEmptyNode
+                }
             }
-            """
         }
-    }
-
-    mutating func buildFunctions() throws -> String {
-        try buildNodeFunctions()
-        return functionMapping.values.joined(separator: "\n")
     }
 
     /// Generate leaf lexer handles, based on the token type
     /// - Parameters:
     ///     - node: the leaf graph node
-    func buildLeaf(node: Node.LeafContent) -> String {
+    func buildLeaf(node: Node.LeafContent) -> CodeBlockItemListSyntax {
         let end = graph.inputs[node.endId]
-        switch end.tokenType {
-        case .skip:
-            return "try lexer.skip()"
-        case .standalone:
-            return "try lexer.setToken(\(enumIdent).\(end.token))"
-        case let .fillCallback(callbackDetail):
-            switch callbackDetail {
-            case let .named(ident):
-                return "try lexer.setToken(\(enumIdent).\(end.token)(\(ident)(&lexer)))"
-            case let .lambda(lambda):
-                return "try lexer.setToken(\(enumIdent).\(end.token)(\(lambda)(&lexer)))"
-            }
-        case let .createCallback(callbackDetail):
-            switch callbackDetail {
-            case let .named(ident):
-                return "try lexer.setToken(\(ident)(&lexer))"
-            case let .lambda(lambda):
-                return "try lexer.setToken(\(lambda)(&lexer))"
+        return CodeBlockItemListSyntax {
+            switch end.tokenType {
+            case .skip:
+                "try lexer.skip()"
+            case .standalone:
+                "try lexer.setToken(\(raw: enumIdent).\(raw: end.token))"
+            case let .fillCallback(callbackDetail):
+                switch callbackDetail {
+                case let .named(ident):
+                    "try lexer.setToken(\(raw: enumIdent).\(raw: end.token)(\(raw: ident)(&lexer)))"
+                case let .lambda(lambda):
+                    "try lexer.setToken(\(raw: enumIdent).\(raw: end.token)(\(raw: lambda)(&lexer)))"
+                }
+            case let .createCallback(callbackDetail):
+                switch callbackDetail {
+                case let .named(ident):
+                    "try lexer.setToken(\(raw: ident)(&lexer))"
+                case let .lambda(lambda):
+                    "try lexer.setToken(\(raw: lambda)(&lexer))"
+                }
             }
         }
     }
@@ -92,8 +73,7 @@ struct Generator {
     /// Cases in the swift are grouped to reduce file length and complexity.
     /// - Parameters:
     ///     - node: the branch graph node
-    func buildBranch(node: Node.BranchContent) -> String {
-        var branches: [String] = []
+    func buildBranch(node: Node.BranchContent) throws -> CodeBlockItemListSyntax {
         var mergeCaes: [NodeId: [Node.BranchHit]] = [:]
         for (hit, nodeId) in node.branches {
             if mergeCaes[nodeId] == nil {
@@ -103,56 +83,60 @@ struct Generator {
             mergeCaes[nodeId]!.append(hit)
         }
 
-        for (nodeId, cases) in mergeCaes {
-            let caseString = cases.map { $0.toCode() }.joined(separator: ", ")
-            branches.append("""
-            case \(caseString):
-                try lexer.bump()
-                try \(generateFuncIdent(nodeId: nodeId))(&lexer)
-            """)
-        }
-
-        let miss = if let missId = node.miss {
-            "try \(generateFuncIdent(nodeId: missId))(&lexer)"
+        let miss: ExprSyntax = if let missId = node.miss {
+            "try \(raw: generateFuncIdent(nodeId: missId))(&lexer)"
         } else {
             "try lexer.error()"
         }
 
-        return """
-        guard let scalar = lexer.peak() else {
-            \(indented: miss)
-            return
-        }
+        return try CodeBlockItemListSyntax {
+            try GuardStmtSyntax("guard let scalar = lexer.peak() else {") {
+                miss
+                "return"
+            }
 
-        switch scalar {
-            \(indented: branches.joined(separator: "\n"))
+            try SwitchExprSyntax("switch scalar") {
+                for (nodeId, cases) in mergeCaes.sorted(by: { $0.key < $1.key }) {
+                    let caseString = cases.map { $0.toCode() }.joined(separator: ", ")
+                    """
+                    case \(raw: caseString):
+                        try lexer.bump()
+                        try \(raw: generateFuncIdent(nodeId: nodeId))(&lexer)
+                    """
+                }
 
-            case _:
-            \(indented: miss)
+                """
+                case _:
+                    \(miss)
+                """
+            }
         }
-        """
     }
 
-    func buildSeq(node: Node.SeqContent) -> String {
-        let miss = if let missId = node.miss?.miss {
-            "try \(generateFuncIdent(nodeId: missId))(&lexer)"
+    func buildSeq(node: Node.SeqContent) throws -> CodeBlockItemListSyntax {
+        let miss: ExprSyntax = if let missId = node.miss?.miss {
+            "try \(raw: generateFuncIdent(nodeId: missId))(&lexer)"
         } else {
             "try lexer.error()"
         }
 
-        return """
-        guard let scalars = lexer.peak(for: \(node.seq.count)) else {
-            \(indented: miss)
-            return
-        }
+        return try CodeBlockItemListSyntax {
+            """
+            guard let scalars = lexer.peak(for: \(raw: node.seq.count)) else {
+                \(miss)
+                return
+            }
+            """
 
-        if \(node.seq.toCode()) == scalars {
-            try lexer.bump(by: \(node.seq.count))
-            try \(generateFuncIdent(nodeId: node.then))(&lexer)
-        } else {
-            \(indented: miss)
+            try IfExprSyntax("if \(raw: node.seq.toCode()) == scalars") {
+                """
+                try lexer.bump(by: \(raw: node.seq.count))
+                try \(raw: generateFuncIdent(nodeId: node.then))(&lexer)
+                """
+            } else: {
+                miss
+            }
         }
-        """
     }
 
     /// Generate function identifier based for a graph node.

@@ -27,6 +27,13 @@
     {
       "target" : {
         "containerPath" : "container:",
+        "identifier" : "KaleidoscopeMacroTests",
+        "name" : "KaleidoscopeMacroTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:",
         "identifier" : "KaleidoscopeTests",
         "name" : "KaleidoscopeTests"
       }

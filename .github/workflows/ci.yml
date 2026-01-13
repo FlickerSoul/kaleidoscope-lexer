@@ -1,0 +1,61 @@
+name: CI
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/**"
+      - "Package.swift"
+      - "Sources/**"
+      - "Tests/**"
+      - "TestPlans/**"
+  pull_request:
+    paths:
+      - ".github/workflows/**"
+      - "Package.swift"
+      - "Sources/**"
+      - "Tests/**"
+      - "TestPlans/**"
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  lint:
+    name: Lint & Format Check
+    runs-on: macOS-26
+    env:
+      DEVELOPER_DIR: "/Applications/Xcode_26.2.app/Contents/Developer"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Swift Version
+        run: xcrun swift --version
+      - name: Install SwiftLint
+        run: brew install swiftlint --quiet
+      - name: Install swift-format
+        run: brew install swiftformat --quiet
+      - name: SwiftLint
+        run: swiftlint --strict --config .swiftlint.yml .
+      - name: Swift Format Check
+        run: swiftformat --lint-only --config .swiftformat.conf . --strict
+  test:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runsOn }}
+    needs: lint
+    env:
+      DEVELOPER_DIR: "/Applications/${{ matrix.xcode }}.app/Contents/Developer"
+    strategy:
+      matrix:
+        include:
+          - xcode: "Xcode_26.0"
+            runsOn: macOS-26
+            name: "macOS 26, SPM 6.2.0 Test"
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swift Version
+        run: xcrun swift --version
+      - name: Brew install tools
+        run: brew install xcbeautify jemalloc --quiet
+      - name: Run Tests
+        run: |
+          set -o pipefail && xcrun swift test | xcbeautify --renderer github-actions

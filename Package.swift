@@ -83,6 +83,7 @@ let package = Package(
         // example
         .executableTarget(name: "KaleidoscopeClient", dependencies: ["Kaleidoscope"]),
     ],
+    swiftLanguageModes: [.v6],
 )
 
 // benchmarks

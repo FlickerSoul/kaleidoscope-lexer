@@ -96,7 +96,7 @@ struct Generator {
             }
 
             try SwitchExprSyntax("switch scalar") {
-                for (nodeId, cases) in mergeCaes {
+                for (nodeId, cases) in mergeCaes.sorted(by: { $0.key < $1.key }) {
                     let caseString = cases.map { $0.toCode() }.joined(separator: ", ")
                     """
                     case \(raw: caseString):

@@ -10,16 +10,16 @@ import OrderedCollections
 // MARK: - Errors
 
 enum GraphError: Error {
-    case DuplicatedInputs
-    case EmptyMerging(String)
-    case IdenticalPriority(String)
-    case MergingLeaves
-    case OverwriteNonReserved(NodeId)
-    case EmptyRoot
-    case ShakingError(String)
-    case EmptyChildren
-    case MergingRangeError
-    case LongSeqAsBranch
+    case duplicatedInputs
+    case emptyMerging(String)
+    case identicalPriority(String)
+    case mergingLeaves
+    case overwriteNonReserved(NodeId)
+    case emptyRoot
+    case shakingError(String)
+    case emptyChildren
+    case mergingRangeError
+    case longSeqAsBranch
 }
 
 // MARK: - Handle ID Generation
@@ -54,7 +54,7 @@ extension Array {
         if self[id] == nil {
             self[id] = node
         } else {
-            throw GraphError.OverwriteNonReserved(index)
+            throw GraphError.overwriteNonReserved(index)
         }
         return index
     }
@@ -110,14 +110,14 @@ public struct Graph {
     public var roots: [NodeId]
     /// The unified root of this graph
     public var rootId: NodeId?
-    
+
     public init(
         nodes: [Node?] = [nil],
         inputs: OrderedSet<GraphInput> = [],
         pendingMerges: [PendingMerge] = [],
-        merges: [Merge : NodeId] = [:],
+        merges: [Merge: NodeId] = [:],
         roots: [NodeId] = [],
-        rootId: NodeId? = nil
+        rootId: NodeId? = nil,
     ) {
         self.nodes = nodes
         self.inputs = inputs
@@ -132,34 +132,32 @@ public struct Graph {
 
 extension Graph {
     func get(node id: NodeId) -> Node? {
-        return nodes[Int(id)]
+        nodes[Int(id)]
     }
 
     func get(input id: EndsId) -> GraphInput {
-        return inputs[Int(id)]
+        inputs[Int(id)]
     }
 
-    mutating func insertOrPush<I: IntoNode>(_ node: I, _ reserved: NodeId? = nil) throws -> NodeId {
-        if let reserved = reserved {
-            return try insert(node, reserved)
+    mutating func insertOrPush(_ node: some IntoNode, _ reserved: NodeId? = nil) throws -> NodeId {
+        if let reserved {
+            try insert(node, reserved)
         } else {
-            return push(node)
+            push(node)
         }
     }
 
-    mutating func push<I: IntoNode>(_ node: I) -> NodeId {
-        return reserve(node.into())
+    mutating func push(_ node: some IntoNode) -> NodeId {
+        reserve(node.into())
     }
 
-    mutating func insert<I: IntoNode>(_ node: I, _ reserved: NodeId) throws -> NodeId {
+    mutating func insert(_ node: some IntoNode, _ reserved: NodeId) throws -> NodeId {
         let id = try reserve(node, reserved)
 
         var ready: [PendingMerge] = []
 
-        for index in (0 ..< pendingMerges.count).reversed() {
-            if pendingMerges[index].waiting == reserved {
-                ready.append(pendingMerges.remove(at: index))
-            }
+        for index in (0 ..< pendingMerges.count).reversed() where pendingMerges[index].waiting == reserved {
+            ready.append(pendingMerges.remove(at: index))
         }
 
         for readyMerge in ready.reversed() {
@@ -170,30 +168,30 @@ extension Graph {
     }
 
     mutating func reserve() -> NodeId {
-        return nodes.reserve()
+        nodes.reserve()
     }
 
-    mutating func reserve<I: IntoNode>(_ node: I) -> NodeId {
-        return nodes.reserve(node.into())
+    mutating func reserve(_ node: some IntoNode) -> NodeId {
+        nodes.reserve(node.into())
     }
 
-    mutating func reserve<I: IntoNode>(_ node: I, _ reserved: NodeId?) throws -> NodeId {
-        return try nodes.reserve(node.into(), reserved)
+    mutating func reserve(_ node: some IntoNode, _ reserved: NodeId?) throws -> NodeId {
+        try nodes.reserve(node.into(), reserved)
     }
 
     mutating func branch(from node: Node, _ id: NodeId) -> Node.BranchContent {
         switch node {
-        case .Branch(let content):
-            return content.copy()
-        case .Leaf:
-            return Node.BranchContent(miss: id)
-        case .Seq(let content):
-            return content.copy().toBranch(graph: &self) // copy to avoid modification
+        case let .branch(content):
+            content.copy()
+        case .leaf:
+            Node.BranchContent(miss: id)
+        case let .seq(content):
+            content.copy().toBranch(graph: &self) // copy to avoid modification
         }
     }
 
     func findMerge(_ left: NodeId, _ right: NodeId) -> NodeId? {
-        return merges[.init(left: left, right: right)]
+        merges[.init(left: left, right: right)]
     }
 
     mutating func setMerge(_ left: NodeId, _ right: NodeId, into: NodeId) {
@@ -210,14 +208,14 @@ extension Graph {
     /// - Parameter input: the graph terminal information
     public mutating func push(input: GraphInput) throws {
         if inputs.contains(input) {
-            throw GraphError.DuplicatedInputs
+            throw GraphError.duplicatedInputs
         }
 
         let endId = inputs.reserve(input)
         let leafId = try insertOrPush(
             Node.LeafContent(
-                endId: endId
-            )
+                endId: endId,
+            ),
         )
 
         let pathStartId = try push(input.hir, leafId)
@@ -234,9 +232,9 @@ extension Graph {
     /// - Returns: Node ID of the start of the chain
     mutating func push(_ hir: HIR, _ succ: NodeId, _ miss: NodeId? = nil, _ reserved: NodeId? = nil) throws -> NodeId {
         switch hir {
-        case .Empty:
+        case .empty:
             return succ
-        case .Loop(let loop):
+        case let .loop(loop):
             // the loop can exit because of a no match
             // which is still count as successful
             // go to then, or the original miss
@@ -247,13 +245,13 @@ extension Graph {
 
             // push children that point back to this node
             return try push(loop, loopNode, miss, loopNode)
-        case .Maybe(let maybe):
+        case let .maybe(maybe):
             // allows fail, so miss can be then or the passed down miss
             let miss = try miss.map { try merge(succ, $0) } ?? succ
 
             // push the children with success, and successful miss
             return try push(maybe, succ, miss, reserved)
-        case .Concat(let concat):
+        case let .concat(concat):
             // TODO: optomize continuous literal and class?
             // create shadow to allow chaining
             var buffer: [HIR.ScalarBytes] = []
@@ -263,12 +261,12 @@ extension Graph {
                 // reverse concat, to allow chaining, succ <- n-1 <- n-2 ... <- 1
                 for child in concat[1...].reversed() {
                     // everything in between doesn't allow miss
-                    if case .Literal(let bytes) = child {
+                    if case let .literal(bytes) = child {
                         buffer.append(bytes)
                     } else {
                         if buffer.count > 0 {
                             let bytes = buffer.reversed().reduce(into: []) { $0.append(contentsOf: $1) }
-                            succ = try push(.Literal(bytes), succ)
+                            succ = try push(.literal(bytes), succ)
                             buffer.removeAll()
                         }
 
@@ -278,14 +276,14 @@ extension Graph {
 
                 // clean up buffer and
                 // push the first to complete the chain, succ <- ... <- 1 <- 0
-                if case .Literal(let lastBytes) = concat[0] {
+                if case let .literal(lastBytes) = concat[0] {
                     buffer.append(lastBytes)
                     let bytes = buffer.reversed().reduce(into: []) { $0.append(contentsOf: $1) }
-                    succ = try push(.Literal(bytes), succ, miss, reserved)
+                    succ = try push(.literal(bytes), succ, miss, reserved)
                 } else {
                     if buffer.count > 0 {
                         let bytes = buffer.reversed().reduce(into: []) { $0.append(contentsOf: $1) }
-                        succ = try push(.Literal(bytes), succ)
+                        succ = try push(.literal(bytes), succ)
                     }
                     succ = try push(concat[0], succ, miss, reserved)
                 }
@@ -293,13 +291,13 @@ extension Graph {
 
             // if the concat is empty, return succ directly
             return succ
-        case .Alternation(let choices):
+        case let .alternation(choices):
             // create a branch of things
             var branchContent = Node.BranchContent(miss: miss)
 
             for childId in try choices.map({ try self.push($0, succ) }) {
                 guard let child = get(node: childId) else {
-                    throw GraphError.EmptyChildren
+                    throw GraphError.emptyChildren
                 }
 
                 try branchContent.merge(other: branch(from: child, childId), graph: &self)
@@ -307,17 +305,16 @@ extension Graph {
 
             let branchId = try reserve(
                 branchContent,
-                reserved
+                reserved,
             )
 
             return branchId
-
-        case .Literal(let bytes):
+        case let .literal(bytes):
             return try reserve(
                 Node.SeqContent(seq: bytes, then: succ, miss: Node.SeqMiss.toFirst(miss)),
-                reserved
+                reserved,
             )
-        case .Class(let classRanges):
+        case let .class(classRanges):
             // push a class hir as usual
             let branches: [Node.BranchHit: NodeId] = Dictionary(uniqueKeysWithValues: classRanges.map { ($0, succ) })
 
@@ -331,44 +328,44 @@ extension Graph {
 
 extension Graph {
     /// Merge two nodes given their ids
-    mutating func merge(_ a: NodeId, _ b: NodeId) throws -> NodeId {
+    mutating func merge(_ left: NodeId, _ right: NodeId) throws -> NodeId {
         // get left node and right node
-        if let merge = findMerge(a, b) {
+        if let merge = findMerge(left, right) {
             return merge
         }
 
-        let lhs: Node? = get(node: a)
-        let rhs: Node? = get(node: b)
+        let lhs: Node? = get(node: left)
+        let rhs: Node? = get(node: right)
 
         // work out pending merge and terminal conflicts
         switch (lhs, rhs) {
         case (nil, nil):
             // shouldn't happen
-            throw GraphError.EmptyMerging("Something wrong with the internal engine. Please let the developer know.")
+            throw GraphError.emptyMerging("Something wrong with the internal engine. Please let the developer know.")
         case (nil, _):
             // if either is nil, push to pending merges
             let reservedId = reserve()
-            pendingMerges.append(PendingMerge(waiting: a, has: b, into: reservedId))
-            setMerge(a, b, into: reservedId)
+            pendingMerges.append(PendingMerge(waiting: left, has: right, into: reservedId))
+            setMerge(left, right, into: reservedId)
             return reservedId
         case (_, nil):
             // same as the previous one
             let reservedId = reserve()
-            pendingMerges.append(PendingMerge(waiting: b, has: a, into: reservedId))
-            setMerge(a, b, into: reservedId)
+            pendingMerges.append(PendingMerge(waiting: right, has: left, into: reservedId))
+            setMerge(left, right, into: reservedId)
             return reservedId
-        case (.Leaf(let lhs), .Leaf(let rhs)):
+        case let (.leaf(lhs), .leaf(rhs)):
             // if they are leaves, choose the one with highest priority
             // and throw when there are priority duplication
             let lhs = get(input: lhs.endId)
             let rhs = get(input: rhs.endId)
 
             if lhs > rhs {
-                return a
+                return left
             } else if rhs > lhs {
-                return b
+                return right
             } else {
-                throw GraphError.IdenticalPriority("The \(lhs) and \(rhs) leaves have the same priority.")
+                throw GraphError.identicalPriority("The \(lhs) and \(rhs) leaves have the same priority.")
             }
         case _:
             // otherwise, follow the following code
@@ -376,13 +373,13 @@ extension Graph {
         }
 
         let reserved = reserve()
-        setMerge(a, b, into: reserved)
-        return try mergeKnown(a, b, reserved)
+        setMerge(left, right, into: reserved)
+        return try mergeKnown(left, right, reserved)
     }
 
     mutating func mergeSeq(_ seq: Node.SeqContent, _ other: Node, _ otherId: NodeId) -> Node.SeqContent? {
         switch other {
-        case .Branch(let branchContent):
+        case let .branch(branchContent):
             if seq.miss == nil {
                 var loopCount = 0
 
@@ -397,18 +394,20 @@ extension Graph {
                 }
 
                 if let newSeq = seq.split(at: loopCount, graph: &self)?.miss(anytime: otherId) {
+                    // swiftlint:disable:next force_try
                     newSeq.then = try! merge(newSeq.then, otherId)
                     return newSeq
                 }
             }
-        case .Seq(let otherSeq):
+        case let .seq(otherSeq):
             if let (prefix, miss) = seq.prefix(with: otherSeq) {
                 let newSeq = seq.copy().asRemainder(at: prefix.count, graph: &self)
                 let newOther = otherSeq.copy().asRemainder(at: prefix.count, graph: &self)
 
+                // swiftlint:disable:next force_try
                 return try! .init(seq: prefix, then: merge(newSeq, newOther), miss: miss)
             }
-        case .Leaf:
+        case .leaf:
             if seq.miss == nil {
                 return seq.miss(first: otherId)
             }
@@ -417,31 +416,31 @@ extension Graph {
         return nil
     }
 
-    mutating func mergeKnown(_ a: NodeId, _ b: NodeId, _ into: NodeId) throws -> NodeId {
+    mutating func mergeKnown(_ left: NodeId, _ right: NodeId, _ into: NodeId) throws -> NodeId {
         // asserting lhs and rhs are not nil
-        guard let lhs = get(node: a), let rhs = get(node: b) else {
-            throw GraphError.EmptyMerging("This shouldn't happen.")
+        guard let lhs = get(node: left), let rhs = get(node: right) else {
+            throw GraphError.emptyMerging("This shouldn't happen.")
         }
 
-        var newSeq: Node.SeqContent? = nil
+        var newSeq: Node.SeqContent?
 
         switch (lhs, rhs) {
-        case (.Leaf, .Leaf):
-            throw GraphError.MergingLeaves
-        case (.Seq(let seq), _):
-            newSeq = mergeSeq(seq.copy(), rhs, b)
-        case (_, .Seq(let seq)):
-            newSeq = mergeSeq(seq.copy(), lhs, a)
+        case (.leaf, .leaf):
+            throw GraphError.mergingLeaves
+        case let (.seq(seq), _):
+            newSeq = mergeSeq(seq.copy(), rhs, right)
+        case let (_, .seq(seq)):
+            newSeq = mergeSeq(seq.copy(), lhs, left)
         case _:
             break
         }
 
-        if let newSeq = newSeq {
+        if let newSeq {
             return try insertOrPush(newSeq, into)
         }
 
-        var lhsContent = branch(from: lhs, a)
-        let rhsContent = branch(from: rhs, b)
+        var lhsContent = branch(from: lhs, left)
+        let rhsContent = branch(from: rhs, right)
 
         try lhsContent.merge(other: rhsContent, graph: &self)
 
@@ -458,9 +457,9 @@ extension Graph {
             let toMerge: Node.BranchContent
 
             switch get(node: miss) {
-            case .Branch(let branchContent):
+            case let .branch(branchContent):
                 toMerge = branchContent.copy()
-            case .Seq(let seqContent):
+            case let .seq(seqContent):
                 toMerge = seqContent.copy().toBranch(graph: &self)
             case _:
                 break flatten
@@ -490,7 +489,7 @@ extension Graph {
 
     public mutating func makeRoot() throws -> NodeId {
         if roots.count == 0 {
-            throw GraphError.EmptyRoot
+            throw GraphError.emptyRoot
         }
 
         var rootId = roots.popLast()!
@@ -509,8 +508,8 @@ extension Graph {
 
 public extension Graph {
     mutating func shake() throws -> NodeId {
-        guard let rootId = rootId else {
-            throw GraphError.EmptyRoot
+        guard let rootId else {
+            throw GraphError.emptyRoot
         }
 
         try mergeAllPendings()
@@ -545,7 +544,15 @@ public extension Graph {
 
         let newRootIndex = indexMapping[rootIndex]!
 
-        try! rootNode?.shake(marks: &marks, indexMapping: &indexMapping, newNodes: &newNodes, oldIndex: rootIndex, newIndex: newRootIndex, graph: &self)
+        // swiftlint:disable:next force_try
+        try! rootNode?.shake(
+            marks: &marks,
+            indexMapping: &indexMapping,
+            newNodes: &newNodes,
+            oldIndex: rootIndex,
+            newIndex: newRootIndex,
+            graph: &self,
+        )
 
         nodes = newNodes
         self.rootId = NodeId(newRootIndex)

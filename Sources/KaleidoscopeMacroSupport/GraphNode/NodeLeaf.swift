@@ -9,12 +9,8 @@ public extension Node {
     struct LeafContent: Hashable, Copy, IntoNode {
         public var endId: EndsId
 
-        init(endId: EndsId) {
-            self.endId = endId
-        }
-
         public static func == (lhs: Node.LeafContent, rhs: Node.LeafContent) -> Bool {
-            return lhs.endId == rhs.endId
+            lhs.endId == rhs.endId
         }
 
         public func hash(into hasher: inout Hasher) {
@@ -22,17 +18,17 @@ public extension Node {
         }
 
         public func copy() -> Self {
-            return .init(endId: endId)
+            .init(endId: endId)
         }
 
         public func into() -> Node {
-            return .Leaf(self)
+            .leaf(self)
         }
     }
 }
 
 extension Node.LeafContent: CustomStringConvertible {
     public var description: String {
-        return "@\(endId)"
+        "@\(endId)"
     }
 }

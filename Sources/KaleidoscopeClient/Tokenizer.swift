@@ -10,8 +10,8 @@ import Kaleidoscope
 @kaleidoscope
 enum Token {
     @regex("aa")
-    case AA
+    case tokenAA
 
     @regex("bb")
-    case B
+    case tokenBB
 }

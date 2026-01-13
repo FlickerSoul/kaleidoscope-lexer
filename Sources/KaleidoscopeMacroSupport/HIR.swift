@@ -28,76 +28,76 @@ public indirect enum HIR: Hashable, Sendable {
 
     static let SCALAR_RANGE = ScalarByte.min ... ScalarByte.max
 
-    case Empty
-    case Concat([HIR])
-    case Alternation([HIR])
-    case Loop(HIR)
-    case Maybe(HIR)
-    case Literal(ScalarBytes)
-    case Class([ScalarByteRange])
+    case empty
+    case concat([HIR])
+    case alternation([HIR])
+    case loop(HIR)
+    case maybe(HIR)
+    case literal(ScalarBytes)
+    case `class`([ScalarByteRange])
 }
 
 extension Unicode.Scalar {
     var scalarByte: HIR.ScalarByte {
-        return self.value
+        value
     }
 
     var scalarBytes: HIR.ScalarBytes {
-        return [self.value]
+        [value]
     }
 }
 
 package extension Character {
     var scalarByte: HIR.ScalarByte {
-        return self.unicodeScalars.first!.scalarByte
+        unicodeScalars.first!.scalarByte
     }
 
     var scalarBytes: HIR.ScalarBytes {
-        return [self.scalarByte]
+        [scalarByte]
     }
 }
 
 extension HIR.ScalarByteRange: @retroactive Comparable {
     public static func < (lhs: ClosedRange<Bound>, rhs: ClosedRange<Bound>) -> Bool {
-        return lhs.lowerBound < rhs.lowerBound || (lhs.lowerBound == rhs.lowerBound && lhs.upperBound < rhs.upperBound)
+        lhs.lowerBound < rhs.lowerBound || (lhs.lowerBound == rhs.lowerBound && lhs.upperBound < rhs.upperBound)
     }
 
     public func toCode() -> String {
         if lowerBound == upperBound {
-            return "\(lowerBound)"
+            "\(lowerBound)"
         } else {
-            return "\(lowerBound) ... \(upperBound)"
+            "\(lowerBound) ... \(upperBound)"
         }
     }
 }
 
 public extension HIR.ScalarBytes {
     func toCode() -> String {
-        return self.description
+        description
     }
 }
 
 package extension HIR.ScalarByte {
     var scalarByteRange: HIR.ScalarByteRange {
-        return self ... self
+        self ... self
     }
 }
 
 public enum HIRParsingError: Error, Equatable {
-    case InvalidRegexString(String)
-    case InvalidRepetitionRange
-    case GreedyMatchingMore
-    case NotSupportedRepetitionKind
-    case NotSupportedQualification
-    case NotSupportedAtomKind
-    case NotSupportedRegexNode
-    case NotSupportedCharacterClass
-    case IncorrectCharRange
-    case IncorrectChar
-    case NotSupportedCharacterRangeKind
-    case InvalidEscapeCharacter
-    case QuoteInCharacterClass
-    case WiderUnicodeThanSupported
+    case invalidRegexString(String)
+    case invalidRepetitionRange
+    case greedyMatchingMore
+    case notSupportedRepetitionKind
+    case notSupportedQualification
+    case notSupportedAtomKind
+    case notSupportedRegexNode
+    case notSupportedCharacterClass
+    case incorrectCharRange
+    case incorrectChar
+    case notSupportedCharacterRangeKind
+    case invalidEscapeCharacter
+    case quoteInCharacterClass
+    case widerUnicodeThanSurpported
 }
 
 // MARK: - Regex Repetition Kinds
@@ -144,19 +144,19 @@ enum RepetitionRange {
         case .zeroOrOne:
             self = .range(left: 0, right: 1)
         case _:
-            throw HIRParsingError.InvalidRepetitionRange
+            throw HIRParsingError.invalidRepetitionRange
         }
     }
 }
 
 // MARK: - Flat HIR Array
 
-extension Array where Element == HIR {
+extension [HIR] {
     func wrapOrExtract(wrapper: ([HIR]) -> HIR) -> HIR {
-        if self.count == 1 {
-            return self[0]
+        if count == 1 {
+            self[0]
         } else {
-            return wrapper(self)
+            wrapper(self)
         }
     }
 }
@@ -169,7 +169,7 @@ public extension HIR {
         do {
             ast = try parse(string, option)
         } catch {
-            throw .InvalidRegexString(string)
+            throw .invalidRegexString(string)
         }
         self = try HIR(ast: ast)
     }
@@ -184,18 +184,19 @@ public extension HIR {
 
     init(node: AST.Node) throws(HIRParsingError) {
         switch node {
-        case .alternation(let alter):
-            let children = try alter.children.map(HIR.init(node:)).compactMap { $0 }
-            self = children.wrapOrExtract(wrapper: HIR.Alternation)
-        case .concatenation(let concat):
-            let children = try concat.children.map(HIR.init(node:)).compactMap { $0 }
-            self = children.wrapOrExtract(wrapper: HIR.Concat)
-        case .group(let group):
+        case let .alternation(alter):
+            let children = try alter.children.map(HIR.init(node:)).compactMap(\.self)
+            self = children.wrapOrExtract(wrapper: HIR.alternation)
+        case let .concatenation(concat):
+            let children = try concat.children.map(HIR.init(node:)).compactMap(\.self)
+            self = children.wrapOrExtract(wrapper: HIR.concat)
+        case let .group(group):
             self = try HIR(node: group.child)
-        case .quantification(let qualification):
+        case let .quantification(qualification):
             switch qualification.amount.value {
-            case .zeroOrMore where qualification.kind.value == .eager, .oneOrMore where qualification.kind.value == .eager:
-                throw HIRParsingError.GreedyMatchingMore
+            case .zeroOrMore where qualification.kind.value == .eager,
+                 .oneOrMore where qualification.kind.value == .eager:
+                throw HIRParsingError.greedyMatchingMore
             case _:
                 let child = try HIR(node: qualification.child)
 
@@ -206,100 +207,102 @@ public extension HIR {
                         let range = try RepetitionRange(qualification.amount.value)
                         self = HIR.processRange(child: child, kind: range)
                     case _:
-                        throw HIRParsingError.NotSupportedRepetitionKind
+                        throw HIRParsingError.notSupportedRepetitionKind
                     }
                 case .zeroOrOne, .exactly, .nOrMore, .upToN, .range:
                     let range = try RepetitionRange(qualification.amount.value)
                     self = HIR.processRange(child: child, kind: range)
                 case _:
-                    throw HIRParsingError.NotSupportedQualification
+                    throw HIRParsingError.notSupportedQualification
                 }
             }
-        case .quote(let quote):
+        case let .quote(quote):
             self = HIR(quote)
-        case .atom(let atom):
+        case let .atom(atom):
             self = try HIR(atom)
-        case .customCharacterClass(let charClass):
-            self = try .Class(HIR.processCharacterClass(charClass))
+        case let .customCharacterClass(charClass):
+            self = try .class(HIR.processCharacterClass(charClass))
         case .empty:
-            self = .Empty
+            self = .empty
         case _:
-            throw HIRParsingError.NotSupportedRegexNode
+            throw HIRParsingError.notSupportedRegexNode
         }
     }
 
     internal init(_ quote: AST.Quote) {
-        self = quote.literal.map { .Literal($0.scalarBytes) }.wrapOrExtract(wrapper: HIR.Concat)
+        self = quote.literal.map { .literal($0.scalarBytes) }.wrapOrExtract(wrapper: HIR.concat)
     }
 
     internal init(_ atom: AST.Atom) throws(HIRParsingError) {
         switch atom.kind {
-        case .char(let char), .keyboardMeta(let char), .keyboardControl(let char), .keyboardMetaControl(let char):
-            self = .Literal(char.scalarBytes)
-        case .scalar(let scalar):
-            self = .Literal(scalar.value.scalarBytes)
-        case .scalarSequence(let scalarSequence):
-            self = scalarSequence.scalarValues.map { .Literal($0.scalarBytes) }.wrapOrExtract(wrapper: HIR.Concat)
-        case .escaped(let escaped):
+        case let .char(char), let .keyboardMeta(char), let .keyboardControl(char), let .keyboardMetaControl(char):
+            self = .literal(char.scalarBytes)
+        case let .scalar(scalar):
+            self = .literal(scalar.value.scalarBytes)
+        case let .scalarSequence(scalarSequence):
+            self = scalarSequence.scalarValues.map { .literal($0.scalarBytes) }.wrapOrExtract(wrapper: HIR.concat)
+        case let .escaped(escaped):
             guard let scalar = escaped.scalarValue else {
-                throw HIRParsingError.InvalidEscapeCharacter
+                throw HIRParsingError.invalidEscapeCharacter
             }
-            self = .Literal(scalar.scalarBytes)
+            self = .literal(scalar.scalarBytes)
         case .dot:
             // wildcard
-            self = .Class([HIR.SCALAR_RANGE])
+            self = .class([HIR.SCALAR_RANGE])
         case .caretAnchor, .dollarAnchor, _:
             // start of the line
             // end of the line
             // and other things
-            throw HIRParsingError.NotSupportedAtomKind
+            throw HIRParsingError.notSupportedAtomKind
         }
     }
 
-    internal static func parseRange(_ range: AST.CustomCharacterClass.Range) throws(HIRParsingError) -> ScalarByteRanges {
+    internal static func parseRange(_ range: AST.CustomCharacterClass
+        .Range) throws(HIRParsingError) -> ScalarByteRanges {
         let lhs = range.lhs.kind
         let rhs = range.rhs.kind
-        if case .char(let leftChar) = lhs, case .char(let rightChar) = rhs {
+        if case let .char(leftChar) = lhs, case let .char(rightChar) = rhs {
             let start = leftChar.scalarByte
             let end = rightChar.scalarByte
 
             return [start ... end]
-        } else if case .scalar(let leftScalar) = lhs, case .scalar(let rightScalar) = rhs {
+        } else if case let .scalar(leftScalar) = lhs, case let .scalar(rightScalar) = rhs {
             let start = leftScalar.value.scalarByte
             let end = rightScalar.value.scalarByte
             return [start ... end]
         } else {
-            throw HIRParsingError.NotSupportedCharacterRangeKind
+            throw HIRParsingError.notSupportedCharacterRangeKind
         }
     }
 
-    internal static func processCharacterClass(_ charClass: AST.CustomCharacterClass) throws(HIRParsingError) -> ScalarByteRanges {
-        let ranges: [ScalarByteRanges] = try charClass.members.map { (member) throws(HIRParsingError) in
+    internal static func processCharacterClass(_ charClass: AST
+        .CustomCharacterClass) throws(HIRParsingError) -> ScalarByteRanges {
+        let ranges: [ScalarByteRanges] = try charClass.members.map { member throws(HIRParsingError) in
             switch member {
-            case .custom(let childMember):
-                return try self.processCharacterClass(childMember).compactMap { $0 }
-            case .range(let range):
+            case let .custom(childMember):
+                return try self.processCharacterClass(childMember).compactMap(\.self)
+            case let .range(range):
                 return try HIR.parseRange(range)
-            case .atom(let atom):
+            case let .atom(atom):
                 switch try HIR(atom) {
-                case .Literal(let scalar):
+                case let .literal(scalar):
                     assert(scalar.count == 1)
 
                     return [scalar[0] ... scalar[0]]
                 case _:
-                    throw HIRParsingError.NotSupportedAtomKind
+                    throw HIRParsingError.notSupportedAtomKind
                 }
             case .quote:
-                throw HIRParsingError.QuoteInCharacterClass
+                throw HIRParsingError.quoteInCharacterClass
             case _:
-                throw HIRParsingError.NotSupportedCharacterClass
+                throw HIRParsingError.notSupportedCharacterClass
             }
         }
 
         // sort out and make distinct ranges
         var flattened: ScalarByteRanges = []
 
-        for currRange in ranges.flatMap({ $0 }).sorted() {
+        for currRange in ranges.flatMap(\.self).sorted() {
             if flattened.count == 0 {
                 flattened.append(currRange)
             } else {
@@ -330,14 +333,14 @@ public extension HIR {
 
             for scalar in flattened {
                 guard let remainingUnwrapped = remaining else {
-                    throw HIRParsingError.WiderUnicodeThanSupported
+                    throw HIRParsingError.widerUnicodeThanSurpported
                 }
 
                 if remainingUnwrapped.lowerBound < scalar.lowerBound {
                     let left = remainingUnwrapped.lowerBound ... (scalar.lowerBound - 1)
                     results.append(left)
                 } else if scalar.upperBound > remainingUnwrapped.upperBound {
-                    throw HIRParsingError.WiderUnicodeThanSupported
+                    throw HIRParsingError.widerUnicodeThanSurpported
                 }
 
                 if scalar.upperBound < remainingUnwrapped.upperBound {
@@ -347,7 +350,7 @@ public extension HIR {
                 }
             }
 
-            if let remaining = remaining {
+            if let remaining {
                 results.append(remaining)
             }
 
@@ -360,19 +363,19 @@ public extension HIR {
     internal static func processRange(child: HIR, kind: RepetitionRange) -> HIR {
         var children: [HIR]
         switch kind {
-        case .exactly(let right):
+        case let .exactly(right):
             children = (0 ..< right).map { _ in child }
-        case .nOrMore(let left):
+        case let .nOrMore(left):
             children = (0 ..< left).map { _ in child }
-            children.append(.Loop(child))
-        case .upToN(let right):
-            children = (0 ..< right).map { _ in .Maybe(child) }
-        case .range(let left, let right):
+            children.append(.loop(child))
+        case let .upToN(right):
+            children = (0 ..< right).map { _ in .maybe(child) }
+        case let .range(left, right):
             children = (0 ..< left).map { _ in child }
-            children.append(contentsOf: (left ..< right).map { _ in .Maybe(child) })
+            children.append(contentsOf: (left ..< right).map { _ in .maybe(child) })
         }
 
-        return children.wrapOrExtract(wrapper: HIR.Concat)
+        return children.wrapOrExtract(wrapper: HIR.concat)
     }
 }
 
@@ -384,15 +387,15 @@ public extension HIR {
     /// The longer the regex is, the higher the score is.
     func priority() -> UInt {
         switch self {
-        case .Empty, .Loop, .Maybe:
+        case .empty, .loop, .maybe:
             return 0
-        case .Class:
+        case .class:
             return 1
-        case .Literal:
+        case .literal:
             return 2
-        case .Concat(let children):
+        case let .concat(children):
             return children.map { $0.priority() }.reduce(0, +)
-        case .Alternation(let children):
+        case let .alternation(children):
             if children.count > 0 {
                 let priorities = children.map { $0.priority() }
                 return priorities.reduce(priorities[0], min)

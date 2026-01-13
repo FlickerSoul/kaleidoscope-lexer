@@ -10,19 +10,19 @@ import Testing
 import KaleidoscopeMacroSupport
 
 enum TestError: Error {
-    case CannotGenerateCharacterSequence
+    case cannotGenerateCharacterSequence
 }
 
-func characters(_ start: Character, _ end: Character, inverted: Bool = false) -> HIR.ScalarByteRanges {
-    return [start.scalarByte ... end.scalarByte]
+func characters(_ start: Character, _ end: Character, inverted _: Bool = false) -> HIR.ScalarByteRanges {
+    [start.scalarByte ... end.scalarByte]
 }
 
 func disemableString(_ string: String) -> HIR {
-    return .Concat(string.map { .Literal($0.scalarBytes) })
+    .concat(string.map { .literal($0.scalarBytes) })
 }
 
 func literal(_ char: Character) -> HIR {
-    return .Literal(char.scalarBytes)
+    .literal(char.scalarBytes)
 }
 
 @Suite
@@ -30,46 +30,52 @@ struct HIRTests {
     @Test(arguments: [
         (
             "ab",
-            .success(disemableString("ab"))
+            .success(disemableString("ab")),
         ),
         (
-            " \n\t", .success(disemableString(" \n\t"))
+            " \n\t", .success(disemableString(" \n\t")),
         ),
         (
             "a*",
-            .failure(HIRParsingError.GreedyMatchingMore)
+            .failure(HIRParsingError.greedyMatchingMore),
         ),
         (
             "a|b",
-            .success(.Alternation([literal("a"), literal("b")]))
+            .success(.alternation([literal("a"), literal("b")])),
         ),
         (
             "[a-z]",
-            .success(.Class(characters("a", "z")))
+            .success(.class(characters("a", "z"))),
         ),
         (
             "[a-c]+?",
-            .success(.Concat([.Class(characters("a", "c")), .Loop(.Class(characters("a", "c")))]))
+            .success(.concat([.class(characters("a", "c")), .loop(.class(characters("a", "c")))])),
         ),
         (
             "[a-cx-z]+?",
-            .success(.Concat([.Class(characters("a", "c") + characters("x", "z")), .Loop(.Class(characters("a", "c") + characters("x", "z")))]))
+            .success(.concat([
+                .class(characters("a", "c") + characters("x", "z")),
+                .loop(.class(characters("a", "c") + characters("x", "z"))),
+            ])),
         ),
-        
+
         (
             "(foo)+?",
-            .success(.Concat([disemableString("foo"), .Loop(disemableString("foo"))]))
+            .success(.concat([disemableString("foo"), .loop(disemableString("foo"))])),
         ),
         (
             "(foo|bar)+?",
-            .success(.Concat([.Alternation([disemableString("foo"), disemableString("bar")]), .Loop(.Alternation([disemableString("foo"), disemableString("bar")]))]))
+            .success(.concat([
+                .alternation([disemableString("foo"), disemableString("bar")]),
+                .loop(.alternation([disemableString("foo"), disemableString("bar")])),
+            ])),
         ),
         (
             ".",
-            .success(.Class([HIR.ScalarByte.min ... HIR.ScalarByte.max]))
+            .success(.class([HIR.ScalarByte.min ... HIR.ScalarByte.max])),
         ),
     ] as [(String, Result<HIR, HIRParsingError>)])
-    func testHIRRegexGeneration(regexContent: String, expected: Result<HIR, HIRParsingError>) throws {
+    func hIRRegexGeneration(regexContent: String, expected: Result<HIR, HIRParsingError>) throws {
         let actual = Result { () throws(HIRParsingError) in
             try HIR(regex: regexContent)
         }
@@ -80,8 +86,8 @@ struct HIRTests {
         ("\\w", disemableString("\\w")),
         ("\\[a-b\\]", disemableString("\\[a-b\\]")),
     ])
-    func testHIRTokenGeneration(tokenContent: String, expected: HIR) throws {
-        let actual = try! HIR(token: tokenContent)
+    func hIRTokenGeneration(tokenContent: String, expected: HIR) throws {
+        let actual = try HIR(token: tokenContent)
         #expect(actual == expected, "The HIR generated for token `\(tokenContent)` is incorrect")
     }
 
@@ -92,8 +98,8 @@ struct HIRTests {
         ("(foo|bar)+?", 6),
         ("(foo|long)+?(bar)", 12),
     ])
-    func testHIRPriority(regexContent: String, expected: UInt) throws {
-        let hir = try! HIR(regex: regexContent)
+    func hIRPriority(regexContent: String, expected: UInt) throws {
+        let hir = try HIR(regex: regexContent)
         let actual = hir.priority()
         #expect(actual == expected, "The priority should be \(expected) instead of \(actual)")
     }

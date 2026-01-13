@@ -9,59 +9,59 @@ import Kaleidoscope
 @kaleidoscope(skip: "\t| |\n")
 enum BenchmarkTestType {
     @regex(#"[a-zA-Z_$][a-zA-Z0-9_$]*?"#)
-    case Identifier
-    
+    case identifier
+
     @regex(#""([^"\\]|\\t|\\n|\\n|\\")*?""#)
-    case String
-    
+    case string
+
     @token(#"private"#)
-    case Private
-    
+    case `private`
+
     @token(#"primitive"#)
-    case Primitive
-    
+    case primitive
+
     @token(#"protected"#)
-    case Protected
-    
+    case protected
+
     @token(#"in"#)
-    case In
-    
+    case `in` // swiftlint:disable:this identifier_name
+
     @token(#"instanceof"#)
-    case Instanceof
-    
+    case instanceOf
+
     @token(#"."#)
-    case Accessor
-    
+    case accessor
+
     @token(#"..."#)
-    case Ellipsis
-    
+    case ellipsis
+
     @token(#"("#)
-    case ParenOpen
-    
+    case parenOpen
+
     @token(#")"#)
-    case ParenClose
-    
+    case parenClose
+
     @token(#"{"#)
-    case BraceOpen
-    
+    case braceOpen
+
     @token(#"}"#)
-    case BraceClose
-    
+    case braceClose
+
     @token(#"+"#)
-    case OpAddition
-    
+    case opAddition
+
     @token(#"++"#)
-    case OpIncrement
-    
+    case opIncrement
+
     @token(#"="#)
-    case OpAssign
-    
+    case opAssign
+
     @token(#"=="#)
-    case OpEquality
-    
+    case opEquality
+
     @token(#"==="#)
-    case OpStrictEquality
-    
+    case opStrictEquality
+
     @token(#"=>"#)
-    case FatArrow
+    case fatArrow
 }

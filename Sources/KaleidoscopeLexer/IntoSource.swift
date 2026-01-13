@@ -11,7 +11,7 @@ extension String: Into {
     public typealias IntoType = LexerProtocol.Source
 
     public func into() -> IntoType {
-        return self.map { $0.unicodeScalars.first!.value }
+        map { $0.unicodeScalars.first!.value }
     }
 }
 
@@ -19,6 +19,6 @@ extension [UInt32]: Into {
     public typealias IntoType = LexerProtocol.Source
 
     public func into() -> IntoType {
-        return self
+        self
     }
 }

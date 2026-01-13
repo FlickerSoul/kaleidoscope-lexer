@@ -5,13 +5,13 @@
 //  Created by Larry Zeng on 12/4/23.
 //
 
-import SwiftSyntax
 import KaleidoscopeMacroSupport
+import SwiftSyntax
 
 // MARK: - Generator
 
 enum GeneratorError: Error {
-    case BuildingEmptyNode
+    case buildingEmptyNode
 }
 
 extension DefaultStringInterpolation {
@@ -20,7 +20,8 @@ extension DefaultStringInterpolation {
         if indent.isEmpty {
             appendInterpolation(string)
         } else {
-            appendLiteral(string.split(separator: "\n", omittingEmptySubsequences: false).joined(separator: "\n" + indent))
+            appendLiteral(string.split(separator: "\n", omittingEmptySubsequences: false)
+                .joined(separator: "\n" + indent))
         }
     }
 }
@@ -35,14 +36,14 @@ struct Generator {
         for (nodeId, node) in graph.nodes.enumerated() {
             let body: String
             switch node {
-            case .Leaf(let content):
+            case let .leaf(content):
                 body = buildLeaf(node: content)
-            case .Branch(let content):
+            case let .branch(content):
                 body = buildBranch(node: content)
-            case .Seq(let content):
+            case let .seq(content):
                 body = buildSeq(node: content)
             case .none:
-                throw GeneratorError.BuildingEmptyNode
+                throw GeneratorError.buildingEmptyNode
             }
 
             let ident = generateFuncIdent(nodeId: nodeId)
@@ -55,7 +56,7 @@ struct Generator {
         }
     }
 
-    public mutating func buildFunctions() throws -> String {
+    mutating func buildFunctions() throws -> String {
         try buildNodeFunctions()
         return functionMapping.values.joined(separator: "\n")
     }
@@ -70,18 +71,18 @@ struct Generator {
             return "try lexer.skip()"
         case .standalone:
             return "try lexer.setToken(\(enumIdent).\(end.token))"
-        case .fillCallback(let callbackDetail):
+        case let .fillCallback(callbackDetail):
             switch callbackDetail {
-            case .Named(let ident):
+            case let .named(ident):
                 return "try lexer.setToken(\(enumIdent).\(end.token)(\(ident)(&lexer)))"
-            case .Lambda(let lambda):
+            case let .lambda(lambda):
                 return "try lexer.setToken(\(enumIdent).\(end.token)(\(lambda)(&lexer)))"
             }
-        case .createCallback(let callbackDetail):
+        case let .createCallback(callbackDetail):
             switch callbackDetail {
-            case .Named(let ident):
+            case let .named(ident):
                 return "try lexer.setToken(\(ident)(&lexer))"
-            case .Lambda(let lambda):
+            case let .lambda(lambda):
                 return "try lexer.setToken(\(lambda)(&lexer))"
             }
         }
@@ -111,11 +112,10 @@ struct Generator {
             """)
         }
 
-        let miss: String
-        if let missId = node.miss {
-            miss = "try \(generateFuncIdent(nodeId: missId))(&lexer)"
+        let miss = if let missId = node.miss {
+            "try \(generateFuncIdent(nodeId: missId))(&lexer)"
         } else {
-            miss = "try lexer.error()"
+            "try lexer.error()"
         }
 
         return """
@@ -134,12 +134,10 @@ struct Generator {
     }
 
     func buildSeq(node: Node.SeqContent) -> String {
-        let miss: String
-
-        if let missId = node.miss?.miss {
-            miss = "try \(generateFuncIdent(nodeId: missId))(&lexer)"
+        let miss = if let missId = node.miss?.miss {
+            "try \(generateFuncIdent(nodeId: missId))(&lexer)"
         } else {
-            miss = "try lexer.error()"
+            "try lexer.error()"
         }
 
         return """
@@ -166,6 +164,6 @@ struct Generator {
 
     /// Generate function identifier given an integer, usually the node ID
     func generateFuncIdent(nodeId: Int) -> String {
-        return "jumpTo_\(nodeId)"
+        "jumpTo_\(nodeId)"
     }
 }

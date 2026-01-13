@@ -1,5 +1,5 @@
 //
-//  TokenType.swift
+//  CaseRegistryMacro.swift
 //
 //
 //  Created by Larry Zeng on 11/26/23.
@@ -15,7 +15,11 @@ import SwiftSyntaxMacros
 /// This macro is used for declaring tokens.
 /// This peer macro is intended to be left blank and does not introduce any peers.
 public struct EnumCaseRegistry: PeerMacro {
-    public static func expansion(of node: SwiftSyntax.AttributeSyntax, providingPeersOf declaration: some SwiftSyntax.DeclSyntaxProtocol, in context: some SwiftSyntaxMacros.MacroExpansionContext) throws -> [SwiftSyntax.DeclSyntax] {
-        return []
+    public static func expansion(
+        of _: SwiftSyntax.AttributeSyntax,
+        providingPeersOf _: some SwiftSyntax.DeclSyntaxProtocol,
+        in _: some SwiftSyntaxMacros.MacroExpansionContext,
+    ) throws -> [SwiftSyntax.DeclSyntax] {
+        []
     }
 }

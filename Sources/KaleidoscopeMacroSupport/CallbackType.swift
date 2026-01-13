@@ -10,9 +10,9 @@
 /// Types of callbacks, currently lambda is not usable due to swift compiler bug
 public enum CallbackType: Hashable {
     /// A name reference of the callback
-    case Named(String)
+    case named(String)
     /// A lambda expression
-    case Lambda(String)
+    case lambda(String)
 }
 
 /// Types of tokens, based on how they are processed

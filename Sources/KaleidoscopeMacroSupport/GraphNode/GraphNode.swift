@@ -22,15 +22,15 @@ protocol IntoNode {
 /// Graph Node Type
 public enum Node {
     /// The terminal of the graph
-    case Leaf(Node.LeafContent)
+    case leaf(Node.LeafContent)
     /// The state that can lead to multiple states
-    case Branch(Node.BranchContent)
+    case branch(Node.BranchContent)
     /// A sequence of bytes
-    case Seq(Node.SeqContent)
+    case seq(Node.SeqContent)
 }
 
 extension Node: IntoNode {
     public func into() -> Node {
-        return self
+        self
     }
 }

@@ -8,12 +8,12 @@
 extension Node: CustomStringConvertible {
     public var description: String {
         switch self {
-        case .Leaf(let content):
-            return content.description
-        case .Branch(let content):
-            return content.description
-        case .Seq(let content):
-            return content.description
+        case let .leaf(content):
+            content.description
+        case let .branch(content):
+            content.description
+        case let .seq(content):
+            content.description
         }
     }
 }

@@ -33,12 +33,12 @@ public struct GraphInput: Hashable {
 
 extension GraphInput: Comparable {
     public static func < (lhs: GraphInput, rhs: GraphInput) -> Bool {
-        return lhs.priority < rhs.priority
+        lhs.priority < rhs.priority
     }
 }
 
 extension GraphInput: CustomStringConvertible {
     public var description: String {
-        return "<\(token): \(priority)>"
+        "<\(token): \(priority)>"
     }
 }

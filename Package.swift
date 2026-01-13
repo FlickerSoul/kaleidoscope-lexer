@@ -11,11 +11,11 @@ let package = Package(
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "Kaleidoscope",
-            targets: ["Kaleidoscope"]
+            targets: ["Kaleidoscope"],
         ),
         .executable(
             name: "KaleidoscopeClient",
-            targets: ["KaleidoscopeClient"]
+            targets: ["KaleidoscopeClient"],
         ),
     ],
     dependencies: [
@@ -24,7 +24,10 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-collections.git", from: "1.0.5"),
         .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.3.0"),
         .package(url: "https://github.com/stackotter/swift-macro-toolkit.git", from: "0.8.0"),
-        .package(url: "https://github.com/swiftlang/swift-experimental-string-processing", revision: "swift-6.1.1-RELEASE"),
+        .package(
+            url: "https://github.com/swiftlang/swift-experimental-string-processing",
+            revision: "swift-6.1.1-RELEASE",
+        ),
         .package(url: "https://github.com/pointfreeco/swift-macro-testing.git", from: "0.6.4"),
         .package(url: "https://github.com/ordo-one/package-benchmark", from: "1.29.7"),
     ],
@@ -48,14 +51,14 @@ let package = Package(
                 "KaleidoscopeMacros",
                 "KaleidoscopeLexer",
                 "KaleidoscopeMacroSupport",
-            ]
+            ],
         ),
         .target(
             name: "KaleidoscopeMacroSupport",
             dependencies: [
                 .product(name: "_RegexParser", package: "swift-experimental-string-processing"),
                 .product(name: "OrderedCollections", package: "swift-collections"),
-            ]
+            ],
         ),
         // tests
         .testTarget(
@@ -64,13 +67,13 @@ let package = Package(
                 "KaleidoscopeMacros",
                 "Kaleidoscope",
                 .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
-            ]
+            ],
         ),
         .testTarget(
             name: "KaleidoscopeMacroSupportTest",
             dependencies: [
                 "KaleidoscopeMacroSupport",
-            ]
+            ],
         ),
         // example
         .executableTarget(name: "KaleidoscopeClient", dependencies: ["Kaleidoscope"]),
@@ -83,6 +86,6 @@ let package = Package(
                 .product(name: "BenchmarkPlugin", package: "package-benchmark"),
             ],
             path: "Benchmarks/ParsingBenchmark",
-        )
-    ]
+        ),
+    ],
 )

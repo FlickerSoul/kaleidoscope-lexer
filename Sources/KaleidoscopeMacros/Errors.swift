@@ -8,11 +8,11 @@
 import Foundation
 
 enum KaleidoscopeError: Error {
-    case SyntaxError
-    case NotAnEnum
-    case MultipleMacroDecleration
-    case ParsingError
-    case ExpectingString
-    case ExpectingIntegerLiteral
-    case OnlyFillOrCreateCallbackIsAllowed
+    case syntaxError
+    case notAnEnum
+    case multipleMacroDeclaration
+    case parsingError
+    case expectingString
+    case expectingIntegerLiteral
+    case onlyFillOrCreateCallbackIsAllowed
 }

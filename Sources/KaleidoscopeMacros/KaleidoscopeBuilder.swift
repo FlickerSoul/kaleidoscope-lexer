@@ -5,11 +5,11 @@
 //  Created by Larry Zeng on 11/26/23.
 //
 
+import KaleidoscopeMacroSupport
 import SwiftCompilerPlugin
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
-import KaleidoscopeMacroSupport
 
 let KALEIDOSCOPE_PACKAGE_NAME: String = "Kaleidoscope"
 
@@ -26,17 +26,23 @@ let KALEIDOSCOPE_CREATE_CALLBACK_OPTION: String = "createCallback"
 /// This extension macro generates an extension to the decorated enum and make it conform to the lexer protocol
 /// so that the decorated enum can be a tokenizer.
 public struct KaleidoscopeBuilder: ExtensionMacro {
-    public static func expansion(of node: SwiftSyntax.AttributeSyntax, attachedTo declaration: some SwiftSyntax.DeclGroupSyntax, providingExtensionsOf type: some SwiftSyntax.TypeSyntaxProtocol, conformingTo protocols: [SwiftSyntax.TypeSyntax], in context: some SwiftSyntaxMacros.MacroExpansionContext) throws -> [SwiftSyntax.ExtensionDeclSyntax] {
+    public static func expansion(
+        of _: SwiftSyntax.AttributeSyntax,
+        attachedTo declaration: some SwiftSyntax.DeclGroupSyntax,
+        providingExtensionsOf _: some SwiftSyntax.TypeSyntaxProtocol,
+        conformingTo _: [SwiftSyntax.TypeSyntax],
+        in _: some SwiftSyntaxMacros.MacroExpansionContext,
+    ) throws -> [SwiftSyntax.ExtensionDeclSyntax] {
         guard let enumDecl = declaration.as(EnumDeclSyntax.self) else {
-            throw KaleidoscopeError.NotAnEnum
+            throw KaleidoscopeError.notAnEnum
         }
-        
+
         // get enum identity
         let enumIdent = enumDecl.name.text
-        
+
         // generate graph
         var graph = Graph()
-        
+
         // get the macro lists
         let kaleidoscopeMacroDelcList = enumDecl.attributes.filter { attr in
             let attrName: TypeSyntax? = attr.as(AttributeSyntax.self)?.attributeName
@@ -44,59 +50,66 @@ public struct KaleidoscopeBuilder: ExtensionMacro {
             let member = attrName?.as(MemberTypeSyntax.self)
             let memberIdent = member?.name.text
             let memberType = member?.baseType.as(IdentifierTypeSyntax.self)?.name.text
-            
+
             // check how many of the attributes are like
             // @kaleidoscope() or Kaleidoscope.kaleidoscope()
-            return ident == KALEIDOSCOPE_MACRO_NAME || (memberIdent == KALEIDOSCOPE_MACRO_NAME && memberType == KALEIDOSCOPE_PACKAGE_NAME)
+            return ident == KALEIDOSCOPE_MACRO_NAME ||
+                (memberIdent == KALEIDOSCOPE_MACRO_NAME && memberType == KALEIDOSCOPE_PACKAGE_NAME)
         }
-        
+
         // if there are more than 1,
         // throw error to indicate duplication
         if kaleidoscopeMacroDelcList.count > 1 {
-            throw KaleidoscopeError.MultipleMacroDecleration
+            throw KaleidoscopeError.multipleMacroDeclaration
         }
-        
-        if let kaleidoscopeAttrs = kaleidoscopeMacroDelcList[0].as(AttributeSyntax.self)?.arguments?.as(LabeledExprListSyntax.self) {
+
+        if let kaleidoscopeAttrs = kaleidoscopeMacroDelcList[0].as(AttributeSyntax.self)?.arguments?
+            .as(LabeledExprListSyntax.self) {
             for kaleidoscopeAttr in kaleidoscopeAttrs {
                 switch kaleidoscopeAttr.label?.text {
                 case KALEIDOSCOPE_MACRO_SKIP_ATTR:
-                    guard let skipString = kaleidoscopeAttr.expression.as(StringLiteralExprSyntax.self)?.segments.description else {
-                        throw KaleidoscopeError.ExpectingString
+                    guard let skipString = kaleidoscopeAttr.expression.as(StringLiteralExprSyntax.self)?.segments
+                        .description else {
+                        throw KaleidoscopeError.expectingString
                     }
-                    try graph.push(input: .init(token: "SKIP_REGEX_TOKEN", tokenType: .skip, hir: HIR(regex: skipString)))
+                    try graph.push(input: .init(
+                        token: "SKIP_REGEX_TOKEN",
+                        tokenType: .skip,
+                        hir: HIR(regex: skipString),
+                    ))
                 case _:
                     break
                 }
             }
         }
-        
+
         // get the member case xxx blocks
         for member in enumDecl.memberBlock.members {
             guard let caseDecl = member.decl.as(EnumCaseDeclSyntax.self) else {
                 continue
             }
-            
+
             // summarize `case  A, B, C(K.String), D(String, Int)`
             // get (name, paramTypes) tuples
             // for example, (A, nil), (C, ["K.String"])
             let caseTypes: [(name: String, paramTypes: [String]?)] = caseDecl.elements.map { element in
-                (name: element.name.text, paramTypes: element.parameterClause?.parameters.map { $0.type.description })
+                (name: element.name.text, paramTypes: element.parameterClause?.parameters.map(\.type.description))
             }
-            
+
             var attrMatches: [AttrMatchInfo] = []
-            
+
             // parse attributes
             for attr in caseDecl.attributes {
                 guard let attr = attr.as(AttributeSyntax.self) else {
                     continue
                 }
-                
+
                 let attrName: TypeSyntax? = attr.attributeName
                 let ident = attrName?.as(IdentifierTypeSyntax.self)?.name.text
                 let member = attrName?.as(MemberTypeSyntax.self)
                 let memberIdent = member?.name.text
                 let memberType = member?.baseType.as(IdentifierTypeSyntax.self)?.name.text
-                
+
                 switch (ident, memberIdent, memberType) {
                 case (KALEIDOSCOPE_REGEX_NAME, _, _), (_, KALEIDOSCOPE_REGEX_NAME, KALEIDOSCOPE_PACKAGE_NAME):
                     try attrMatches.append(parse(regex: attr))
@@ -106,36 +119,36 @@ public struct KaleidoscopeBuilder: ExtensionMacro {
                     break
                 }
             }
-            
+
             for token in caseTypes {
                 for (hir, tokenType, priority) in attrMatches {
                     try graph.push(input: .init(token: token.name, tokenType: tokenType, hir: hir, priority: priority))
                 }
             }
         }
-        
+
         _ = try graph.makeRoot()
         let rootId = try graph.shake()
-        
+
         var generator = Generator(graph: graph, enumIdent: enumIdent)
-        
+
         let lexerConformance: DeclSyntax = try """
         extension \(raw: enumIdent): LexerProtocol {
             typealias TokenType = Self
             typealias RawSource = String
-        
+
             public static func lex(_ lexer: inout LexerMachine<Self>) throws {
                 \(raw: generator.buildFunctions())
-        
+
                 try \(raw: generator.generateFuncIdent(nodeId: rootId))(&lexer)
             }
-        
+
             public static func lexer(source: RawSource) -> LexerMachine<Self> {
                 return LexerMachine(raw: source)
             }
         }
         """
-        
+
         let tokenResultConformance: DeclSyntax = """
         extension \(raw: enumIdent): Into {
             public typealias IntoType = TokenResult<\(raw: enumIdent)>
@@ -144,10 +157,10 @@ public struct KaleidoscopeBuilder: ExtensionMacro {
             }
         }
         """
-        
+
         return [
             lexerConformance.cast(ExtensionDeclSyntax.self),
-            tokenResultConformance.cast(ExtensionDeclSyntax.self)
+            tokenResultConformance.cast(ExtensionDeclSyntax.self),
         ]
     }
 }
@@ -156,79 +169,76 @@ typealias AttrMatchInfo = (hir: HIR, type: TokenType, priority: UInt?)
 
 extension SyntaxCollection {
     subscript(index: Int) -> Element {
-        return self[self.index(startIndex, offsetBy: index)]
+        self[self.index(startIndex, offsetBy: index)]
     }
 }
 
 func parse(regex: AttributeSyntax) throws -> AttrMatchInfo {
-    return try parse(regex, isToken: false)
+    try parse(regex, isToken: false)
 }
 
 func parse(token: AttributeSyntax) throws -> AttrMatchInfo {
-    return try parse(token, isToken: true)
+    try parse(token, isToken: true)
 }
 
 /// Parses an enum case's information.
 func parse(_ attr: AttributeSyntax, isToken: Bool) throws -> AttrMatchInfo {
     guard let arguments = attr.arguments?.as(LabeledExprListSyntax.self) else {
-        throw KaleidoscopeError.ParsingError
+        throw KaleidoscopeError.parsingError
     }
-    
+
     // TODO: this might be wrong
     guard let regexOrToken = arguments[0].expression.as(StringLiteralExprSyntax.self)?.segments.description else {
-        throw KaleidoscopeError.ExpectingString
+        throw KaleidoscopeError.expectingString
     }
-    
-    let hir: HIR
-    if isToken {
-        hir = try HIR(token: regexOrToken)
+
+    let hir: HIR = if isToken {
+        try HIR(token: regexOrToken)
     } else {
-        hir = try HIR(regex: regexOrToken)
+        try HIR(regex: regexOrToken)
     }
-    
+
     var matchCallback: TokenType = .standalone
-    var priority: UInt? = nil
-    
+    var priority: UInt?
+
     if let foundExpr = findExpression(KALEIDOSCOPE_FILL_CALLBACK_OPTION, in: arguments)?.expression {
         if let lambda = foundExpr.as(ClosureExprSyntax.self) {
             // TODO: this might be wrong
-            matchCallback = .fillCallback(.Lambda(lambda.description))
+            matchCallback = .fillCallback(.lambda(lambda.description))
         } else {
             // TODO: this might be wrong
-            matchCallback = .fillCallback(.Named(foundExpr.description))
+            matchCallback = .fillCallback(.named(foundExpr.description))
         }
     }
-    
+
     if let foundExpr = findExpression(KALEIDOSCOPE_CREATE_CALLBACK_OPTION, in: arguments)?.expression {
         if case .standalone = matchCallback {
             if let lambda = foundExpr.as(ClosureExprSyntax.self) {
                 // TODO: this might be wrong
-                matchCallback = .createCallback(.Lambda(lambda.description))
+                matchCallback = .createCallback(.lambda(lambda.description))
             } else {
                 // TODO: this might be wrong
-                matchCallback = .createCallback(.Named(foundExpr.description))
+                matchCallback = .createCallback(.named(foundExpr.description))
             }
         } else {
-            throw KaleidoscopeError.OnlyFillOrCreateCallbackIsAllowed
+            throw KaleidoscopeError.onlyFillOrCreateCallbackIsAllowed
         }
     }
-    
+
     if let foundExpr = findExpression(KALEIDOSCOPE_PRIORITY_OPTION, in: arguments)?.expression {
         guard let num = foundExpr.as(IntegerLiteralExprSyntax.self) else {
-            throw KaleidoscopeError.ExpectingIntegerLiteral
+            throw KaleidoscopeError.expectingIntegerLiteral
         }
         priority = UInt(num.literal.text)
     }
-    
+
     return (hir, matchCallback, priority)
 }
 
 func findExpression(_ name: String, in exprList: LabeledExprListSyntax) -> LabeledExprSyntax? {
-    for labeledExpr in exprList {
-        if labeledExpr.label?.text == name {
-            return labeledExpr
-        }
+    for labeledExpr in exprList where labeledExpr.label?.text == name {
+        return labeledExpr
     }
-    
+
     return nil
 }

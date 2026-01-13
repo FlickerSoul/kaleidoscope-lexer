@@ -7,15 +7,15 @@
 
 import Kaleidoscope
 import KaleidoscopeMacros
-import XCTest
+import Testing
 
 @kaleidoscope()
 enum PriorityTest: Equatable {
     @token("fast")
-    case Fast
+    case fast
 
     @token("fast", priority: 10)
-    case Faaaast
+    case faaaast
 }
 
 let convertInt: FillCallback<CallbackTest, Int> = { lexer in Int(lexer.rawSlice)! }
@@ -26,53 +26,69 @@ let toSubstring: FillCallback<CallbackTest, Substring> = { lexer in lexer.rawSli
 
 let questionTokenGen: CreateCallback<CallbackTest, CallbackTest> = { lexer in
     if lexer.rawSlice.count % 2 == 0 {
-        return .Question(0)
+        .question(0)
     } else {
-        return .Question(lexer.rawSlice.count)
+        .question(lexer.rawSlice.count)
     }
 }
 
 let excTokenGen: CreateCallback<CallbackTest, TokenResult<CallbackTest>> = { lexer in
     if lexer.rawSlice.count % 2 == 0 {
-        return CallbackTest.Exc.into()
+        CallbackTest.exc.into()
     } else {
-        return .skipped
+        .skipped
     }
 }
 
 @kaleidoscope(skip: " ")
 enum CallbackTest: Equatable {
     @regex(#"[0-9]*?\.[0-9]+?"#, fillCallback: convertDouble)
-    case Double(Double)
+    case double(Double)
 
     @regex("[0-9]+?", fillCallback: convertInt)
-    case Number(Int)
+    case number(Int)
 
     @token("what", fillCallback: toSubstring)
-    case What(Substring)
+    case what(Substring)
 
     @regex("//.*?", fillCallback: toSubstring)
-    case Comment(Substring)
+    case comment(Substring)
 
     @token(".")
-    case Dot
+    case dot
 
     @regex(#"\?*?"#, createCallback: questionTokenGen)
-    case Question(Int)
+    case question(Int)
 
     @regex(#"!*?"#, priority: 2, createCallback: excTokenGen)
-    case Exc
+    case exc
 }
 
-final class TestTokenizer: XCTestCase {
+@Suite
+struct TestTokenizer {
+    @Test
     func testPriority() throws {
-        XCTAssertEqual(PriorityTest.lexer(source: "fast").toUnwrappedArray(), [PriorityTest.Faaaast])
+        let actual = try PriorityTest.lexer(source: "fast").toUnwrappedArray()
+        #expect(actual == [PriorityTest.faaaast])
     }
 
-    func testCallback() throws {
-        XCTAssertEqual(
-            CallbackTest.lexer(source: "100 1.5 .6 what . ? ??? ???? !! ! // this is a comment").toUnwrappedArray(),
-            [.Number(100), .Double(1.5), .Double(0.6), .What("what"), .Dot, .Question(1), .Question(3), .Question(0), .Exc, .Comment("// this is a comment")]
+    @Test
+    func callback() throws {
+        let actual = try CallbackTest.lexer(source: "100 1.5 .6 what . ? ??? ???? !! ! // this is a comment")
+            .toUnwrappedArray()
+        #expect(
+            actual == [
+                .number(100),
+                .double(1.5),
+                .double(0.6),
+                .what("what"),
+                .dot,
+                .question(1),
+                .question(3),
+                .question(0),
+                .exc,
+                .comment("// this is a comment"),
+            ],
         )
     }
 }

@@ -11,29 +11,29 @@ public extension Node {
 
         public var miss: NodeId {
             switch self {
-            case .first(let id), .anytime(let id):
-                return id
+            case let .first(id), let .anytime(id):
+                id
             }
         }
 
         var anytimeMiss: NodeId? {
             switch self {
-            case .anytime(let id):
-                return id
+            case let .anytime(id):
+                id
             case _:
-                return nil
+                nil
             }
         }
 
         static func toFirst(_ id: NodeId?) -> Self? {
-            if let id = id {
+            if let id {
                 return .first(id)
             }
             return nil
         }
 
         static func toAnytime(_ id: NodeId?) -> Self? {
-            if let id = id {
+            if let id {
                 return .anytime(id)
             }
             return nil
@@ -52,29 +52,28 @@ public extension Node {
         }
 
         func copy() -> Self {
-            return .init(seq: seq, then: then, miss: miss)
+            .init(seq: seq, then: then, miss: miss)
         }
 
         func into() -> Node {
-            return Node.Seq(self)
+            Node.seq(self)
         }
 
         public func toBranch(graph: inout Graph) -> Node.BranchContent {
             let hit = seq.remove(at: 0)
             let missId = miss?.miss
 
-            let thenId: NodeId
-            if seq.count == 0 {
-                thenId = then
+            let thenId: NodeId = if seq.count == 0 {
+                then
             } else {
-                thenId = graph.push(self)
+                graph.push(self)
             }
 
             return .init(branches: [hit.scalarByteRange: thenId], miss: missId)
         }
 
-        public func asRemainder(at: Int, graph: inout Graph) -> NodeId {
-            seq = Array(seq[at ..< seq.count])
+        public func asRemainder(at remainderIndex: Int, graph: inout Graph) -> NodeId {
+            seq = Array(seq[remainderIndex ..< seq.count])
 
             if seq.count == 0 {
                 return then
@@ -83,8 +82,8 @@ public extension Node {
             }
         }
 
-        public func split(at: Int, graph: inout Graph) -> SeqContent? {
-            switch at {
+        public func split(at splitIndex: Int, graph: inout Graph) -> SeqContent? {
+            switch splitIndex {
             case 0:
                 return nil
             case seq.count:
@@ -93,14 +92,13 @@ public extension Node {
                 break
             }
 
-            let current = seq[0 ..< at]
-            let next = seq[at ..< seq.count]
+            let current = seq[0 ..< splitIndex]
+            let next = seq[splitIndex ..< seq.count]
 
-            let nextMiss: Node.SeqMiss?
-            if let miss = miss?.anytimeMiss {
-                nextMiss = .anytime(miss)
+            let nextMiss: Node.SeqMiss? = if let miss = miss?.anytimeMiss {
+                .anytime(miss)
             } else {
-                nextMiss = nil
+                nil
             }
 
             let nextId = graph.push(Self(seq: Array(next), then: then, miss: nextMiss))
@@ -112,7 +110,7 @@ public extension Node {
         }
 
         public func miss(first val: NodeId?) -> Self {
-            if let val = val {
+            if let val {
                 miss = .first(val)
             } else {
                 miss = nil
@@ -121,7 +119,7 @@ public extension Node {
         }
 
         public func miss(anytime val: NodeId?) -> Self {
-            if let val = val {
+            if let val {
                 miss = .anytime(val)
             } else {
                 miss = nil
@@ -132,7 +130,7 @@ public extension Node {
 
         public func prefix(with other: SeqContent) -> (HIR.ScalarBytes, SeqMiss)? {
             var count = 0
-            while count < other.seq.count && count < seq.count {
+            while count < other.seq.count, count < seq.count {
                 if other.seq[count] == seq[count] {
                     count += 1
                 } else {
@@ -147,7 +145,7 @@ public extension Node {
             let newSeq = Array(seq[0 ..< count])
 
             switch (miss, other.miss) {
-            case (nil, .some(let newMiss)), (.some(let newMiss), nil):
+            case (nil, let .some(newMiss)), (.some(let newMiss), nil):
                 return (newSeq, newMiss)
             case _:
                 return nil
@@ -155,7 +153,7 @@ public extension Node {
         }
 
         public static func == (lhs: Node.SeqContent, rhs: Node.SeqContent) -> Bool {
-            return lhs.seq == rhs.seq && lhs.then == rhs.then && lhs.miss == rhs.miss
+            lhs.seq == rhs.seq && lhs.then == rhs.then && lhs.miss == rhs.miss
         }
 
         public func hash(into hasher: inout Hasher) {
@@ -166,7 +164,7 @@ public extension Node {
 
         public var description: String {
             var des = "`\(seq.map { Unicode.Scalar($0)!.escaped(asASCII: true) }.joined())` => \(then)"
-            if let miss = miss {
+            if let miss {
                 des += " | _ => \(miss)"
             }
 

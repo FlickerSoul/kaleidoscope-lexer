@@ -9,7 +9,7 @@ public extension Node {
 
     struct BranchContent: Hashable, Copy, IntoNode {
         public var branches: [BranchHit: NodeId] = [:]
-        public var miss: NodeId? = nil
+        public var miss: NodeId?
 
         init(branches: [BranchHit: NodeId] = [:], miss: NodeId? = nil) {
             self.branches = branches
@@ -17,7 +17,7 @@ public extension Node {
         }
 
         public static func == (lhs: Node.BranchContent, rhs: Node.BranchContent) -> Bool {
-            return lhs.branches == rhs.branches && lhs.miss == rhs.miss
+            lhs.branches == rhs.branches && lhs.miss == rhs.miss
         }
 
         public func hash(into hasher: inout Hasher) {
@@ -26,14 +26,14 @@ public extension Node {
         }
 
         public func copy() -> Self {
-            return .init(
+            .init(
                 branches: branches,
-                miss: miss
+                miss: miss,
             )
         }
 
         public func into() -> Node {
-            return .Branch(self)
+            .branch(self)
         }
 
         mutating func merge(other: BranchContent, graph: inout Graph) throws {
@@ -41,7 +41,7 @@ public extension Node {
             case (nil, _):
                 // if branch's miss is empty, use other's
                 miss = other.miss
-            case (.some(let lhs), .some(let rhs)) where lhs != rhs:
+            case let (.some(lhs), .some(rhs)) where lhs != rhs:
                 // if both have misses, merge two misses
                 miss = try graph.merge(lhs, rhs)
             case _:
@@ -105,7 +105,7 @@ public extension Node {
 
                     while stack.count > 0 {
                         guard let currUnwrapped = curr else {
-                            throw GraphError.MergingRangeError
+                            throw GraphError.mergingRangeError
                         }
 
                         let comp = stack.removeLast()
@@ -144,7 +144,7 @@ public extension Node {
                         }
                     }
 
-                    if let curr = curr {
+                    if let curr {
                         merged.append(curr)
                         mergedId.append(currId)
                     }
@@ -157,10 +157,8 @@ public extension Node {
         }
 
         func contains(_ val: HIR.ScalarByte) -> NodeId? {
-            for (range, nodeId) in branches {
-                if range.contains(val) {
-                    return nodeId
-                }
+            for (range, nodeId) in branches where range.contains(val) {
+                return nodeId
             }
 
             return nil
@@ -170,7 +168,7 @@ public extension Node {
 
 extension Node.BranchContent: CustomStringConvertible {
     public var description: String {
-        return "{" +
+        "{" +
             branches.map { key, val in
                 "\(key) => \(val)"
             }.joined(separator: ", ") +

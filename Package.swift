@@ -24,6 +24,9 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-collections.git", from: "1.0.5"),
         .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.3.0"),
         .package(url: "https://github.com/stackotter/swift-macro-toolkit.git", from: "0.8.0"),
+        .package(url: "https://github.com/swiftlang/swift-experimental-string-processing", revision: "swift-6.1.1-RELEASE"),
+        .package(url: "https://github.com/pointfreeco/swift-macro-testing.git", from: "0.6.4"),
+        .package(url: "https://github.com/ordo-one/package-benchmark", from: "1.29.7"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -36,16 +39,12 @@ let package = Package(
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
                 .product(name: "OrderedCollections", package: "swift-collections"),
                 "KaleidoscopeLexer",
+                .product(name: "_RegexParser", package: "swift-experimental-string-processing"),
             ],
-            swiftSettings: [.unsafeFlags(["-Xfrontend", "-enable-experimental-string-processing"])]
         ),
         .target(name: "KaleidoscopeLexer"),
-        // Library that exposes a macro as part of its API, which is used in client programs.
         .target(name: "Kaleidoscope", dependencies: ["KaleidoscopeMacros", "KaleidoscopeLexer"]),
-        // A client of the library, which is able to use the macro in its own code.
         .executableTarget(name: "KaleidoscopeClient", dependencies: ["Kaleidoscope"]),
-
-        // A test target used to develop the macro implementation.
         .testTarget(
             name: "KaleidoscopeTests",
             dependencies: [
@@ -54,5 +53,15 @@ let package = Package(
                 .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
             ]
         ),
+        // benchmarks
+        .executableTarget(
+            name: "ParsingBenchmark",
+            dependencies: [
+                "Kaleidoscope",
+                .product(name: "Benchmark", package: "package-benchmark"),
+                .product(name: "BenchmarkPlugin", package: "package-benchmark"),
+            ],
+            path: "Benchmarks/ParsingBenchmark",
+        )
     ]
 )

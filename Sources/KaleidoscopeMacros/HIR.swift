@@ -20,7 +20,7 @@ import Foundation
 /// [Regex AST API](https://swiftinit.org/docs/swift/_regexparser/ast)
 /// - SeeAlso
 /// [AST Node API](https://swiftinit.org/docs/swift/_regexparser/ast/node)
-public indirect enum HIR: Hashable {
+public indirect enum HIR: Hashable, Sendable {
     public typealias ScalarByte = UInt32
     public typealias ScalarBytes = [ScalarByte]
 
@@ -84,7 +84,8 @@ extension HIR.ScalarByte {
     }
 }
 
-public enum HIRParsingError: Error {
+public enum HIRParsingError: Error, Equatable {
+    case InvalidRegexString(String)
     case InvalidRepetitionRange
     case GreedyMatchingMore
     case NotSupportedRepetitionKind
@@ -95,7 +96,7 @@ public enum HIRParsingError: Error {
     case IncorrectCharRange
     case IncorrectChar
     case NotSupportedCharacterRangeKind
-    case InvalidEscapeCharactor
+    case InvalidEscapeCharacter
     case QuoteInCharacterClass
     case WiderUnicodeThanSupported
 }
@@ -109,7 +110,7 @@ enum RepetitionRange {
     case upToN(right: Int)
     case range(left: Int, right: Int)
 
-    init(_ amount: AST.Quantification.Amount) throws {
+    init(_ amount: AST.Quantification.Amount) throws(HIRParsingError) {
         var left, right: AST.Atom.Number?
 
         switch amount {
@@ -164,25 +165,31 @@ extension Array where Element == HIR {
 // MARK: - Init
 
 public extension HIR {
-    init(regex string: String, option: SyntaxOptions = .traditional) throws {
-        self = try HIR(ast: parse(string, option))
+    init(regex string: String, option: SyntaxOptions = .traditional) throws(HIRParsingError) {
+        let ast: AST
+        do {
+            ast = try parse(string, option)
+        } catch {
+            throw .InvalidRegexString(string)
+        }
+        self = try HIR(ast: ast)
     }
 
     init(token string: String) throws {
         self = try HIR(regex: NSRegularExpression.escapedPattern(for: string))
     }
 
-    init(ast: AST) throws {
+    init(ast: AST) throws(HIRParsingError) {
         self = try HIR(node: ast.root)
     }
 
-    init(node: AST.Node) throws {
+    init(node: AST.Node) throws(HIRParsingError) {
         switch node {
         case .alternation(let alter):
-            let children = try alter.children.map { try HIR(node: $0) }.compactMap { $0 }
+            let children = try alter.children.map(HIR.init(node:)).compactMap { $0 }
             self = children.wrapOrExtract(wrapper: HIR.Alternation)
         case .concatenation(let concat):
-            let children = try concat.children.map { try HIR(node: $0) }.compactMap { $0 }
+            let children = try concat.children.map(HIR.init(node:)).compactMap { $0 }
             self = children.wrapOrExtract(wrapper: HIR.Concat)
         case .group(let group):
             self = try HIR(node: group.child)
@@ -226,7 +233,7 @@ public extension HIR {
         self = quote.literal.map { .Literal($0.scalarBytes) }.wrapOrExtract(wrapper: HIR.Concat)
     }
 
-    internal init(_ atom: AST.Atom) throws {
+    internal init(_ atom: AST.Atom) throws(HIRParsingError) {
         switch atom.kind {
         case .char(let char), .keyboardMeta(let char), .keyboardControl(let char), .keyboardMetaControl(let char):
             self = .Literal(char.scalarBytes)
@@ -236,7 +243,7 @@ public extension HIR {
             self = scalarSequence.scalarValues.map { .Literal($0.scalarBytes) }.wrapOrExtract(wrapper: HIR.Concat)
         case .escaped(let escaped):
             guard let scalar = escaped.scalarValue else {
-                throw HIRParsingError.InvalidEscapeCharactor
+                throw HIRParsingError.InvalidEscapeCharacter
             }
             self = .Literal(scalar.scalarBytes)
         case .dot:
@@ -250,7 +257,7 @@ public extension HIR {
         }
     }
 
-    internal static func parseRange(_ range: AST.CustomCharacterClass.Range) throws -> ScalarByteRanges {
+    internal static func parseRange(_ range: AST.CustomCharacterClass.Range) throws(HIRParsingError) -> ScalarByteRanges {
         let lhs = range.lhs.kind
         let rhs = range.rhs.kind
         if case .char(let leftChar) = lhs, case .char(let rightChar) = rhs {
@@ -267,8 +274,8 @@ public extension HIR {
         }
     }
 
-    internal static func processCharacterClass(_ charClass: AST.CustomCharacterClass) throws -> ScalarByteRanges {
-        let ranges: [ScalarByteRanges] = try charClass.members.map { member in
+    internal static func processCharacterClass(_ charClass: AST.CustomCharacterClass) throws(HIRParsingError) -> ScalarByteRanges {
+        let ranges: [ScalarByteRanges] = try charClass.members.map { (member) throws(HIRParsingError) in
             switch member {
             case .custom(let childMember):
                 return try self.processCharacterClass(childMember).compactMap { $0 }

@@ -2,13 +2,12 @@
 // https://docs.swift.org/swift-book
 
 @_exported import KaleidoscopeLexer
-import SwiftSyntax
 
 // MARK: - callback type
 
 /// Token callback type.
-public typealias FillCallback<T: LexerProtocol, R> = (inout LexerMachine<T>) -> R
-public typealias CreateCallback<T: LexerProtocol, R: Into<TokenResult<T>>> = (inout LexerMachine<T>) -> R
+public typealias FillCallback<T: LexerProtocol, R> = @Sendable (inout LexerMachine<T>) -> R
+public typealias CreateCallback<T: LexerProtocol, R: Into<TokenResult<T>>> = @Sendable (inout LexerMachine<T>) -> R
 
 // MARK: - Enum Case Decorators
 

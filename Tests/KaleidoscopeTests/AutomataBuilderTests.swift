@@ -6,7 +6,7 @@
 //
 
 @testable import KaleidoscopeMacros
-import XCTest
+import Testing
 
 protocol IntoByte {
     func into() -> UInt32
@@ -57,7 +57,9 @@ func leaf(_ end: EndsId) -> Node {
     return .Leaf(.init(endId: end))
 }
 
-final class GraphTests: XCTestCase {
+@Suite
+struct AutomataBuilderTests {
+    @Test
     func testBuildGraph() throws {
         let tests: [(regexs: [String], nodes: [Node?], root: NodeId)] = [
             (
@@ -88,19 +90,17 @@ final class GraphTests: XCTestCase {
         ]
 
         for (regexContents, expectedNodes, root) in tests {
-            try XCTContext.runActivity(named: "Test `\(regexContents) graph generation`") { _ in
-                var graph = Graph()
-                for regexContent in regexContents {
-                    let hir = try HIR(regex: regexContent)
-                    try graph.push(input: .init(token: "LEAF", tokenType: .standalone, hir: hir))
-                }
-
-                _ = try graph.makeRoot()
-                _ = try graph.shake()
-
-                XCTAssertEqual(graph.nodes, expectedNodes, "\(regexContents) graph comp failed")
-                XCTAssertEqual(graph.rootId, .some(root), "\(regexContents) graph root comp failed")
+            var graph = Graph()
+            for regexContent in regexContents {
+                let hir = try HIR(regex: regexContent)
+                try graph.push(input: .init(token: "LEAF", tokenType: .standalone, hir: hir))
             }
+
+            _ = try graph.makeRoot()
+            _ = try graph.shake()
+
+            #expect(graph.nodes == expectedNodes, "\(regexContents) graph comp failed")
+            #expect(graph.rootId == root, "\(regexContents) graph root comp failed")
         }
     }
 }

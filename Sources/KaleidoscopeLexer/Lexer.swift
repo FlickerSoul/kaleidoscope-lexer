@@ -30,32 +30,23 @@ public protocol LexerProtocol {
     static func lexer(source: RawSource) -> LexerMachine<Self>
 }
 
-public enum TokenResult<Token: LexerProtocol>: Equatable, Into {
+public enum TokenResult<Token: LexerProtocol> {
     public typealias IntoType = Self
 
     case result(Token)
     case skipped
 
-    public static func == (lhs: TokenResult, rhs: TokenResult) -> Bool {
-        switch (lhs, rhs) {
-        case (.skipped, skipped):
-            true
-        case _:
-            false
+    var isSkip: Bool {
+        switch self {
+        case .skipped: true
+        default: false
         }
     }
+}
 
-    public static func == (lhs: TokenResult, rhs: TokenResult) -> Bool where Token: Equatable {
-        switch (lhs, rhs) {
-        case (.skipped, .skipped):
-            true
-        case let (.result(lhs), .result(rhs)):
-            lhs == rhs
-        case _:
-            false
-        }
-    }
+extension TokenResult: Equatable where Token: Equatable {}
 
+extension TokenResult: Into {
     public func into() -> TokenResult<Token> {
         self
     }
@@ -149,7 +140,7 @@ public struct LexerMachine<Token: LexerProtocol> {
 
     @inline(__always)
     public mutating func setToken(_ token: any Into<TokenResult<Token>>) throws {
-        guard self.token == nil || self.token == .skipped else {
+        guard self.token == nil || self.token?.isSkip == true else {
             throw LexerError.duplicatedToken
         }
         self.token = token.into()

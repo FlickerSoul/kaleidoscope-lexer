@@ -132,35 +132,31 @@ public struct KaleidoscopeBuilder: ExtensionMacro {
 
         var generator = Generator(graph: graph, enumIdent: enumIdent)
 
-        let lexerConformance: DeclSyntax = try """
-        extension \(raw: enumIdent): LexerProtocol {
-            typealias TokenType = Self
-            typealias RawSource = String
+        let lexerConformance = try ExtensionDeclSyntax("extension \(raw: enumIdent): Kaleidoscope.LexerProtocol") {
+            "typealias TokenType = Self"
+            "typealias RawSource = String"
 
-            public static func lex(_ lexer: inout LexerMachine<Self>) throws {
-                \(raw: generator.buildFunctions())
+            try FunctionDeclSyntax("public static func lex(_ lexer: inout Kaleidoscope.LexerMachine<Self>) throws") {
+                try generator.buildFunctions()
 
-                try \(raw: generator.generateFuncIdent(nodeId: rootId))(&lexer)
+                "try \(raw: generator.generateFuncIdent(nodeId: rootId))(&lexer)"
             }
 
-            public static func lexer(source: RawSource) -> LexerMachine<Self> {
-                return LexerMachine(raw: source)
-            }
-        }
-        """
-
-        let tokenResultConformance: DeclSyntax = """
-        extension \(raw: enumIdent): Into {
-            public typealias IntoType = TokenResult<\(raw: enumIdent)>
-            public func into() -> IntoType {
-                return .result(self)
+            try FunctionDeclSyntax("public static func lexer(source: RawSource) -> Kaleidoscope.LexerMachine<Self>") {
+                "return Kaleidoscope.LexerMachine(raw: source)"
             }
         }
-        """
+
+        let tokenResultConformance = try ExtensionDeclSyntax("extension \(raw: enumIdent): Kaleidoscope.Into") {
+            "public typealias IntoType = Kaleidoscope.TokenResult<\(raw: enumIdent)>"
+            try FunctionDeclSyntax("public func into() -> IntoType") {
+                "return .result(self)"
+            }
+        }
 
         return [
-            lexerConformance.cast(ExtensionDeclSyntax.self),
-            tokenResultConformance.cast(ExtensionDeclSyntax.self),
+            lexerConformance,
+            tokenResultConformance,
         ]
     }
 }

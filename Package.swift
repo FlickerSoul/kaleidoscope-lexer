@@ -1,4 +1,4 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 6.2
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import CompilerPluginSupport
@@ -20,9 +20,10 @@ let package = Package(
     ],
     dependencies: [
         // Depend on the Swift 5.9 release of SwiftSyntax
-        .package(url: "https://github.com/apple/swift-syntax.git", from: "509.0.0"),
-        .package(url: "https://github.com/apple/swift-collections.git", .upToNextMajor(from: "1.0.5")),
-        .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"),
+        .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),
+        .package(url: "https://github.com/apple/swift-collections.git", from: "1.0.5"),
+        .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.3.0"),
+        .package(url: "https://github.com/stackotter/swift-macro-toolkit.git", from: "0.8.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.

@@ -6,31 +6,9 @@
 //
 
 import Foundation
-import KaleidoscopeLexer
+import KaleidoscopeMacroSupport
 import SwiftSyntax
 import SwiftSyntaxMacros
-
-// MARK: - Callback Type
-
-/// Types of callbacks, currently lambda is not usable due to swift compiler bug
-enum CallbackType {
-    /// A name reference of the callback
-    case Named(String)
-    /// A lambda expression
-    case Lambda(String)
-}
-
-/// Types of tokens, based on how they are processed
-enum TokenType {
-    /// A token with a fill callback that transforms the token string slice into actual value
-    case fillCallback(CallbackType)
-    /// A token with a create callback that gives a into token type
-    case createCallback(CallbackType)
-    /// A token that does not carry any value
-    case standalone
-    /// A skip mark that signals the lexer to continue matching the next one
-    case skip
-}
 
 // MARK: - Enum Case Token Registry
 

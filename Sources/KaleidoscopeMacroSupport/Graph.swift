@@ -4,7 +4,6 @@
 //
 //  Created by Larry Zeng on 11/27/23.
 //
-
 import Foundation
 import OrderedCollections
 
@@ -100,17 +99,33 @@ public struct Merge: Hashable, Equatable {
 /// Automata representation graph
 public struct Graph {
     /// The nodes in this automata graph
-    var nodes: [Node?] = [nil]
+    public var nodes: [Node?]
     /// The terminal informaiton of this graph
-    var inputs: OrderedSet<GraphInput> = []
+    public var inputs: OrderedSet<GraphInput>
     /// The merges that have not been completed
-    var pendingMerges: [PendingMerge] = []
+    public var pendingMerges: [PendingMerge]
     /// The merge records
-    var merges: [Merge: NodeId] = [:]
+    public var merges: [Merge: NodeId]
     /// The tentative roots of this graph
-    var roots: [NodeId] = []
+    public var roots: [NodeId]
     /// The unified root of this graph
-    var rootId: NodeId?
+    public var rootId: NodeId?
+    
+    public init(
+        nodes: [Node?] = [nil],
+        inputs: OrderedSet<GraphInput> = [],
+        pendingMerges: [PendingMerge] = [],
+        merges: [Merge : NodeId] = [:],
+        roots: [NodeId] = [],
+        rootId: NodeId? = nil
+    ) {
+        self.nodes = nodes
+        self.inputs = inputs
+        self.pendingMerges = pendingMerges
+        self.merges = merges
+        self.roots = roots
+        self.rootId = rootId
+    }
 }
 
 // MARK: - Graph Element Helpers
@@ -473,7 +488,7 @@ extension Graph {
         pendingMerges = []
     }
 
-    mutating func makeRoot() throws -> NodeId {
+    public mutating func makeRoot() throws -> NodeId {
         if roots.count == 0 {
             throw GraphError.EmptyRoot
         }

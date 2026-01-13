@@ -37,14 +37,27 @@ let package = Package(
             dependencies: [
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
-                .product(name: "OrderedCollections", package: "swift-collections"),
                 "KaleidoscopeLexer",
-                .product(name: "_RegexParser", package: "swift-experimental-string-processing"),
+                "KaleidoscopeMacroSupport",
             ],
         ),
         .target(name: "KaleidoscopeLexer"),
-        .target(name: "Kaleidoscope", dependencies: ["KaleidoscopeMacros", "KaleidoscopeLexer"]),
-        .executableTarget(name: "KaleidoscopeClient", dependencies: ["Kaleidoscope"]),
+        .target(
+            name: "Kaleidoscope",
+            dependencies: [
+                "KaleidoscopeMacros",
+                "KaleidoscopeLexer",
+                "KaleidoscopeMacroSupport",
+            ]
+        ),
+        .target(
+            name: "KaleidoscopeMacroSupport",
+            dependencies: [
+                .product(name: "_RegexParser", package: "swift-experimental-string-processing"),
+                .product(name: "OrderedCollections", package: "swift-collections"),
+            ]
+        ),
+        // tests
         .testTarget(
             name: "KaleidoscopeTests",
             dependencies: [
@@ -53,6 +66,14 @@ let package = Package(
                 .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
             ]
         ),
+        .testTarget(
+            name: "KaleidoscopeMacroSupportTest",
+            dependencies: [
+                "KaleidoscopeMacroSupport",
+            ]
+        ),
+        // example
+        .executableTarget(name: "KaleidoscopeClient", dependencies: ["Kaleidoscope"]),
         // benchmarks
         .executableTarget(
             name: "ParsingBenchmark",

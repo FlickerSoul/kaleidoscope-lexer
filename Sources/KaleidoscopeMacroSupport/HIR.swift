@@ -4,7 +4,6 @@
 //
 //  Created by Larry Zeng on 11/27/23.
 //
-
 import _RegexParser
 import Foundation
 
@@ -48,7 +47,7 @@ extension Unicode.Scalar {
     }
 }
 
-extension Character {
+package extension Character {
     var scalarByte: HIR.ScalarByte {
         return self.unicodeScalars.first!.scalarByte
     }
@@ -78,7 +77,7 @@ public extension HIR.ScalarBytes {
     }
 }
 
-extension HIR.ScalarByte {
+package extension HIR.ScalarByte {
     var scalarByteRange: HIR.ScalarByteRange {
         return self ... self
     }

@@ -1,0 +1,36 @@
+{
+  "configurations" : [
+    {
+      "id" : "385B3E5C-DAB1-4B20-B06E-084A1F9F660E",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "performanceAntipatternCheckerEnabled" : true,
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:",
+      "identifier" : "KaleidoscopeClient",
+      "name" : "KaleidoscopeClient"
+    }
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "KaleidoscopeMacroSupportTest",
+        "name" : "KaleidoscopeMacroSupportTest"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "KaleidoscopeTests",
+        "name" : "KaleidoscopeTests"
+      }
+    }
+  ],
+  "version" : 1
+}

@@ -5,7 +5,7 @@
 //  Created by Larry Zeng on 12/2/23.
 //
 
-@testable import KaleidoscopeMacros
+@testable import KaleidoscopeMacroSupport
 import Testing
 
 protocol IntoByte {

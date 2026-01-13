@@ -4,13 +4,12 @@
 //
 //  Created by Larry Zeng on 12/22/23.
 //
-
 public extension Node {
     typealias BranchHit = HIR.ScalarByteRange
 
     struct BranchContent: Hashable, Copy, IntoNode {
-        var branches: [BranchHit: NodeId] = [:]
-        var miss: NodeId? = nil
+        public var branches: [BranchHit: NodeId] = [:]
+        public var miss: NodeId? = nil
 
         init(branches: [BranchHit: NodeId] = [:], miss: NodeId? = nil) {
             self.branches = branches

@@ -7,7 +7,7 @@
 
 public extension Node {
     struct LeafContent: Hashable, Copy, IntoNode {
-        var endId: EndsId
+        public var endId: EndsId
 
         init(endId: EndsId) {
             self.endId = endId

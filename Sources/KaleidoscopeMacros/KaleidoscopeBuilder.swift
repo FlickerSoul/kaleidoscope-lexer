@@ -9,6 +9,7 @@ import SwiftCompilerPlugin
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
+import KaleidoscopeMacroSupport
 
 let KALEIDOSCOPE_PACKAGE_NAME: String = "Kaleidoscope"
 

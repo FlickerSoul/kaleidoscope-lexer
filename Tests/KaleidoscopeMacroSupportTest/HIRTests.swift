@@ -7,7 +7,7 @@
 
 import Testing
 
-@testable import KaleidoscopeMacros
+import KaleidoscopeMacroSupport
 
 enum TestError: Error {
     case CannotGenerateCharacterSequence

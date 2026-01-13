@@ -4,13 +4,12 @@
 //
 //  Created by Larry Zeng on 12/22/23.
 //
-
 public extension Node {
     enum SeqMiss: Hashable {
         case first(NodeId)
         case anytime(NodeId)
 
-        var miss: NodeId {
+        public var miss: NodeId {
             switch self {
             case .first(let id), .anytime(let id):
                 return id
@@ -42,9 +41,9 @@ public extension Node {
     }
 
     class SeqContent: Copy, IntoNode, Hashable, CustomStringConvertible {
-        var seq: HIR.ScalarBytes
-        var then: NodeId
-        var miss: SeqMiss?
+        public var seq: HIR.ScalarBytes
+        public var then: NodeId
+        public var miss: SeqMiss?
 
         required init(seq: HIR.ScalarBytes, then: NodeId, miss: SeqMiss? = nil) {
             self.seq = seq

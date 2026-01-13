@@ -4,6 +4,10 @@
 import CompilerPluginSupport
 import PackageDescription
 
+import class Foundation.ProcessInfo
+
+private let enableBenchmark = ProcessInfo.processInfo.environment["ENABLE_BENCHMARK"]
+
 let package = Package(
     name: "Kaleidoscope",
     platforms: [.macOS(.v13), .iOS(.v13), .tvOS(.v13), .watchOS(.v6), .macCatalyst(.v13)],
@@ -25,7 +29,6 @@ let package = Package(
             revision: "swift-6.1.1-RELEASE",
         ),
         .package(url: "https://github.com/pointfreeco/swift-macro-testing.git", from: "0.6.4"),
-        .package(url: "https://github.com/ordo-one/package-benchmark", from: "1.29.7"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -79,7 +82,15 @@ let package = Package(
         ),
         // example
         .executableTarget(name: "KaleidoscopeClient", dependencies: ["Kaleidoscope"]),
-        // benchmarks
+    ],
+)
+
+// benchmarks
+
+if enableBenchmark == "1" || enableBenchmark == "true" {
+    package.dependencies.append(
+        .package(url: "https://github.com/ordo-one/package-benchmark", from: "1.29.7"))
+    package.targets.append(
         .executableTarget(
             name: "ParsingBenchmark",
             dependencies: [
@@ -89,5 +100,5 @@ let package = Package(
             ],
             path: "Benchmarks/ParsingBenchmark",
         ),
-    ],
-)
+    )
+}

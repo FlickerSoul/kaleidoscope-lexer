@@ -66,6 +66,17 @@ When the package reaches a 1.0.0 release, the public API of the kaleidoscope-lex
 
 Future minor versions of the package may introduce changes to these rules as needed.
 
+## Benchmark
+
+To run benchmark, please install `jemalloc`, as instructed by the [package-benchmark](https://github.com/ordo-one/package-benchmark) package.
+
+Then run
+
+```
+export ENABLE_BENCHMARK=1
+swift package benchmark
+```
+
 ## Idea
 
 The project is provides three macros: `@kaleidoscope`, `regex`, and `token`, and they work together to generate conformance to `LexerProtocol` for the decorated  enums. `regex` takes in a regex expression for matching and `token` takes a string for excat matching. In addition, they can take a `onMatch` callback and a `priority` integer. The callback has access to token string slice and can futher transform it to whatever type required by the enum case. The priority are calculated by from the expression by default. However, if two exprssions have the same weight, manual specification is required to resolve the conflict.

@@ -1,0 +1,61 @@
+flowchart TB
+n0["Node 0"]
+style n0 stroke:#000000
+en0n6{"da"}
+style en0n6 stroke:#000000
+n0-->en0n6
+en0n6-->n6
+n1["Root Node 1"]
+style n1 stroke:#000000
+en1n4_97{"a"}
+style en1n4_97 stroke:#000000
+n1-->en1n4_97
+en1n4_97-->n4
+en1n3_98{"b"}
+style en1n3_98 stroke:#000000
+n1-->en1n3_98
+en1n3_98-->n3
+en1n0_99{"c"}
+style en1n0_99 stroke:#000000
+n1-->en1n0_99
+en1n0_99-->n0
+en1n2_100{"d"}
+style en1n2_100 stroke:#000000
+n1-->en1n2_100
+en1n2_100-->n2
+en1n5_miss{"miss"}
+style en1n5_miss stroke:#000000
+n1-->en1n5_miss
+en1n5_miss-->n5
+n2["Node 2"]
+style n2 stroke:#000000
+en2n7{"e"}
+style en2n7 stroke:#000000
+n2-->en2n7
+en2n7-->n7
+n3["Node 3"]
+style n3 stroke:#000000
+en3n8{"cd"}
+style en3n8 stroke:#000000
+n3-->en3n8
+en3n8-->n8
+n4["Node 4"]
+style n4 stroke:#000000
+en4n9{"b"}
+style en4n9 stroke:#000000
+n4-->en4n9
+en4n9-->n9
+en4n5_miss{"miss(first)"}
+style en4n5_miss stroke:#000000
+n4-->en4n5_miss
+en4n5_miss-->n5
+n5["Node 5<br/>leaf(Token4)"]
+style n5 stroke:#00C853
+n6["Node 6<br/>leaf(Token3)"]
+style n6 stroke:#00C853
+n7["Node 7<br/>leaf(Token2)"]
+style n7 stroke:#00C853
+n8["Node 8<br/>leaf(Token1)"]
+style n8 stroke:#00C853
+n9["Node 9<br/>leaf(Token0)"]
+style n9 stroke:#00C853

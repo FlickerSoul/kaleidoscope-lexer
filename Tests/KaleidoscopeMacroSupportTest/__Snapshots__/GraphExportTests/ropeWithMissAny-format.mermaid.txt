@@ -1,0 +1,29 @@
+flowchart TB
+n0["Root Node 0"]
+style n0 stroke:#000000
+en0n1{"f"}
+style en0n1 stroke:#000000
+n0-->en0n1
+en0n1-->n1
+n1["Node 1"]
+style n1 stroke:#000000
+en1n2{"e"}
+style en1n2 stroke:#000000
+n1-->en1n2
+en1n2-->n2
+en1n2_miss{"miss(first)"}
+style en1n2_miss stroke:#000000
+n1-->en1n2_miss
+en1n2_miss-->n2
+n2["Node 2"]
+style n2 stroke:#000000
+en2n3{"e"}
+style en2n3 stroke:#000000
+n2-->en2n3
+en2n3-->n3
+en2n3_miss{"miss(first)"}
+style en2n3_miss stroke:#000000
+n2-->en2n3_miss
+en2n3_miss-->n3
+n3["Node 3<br/>leaf(Token0)"]
+style n3 stroke:#00C853

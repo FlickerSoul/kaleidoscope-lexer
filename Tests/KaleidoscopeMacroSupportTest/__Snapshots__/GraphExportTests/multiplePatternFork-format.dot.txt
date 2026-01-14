@@ -1,0 +1,21 @@
+digraph {
+node[shape=box];
+splines=ortho;
+n0[label="Node 0",color=black,shape=box];
+en0n3[label="cd",color=black,shape=diamond];
+n0->en0n3;
+en0n3->n3;
+en0n4_miss[label="miss(first)",color=black,shape=diamond];
+n0->en0n4_miss;
+en0n4_miss->n4;
+n1[label="Node 1",color=black,shape=box];
+en1n0_98[label="b",color=black,shape=diamond];
+n1->en1n0_98;
+en1n0_98->n0;
+n2[label="Root Node 2",color=black,shape=box];
+en2n1_97[label="a",color=black,shape=diamond];
+n2->en2n1_97;
+en2n1_97->n1;
+n3[label="Node 3<br/>leaf(Token1)",color=green,shape=box];
+n4[label="Node 4<br/>leaf(Token0)",color=green,shape=box];
+}

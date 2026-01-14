@@ -110,36 +110,35 @@ enum RepetitionRange {
     case range(left: Int, right: Int)
 
     init(_ amount: AST.Quantification.Amount) throws(HIRParsingError) {
-        var left, right: AST.Atom.Number?
-
         switch amount {
-        case .exactly(right):
-            break
-        case .nOrMore(left):
-            break
-        case .upToN(right):
-            break
-        case .range(left, right):
-            break
-        case _:
-            break
-        }
+        case let .exactly(right):
+            guard let right_num = right.value else {
+                throw HIRParsingError.invalidRepetitionRange
+            }
 
-        let left_num = left?.value ?? -1
-        let right_num = right?.value ?? -1
-
-        switch amount {
-        case .exactly:
             self = .exactly(right: right_num)
-        case .nOrMore:
-            self = .nOrMore(left: right_num)
+        case let .nOrMore(left):
+            guard let left_num = left.value else {
+                throw HIRParsingError.invalidRepetitionRange
+            }
+            self = .nOrMore(left: left_num)
         case .oneOrMore:
             self = .nOrMore(left: 1)
         case .zeroOrMore:
             self = .nOrMore(left: 0)
-        case .upToN:
+        case let .upToN(right):
+            guard let right_num = right.value else {
+                throw HIRParsingError.invalidRepetitionRange
+            }
             self = .upToN(right: right_num)
-        case .range:
+        case let .range(left, right):
+            guard let left_num = left.value, let right_num = right.value else {
+                throw HIRParsingError.invalidRepetitionRange
+            }
+            guard left_num <= right_num else {
+                throw HIRParsingError.invalidRepetitionRange
+            }
+
             self = .range(left: left_num, right: right_num)
         case .zeroOrOne:
             self = .range(left: 0, right: 1)

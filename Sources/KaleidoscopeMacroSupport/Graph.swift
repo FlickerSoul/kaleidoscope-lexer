@@ -24,7 +24,7 @@ enum GraphError: Error {
 
 // MARK: - Handle ID Generation
 
-extension Array {
+extension [Node?] {
     /// Get the next node id, which is alwayas
     /// euqal to the length of the node list, or
     /// the index of the next appended item
@@ -32,19 +32,19 @@ extension Array {
         UInt(count)
     }
 
-    mutating func reserve() -> NodeId where Element == Node? {
+    mutating func reserve() -> NodeId {
         let id = nextNodeId
         append(nil)
         return id
     }
 
-    mutating func reserve(_ node: Node) -> NodeId where Element == Node? {
+    mutating func reserve(_ node: Node) -> NodeId {
         let id = nextNodeId
         append(node)
         return id
     }
 
-    mutating func reserve(_ node: Node, _ reserved: NodeId?) throws -> NodeId where Element == Node? {
+    mutating func reserve(_ node: Node, _ reserved: NodeId?) throws -> NodeId {
         guard let index = reserved else {
             return reserve(node)
         }
@@ -60,7 +60,7 @@ extension Array {
     }
 }
 
-extension OrderedSet {
+extension OrderedSet where Element == GraphInput {
     /// Get the next info ID, which is always
     /// equal to the length of the info list, or
     /// the index of next appended item
@@ -74,7 +74,7 @@ extension OrderedSet {
         count
     }
 
-    mutating func reserve(_ input: GraphInput) -> EndsId where Element == GraphInput {
+    mutating func reserve(_ input: GraphInput) -> EndsId {
         let id = nextInputId
         append(input)
         return id

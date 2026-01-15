@@ -33,7 +33,10 @@ identifier_name:
     - j
     - x
     - y
-    - "b[0-9]"
+    - "a"
+    - "b"
+    - "to"
+    - "op"
   allowed_symbols: ["_", " "]
 cyclomatic_complexity:
   warning: 20

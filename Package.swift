@@ -61,6 +61,12 @@ let package = Package(
                 .product(name: "OrderedCollections", package: "swift-collections"),
             ],
         ),
+        .target(
+            name: "RegexSupport",
+            dependencies: [
+                .product(name: "_RegexParser", package: "swift-experimental-string-processing"),
+            ],
+        ),
         // tests
         .testTarget(
             name: "KaleidoscopeMacroTests",
@@ -80,6 +86,14 @@ let package = Package(
             name: "KaleidoscopeMacroSupportTest",
             dependencies: [
                 "KaleidoscopeMacroSupport",
+                .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
+            ],
+            exclude: ["__Snapshots__"],
+        ),
+        .testTarget(
+            name: "RegexSupportTests",
+            dependencies: [
+                "RegexSupport",
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
             ],
         ),

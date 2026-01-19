@@ -221,10 +221,10 @@ public extension CharacterClass {
 
         if let firstMember {
             self = members.dropFirst().reduce(into: firstMember) { partialResult, next in
-                partialResult.union(other: next)
+                partialResult.union(next)
             }
         } else {
-            self = CharacterClass(classes: .init(ranges: []))
+            self = CharacterClass(ranges: [])
         }
 
         if inverted {
@@ -258,11 +258,9 @@ public extension CharacterClass {
             }
 
             self = .init(
-                classes: .init(
-                    ranges: [
-                        lhsCharacter ... rhsCharacter,
-                    ],
-                ),
+                ranges: [
+                    lhsCharacter ... rhsCharacter,
+                ],
             )
         case let .atom(atom):
             let character = atom.literalCharacterValue
@@ -271,20 +269,16 @@ public extension CharacterClass {
                     with: atom.location)
             }
             self = .init(
-                classes: .init(
-                    ranges: [character ... character],
-                ),
+                ranges: [character ... character],
             )
         case let .quote(quote):
             self = .init(
-                classes: .init(
-                    ranges: quote.literal.map { value in
-                        value ... value
-                    },
-                ),
+                ranges: quote.literal.map { value in
+                    value ... value
+                },
             )
         case .trivia:
-            self = .init(classes: [])
+            self = .init(ranges: [])
         case let .setOperation(lhs, op, rhs):
             var lhsClasses = try CharacterClass(lhs, inverted: false)
             let rhsClasses = try CharacterClass(rhs, inverted: false)

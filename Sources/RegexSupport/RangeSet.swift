@@ -20,6 +20,10 @@ public struct RangeSet<T: RangeSetBound>: ExpressibleByArrayLiteral, Equatable {
         normalize()
     }
 
+    var isEmpty: Bool {
+        ranges.isEmpty
+    }
+
     // MARK: - Set Operations
 
     /// Takes the union of two RangeSets

@@ -49,44 +49,13 @@ public struct Quantification: Equatable, Sendable {
 
 // MARK: CharacterClass
 
-/// CharacterClass represents a set of characters that are equivalent.
-public struct CharacterClass: Equatable, Sendable, ExpressibleByArrayLiteral {
-    public typealias ArrayLiteralElement = RangeSet<HIRKind.Scalar>.ArrayLiteralElement
+public typealias CharacterClass = RangeSet<HIRKind.Scalar>
 
-    var classes: RangeSet<HIRKind.Scalar>
-
-    public init(classes: RangeSet<HIRKind.Scalar>) {
-        self.classes = classes
-    }
-
-    public init(arrayLiteral elements: ArrayLiteralElement...) {
-        classes = RangeSet(ranges: elements)
-    }
-
-    mutating func union(other characterClass: CharacterClass) {
-        classes.union(characterClass.classes)
-    }
-
-    mutating func subtraction(_ other: CharacterClass) {
-        classes.subtraction(other.classes)
-    }
-
-    mutating func intersection(_ other: CharacterClass) {
-        classes.intersection(other.classes)
-    }
-
-    mutating func symmetricDifference(_ other: CharacterClass) {
-        classes.symmetricDifference(other.classes)
-    }
-
-    mutating func invert() {
-        classes.invert()
-    }
-
-    func inverting() -> CharacterClass {
-        var inverted = self
-        inverted.invert()
-        return inverted
+extension CharacterClass {
+    func isAllAscii() -> Bool {
+        ranges.last.flatMap { range in
+            range.upperBound <= "\u{7F}"
+        } ?? true
     }
 }
 

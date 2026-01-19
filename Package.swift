@@ -30,6 +30,7 @@ let package = Package(
         ),
         .package(url: "https://github.com/pointfreeco/swift-macro-testing.git", from: "0.6.4"),
         .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.12.0"),
+        .package(url: "https://github.com/pointfreeco/swift-case-paths.git", from: "1.7.2"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -65,6 +66,7 @@ let package = Package(
             name: "RegexSupport",
             dependencies: [
                 .product(name: "_RegexParser", package: "swift-experimental-string-processing"),
+                .product(name: "CasePaths", package: "swift-case-paths"),
             ],
         ),
         // tests

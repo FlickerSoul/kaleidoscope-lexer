@@ -186,25 +186,25 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     @Test
     func `single character class`() throws {
         let result = try parseToHIR("[a]")
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: ["a" ... "a"])))
+        let expected = HIRKind.class(CharacterClass(ranges: ["a" ... "a"]))
         #expect(result == expected)
     }
 
     @Test
     func `character range class`() throws {
         let result = try parseToHIR("[a-z]")
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: ["a" ... "z"])))
+        let expected = HIRKind.class(CharacterClass(ranges: ["a" ... "z"]))
         #expect(result == expected)
     }
 
     @Test
     func `multiple characters class`() throws {
         let result = try parseToHIR("[abc]")
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: [
+        let expected = HIRKind.class(CharacterClass(ranges: [
             "a" ... "a",
             "b" ... "b",
             "c" ... "c",
-        ])))
+        ]))
         #expect(result == expected)
     }
 
@@ -285,7 +285,7 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
             min: 1,
             max: nil,
             isEager: true,
-            child: .class(CharacterClass(classes: RangeSet(ranges: ["a" ... "z"]))),
+            child: .class(CharacterClass(ranges: ["a" ... "z"])),
         ))
         #expect(result == expected)
     }
@@ -529,7 +529,7 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     func `character class range combined`() throws {
         let result = try parseToHIR("[a-fd-h]")
         // After normalization: a-h
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: ["a" ... "h"])))
+        let expected = HIRKind.class(CharacterClass(ranges: ["a" ... "h"]))
         #expect(result == expected)
     }
 
@@ -537,56 +537,56 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     func `character class overlapping ranges`() throws {
         let result = try parseToHIR("[a-fg-m]")
         // After normalization: a-m
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: ["a" ... "m"])))
+        let expected = HIRKind.class(CharacterClass(ranges: ["a" ... "m"]))
         #expect(result == expected)
     }
 
     @Test
     func `character class with null`() throws {
         let result = try parseToHIR("[\\x00]")
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: ["\0" ... "\0"])))
+        let expected = HIRKind.class(CharacterClass(ranges: ["\0" ... "\0"]))
         #expect(result == expected)
     }
 
     @Test
     func `character class with newline`() throws {
         let result = try parseToHIR("[\\n]")
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: ["\n" ... "\n"])))
+        let expected = HIRKind.class(CharacterClass(ranges: ["\n" ... "\n"]))
         #expect(result == expected)
     }
 
     @Test
     func `character class bracket literal`() throws {
         let result = try parseToHIR("[\\[]")
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: ["[" ... "["])))
+        let expected = HIRKind.class(CharacterClass(ranges: ["[" ... "["]))
         #expect(result == expected)
     }
 
     @Test
     func `character class ampersand`() throws {
         let result = try parseToHIR("[&]")
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: ["&" ... "&"])))
+        let expected = HIRKind.class(CharacterClass(ranges: ["&" ... "&"]))
         #expect(result == expected)
     }
 
     @Test
     func `character class tilde`() throws {
         let result = try parseToHIR("[~]")
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: ["~" ... "~"])))
+        let expected = HIRKind.class(CharacterClass(ranges: ["~" ... "~"]))
         #expect(result == expected)
     }
 
     @Test
     func `character class hyphen`() throws {
         let result = try parseToHIR("[-]")
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: ["-" ... "-"])))
+        let expected = HIRKind.class(CharacterClass(ranges: ["-" ... "-"]))
         #expect(result == expected)
     }
 
     @Test
     func `character class escaped hyphen`() throws {
         let result = try parseToHIR("[\\-]")
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: ["-" ... "-"])))
+        let expected = HIRKind.class(CharacterClass(ranges: ["-" ... "-"]))
         #expect(result == expected)
     }
 
@@ -595,28 +595,28 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     @Test
     func `character class intersection basic`() throws {
         let result = try parseToHIR("[abc&&b-c]")
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: ["b" ... "c"])))
+        let expected = HIRKind.class(CharacterClass(ranges: ["b" ... "c"]))
         #expect(result == expected)
     }
 
     @Test
     func `character class intersection with nested class`() throws {
         let result = try parseToHIR("[abc&&[b-c]]")
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: ["b" ... "c"])))
+        let expected = HIRKind.class(CharacterClass(ranges: ["b" ... "c"]))
         #expect(result == expected)
     }
 
     @Test
     func `character class intersection both nested`() throws {
         let result = try parseToHIR("[[abc]&&[b-c]]")
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: ["b" ... "c"])))
+        let expected = HIRKind.class(CharacterClass(ranges: ["b" ... "c"]))
         #expect(result == expected)
     }
 
     @Test
     func `character class triple intersection`() throws {
         let result = try parseToHIR("[a-z&&b-y&&c-x]")
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: ["c" ... "x"])))
+        let expected = HIRKind.class(CharacterClass(ranges: ["c" ... "x"]))
         #expect(result == expected)
     }
 
@@ -624,7 +624,7 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     func `character class intersection order independent`() throws {
         let result1 = try parseToHIR("[c-da-b&&a-d]")
         let result2 = try parseToHIR("[a-d&&c-da-b]")
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: ["a" ... "d"])))
+        let expected = HIRKind.class(CharacterClass(ranges: ["a" ... "d"]))
         #expect(result1 == expected)
         #expect(result2 == expected)
     }
@@ -632,14 +632,14 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     @Test
     func `character class intersection range subset`() throws {
         let result = try parseToHIR("[a-z&&a-c]")
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: ["a" ... "c"])))
+        let expected = HIRKind.class(CharacterClass(ranges: ["a" ... "c"]))
         #expect(result == expected)
     }
 
     @Test
     func `character class intersection caret`() throws {
         let result = try parseToHIR("[\\^&&^]")
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: ["^" ... "^"])))
+        let expected = HIRKind.class(CharacterClass(ranges: ["^" ... "^"]))
         #expect(result == expected)
     }
 
@@ -651,10 +651,10 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
         let result = try parseToHIR("[a-w&&[^c-g]z]")
         // [a-w] intersect [^c-g union z] = [a-w] intersect [a-b, h-z]
         // = [a-b, h-w]
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: [
+        let expected = HIRKind.class(CharacterClass(ranges: [
             "a" ... "b",
             "h" ... "w",
-        ])))
+        ]))
         #expect(result == expected)
     }
 
@@ -664,10 +664,10 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     func `character class difference basic`() throws {
         // [a-z--m-n] = a-z minus m-n = [a-l, o-z]
         let result = try parseToHIR("[a-z--m-n]")
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: [
+        let expected = HIRKind.class(CharacterClass(ranges: [
             "a" ... "l",
             "o" ... "z",
-        ])))
+        ]))
         #expect(result == expected)
     }
 
@@ -675,7 +675,7 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     func `character class difference alpha minus lower`() throws {
         // [a-zA-Z--a-z] = [A-Z]
         let result = try parseToHIR("[a-zA-Z--a-z]")
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: ["A" ... "Z"])))
+        let expected = HIRKind.class(CharacterClass(ranges: ["A" ... "Z"]))
         #expect(result == expected)
     }
 
@@ -686,10 +686,10 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
         // [a-g~~c-j] = (a-g union c-j) minus (a-g intersect c-j)
         // = [a-j] minus [c-g] = [a-b, h-j]
         let result = try parseToHIR("[a-g~~c-j]")
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: [
+        let expected = HIRKind.class(CharacterClass(ranges: [
             "a" ... "b",
             "h" ... "j",
-        ])))
+        ]))
         #expect(result == expected)
     }
 
@@ -697,7 +697,7 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     func `character class symmetric difference same ranges`() throws {
         // [a-z~~a-z] = empty set
         let result = try parseToHIR("[a-z~~a-z]")
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: [])))
+        let expected = HIRKind.class(CharacterClass(ranges: []))
         #expect(result == expected)
     }
 
@@ -705,10 +705,10 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     func `character class symmetric difference disjoint`() throws {
         // [a-c~~x-z] = [a-c, x-z] (no overlap)
         let result = try parseToHIR("[a-c~~x-z]")
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: [
+        let expected = HIRKind.class(CharacterClass(ranges: [
             "a" ... "c",
             "x" ... "z",
-        ])))
+        ]))
         #expect(result == expected)
     }
 
@@ -717,10 +717,10 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     @Test
     func `character class union basic`() throws {
         let result = try parseToHIR("[a-zA-Z]")
-        let expected = HIRKind.class(CharacterClass(classes: RangeSet(ranges: [
+        let expected = HIRKind.class(CharacterClass(ranges: [
             "A" ... "Z",
             "a" ... "z",
-        ])))
+        ]))
         #expect(result == expected)
     }
 
@@ -731,16 +731,16 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
         let result = try parseToHIR("[^a]")
         // Negation of [a] should be everything except 'a'
         // This creates [minValue...('a'-1), ('a'+1)...maxValue]
-        let negatedClass = RangeSet<Character>(ranges: ["a" ... "a"]).inverting()
-        let expected = HIRKind.class(CharacterClass(classes: negatedClass))
+        let negatedClass = CharacterClass(ranges: ["a" ... "a"]).inverting()
+        let expected = HIRKind.class(negatedClass)
         #expect(result == expected)
     }
 
     @Test
     func `negated character class range`() throws {
         let result = try parseToHIR("[^a-z]")
-        let negatedClass = RangeSet<Character>(ranges: ["a" ... "z"]).inverting()
-        let expected = HIRKind.class(CharacterClass(classes: negatedClass))
+        let negatedClass = CharacterClass(ranges: ["a" ... "z"]).inverting()
+        let expected = HIRKind.class(negatedClass)
         #expect(result == expected)
     }
 
@@ -752,8 +752,8 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
         // Actually [a[^c]] means union of 'a' with negation of 'c'
         // = [^c] since 'a' is already not 'c'
         let result = try parseToHIR("[a[^c]]")
-        let negatedC = RangeSet<Character>(ranges: ["c" ... "c"]).inverting()
-        let expected = HIRKind.class(CharacterClass(classes: negatedC))
+        let negatedC = CharacterClass(ranges: ["c" ... "c"]).inverting()
+        let expected = HIRKind.class(negatedC)
         #expect(result == expected)
     }
 
@@ -761,8 +761,8 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     func `nested negated class union with range`() throws {
         // [a-b[^c]] = [a-b] union [^c] = [^c] (since a-b is subset of [^c])
         let result = try parseToHIR("[a-b[^c]]")
-        let negatedC = RangeSet<Character>(ranges: ["c" ... "c"]).inverting()
-        let expected = HIRKind.class(CharacterClass(classes: negatedC))
+        let negatedC = CharacterClass(ranges: ["c" ... "c"]).inverting()
+        let expected = HIRKind.class(negatedC)
         #expect(result == expected)
     }
 

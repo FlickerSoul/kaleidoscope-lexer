@@ -37,7 +37,7 @@ public struct NFAStateID: Hashable, Equatable, Sendable, CustomStringConvertible
 // MARK: - Byte Range Transition
 
 /// A transition because of a contiguous range of bytes
-public struct Transition: Equatable, Sendable {
+public struct Transition: Hashable, Sendable {
     /// The inclusive start of the byte range
     public let start: UInt8
     /// The inclusive end of the byte range
@@ -84,7 +84,7 @@ public enum NFAState: Equatable, Sendable {
     /// First alternative has priority (for greedy matching).
     case union([NFAStateID])
 
-    /// A special case of union with exactly two alternatives.
+    /// A union of states in reverse order - tries each alternative in reverse order.
     case binaryUnion(NFAStateID, NFAStateID)
 
     /// A match/accept state. Reached when the pattern successfully matches.
@@ -93,11 +93,11 @@ public enum NFAState: Equatable, Sendable {
     /// A fail/dead state. Represents an impossible transition.
     case fail
 
-    func remap(_ map: borrowing [NFAStateID]) -> NFAState {
-        switch self {
+    mutating func remap(_ map: borrowing [NFAStateID]) {
+        switch consume self {
         case var .byteRange(transition):
             transition.next = map[transition.next.asIndex]
-            return .byteRange(transition)
+            self = .byteRange(transition)
         case var .sparse(transitions):
             for index in 0 ..< transitions.count {
                 var transition = transitions[index]
@@ -105,21 +105,21 @@ public enum NFAState: Equatable, Sendable {
                 transitions[index] = transition
             }
 
-            return .sparse(transitions)
+            self = .sparse(transitions)
         case var .union(alternatives):
             for index in 0 ..< alternatives.count {
                 alternatives[index] = map[alternatives[index].asIndex]
             }
-            return .union(alternatives)
+            self = .union(alternatives)
         case let .binaryUnion(alt1, alt2):
-            return .binaryUnion(
+            self = .binaryUnion(
                 map[alt1.asIndex],
                 map[alt2.asIndex],
             )
         case let .match(patternId):
-            return .match(patternId)
+            self = .match(consume patternId)
         case .fail:
-            return .fail
+            self = .fail
         }
     }
 }
@@ -160,6 +160,29 @@ public enum NFABuilderState: Equatable, Sendable {
             unions[0]
         case .byteRange, .sparse, .union, .unionReverse, .match, .fail:
             nil
+        }
+    }
+
+    mutating func patch(to: NFAStateID) throws(NFAConstructionError) {
+        switch consume self {
+        case var .byteRange(transition):
+            transition.next = to
+            self = .byteRange(transition)
+        case let .sparse(transitions):
+            self = .sparse(transitions)
+            throw NFAConstructionError.invalidOperation(description: "Cannot patch sparse state directly.")
+        case .epsilon:
+            self = .epsilon(to)
+        case var .union(unions):
+            unions.append(to)
+            self = .union(unions)
+        case var .unionReverse(unions):
+            unions.append(to)
+            self = .unionReverse(unions)
+        case let .match(next):
+            self = .match(next)
+        case .fail:
+            self = .fail
         }
     }
 }
@@ -307,36 +330,21 @@ public struct ThompsonBuilder {
     // MARK: - Patch
 
     mutating func patch(from: NFAStateID, to: NFAStateID) throws(NFAConstructionError) {
-        let fromState = states[from.asIndex]
-        let newState: NFABuilderState
-
-        switch fromState {
-        case var .byteRange(transition):
-            transition.next = to
-            newState = .byteRange(transition)
-        case .sparse:
-            throw NFAConstructionError.invalidOperation(description: "Cannot patch sparse state directly.")
-        case .epsilon:
-            newState = .epsilon(to)
-        case var .union(unions):
-            unions.append(to)
-            newState = .union(unions)
-        case var .unionReverse(unions):
-            unions.append(to)
-            newState = .unionReverse(unions)
-        case let .match(next):
-            newState = .match(next)
-        case .fail:
-            newState = .fail
-        }
-
-        states[from.asIndex] = newState
+        try states[from.asIndex].patch(to: to)
     }
 
     /// Adds a byte range state and returns its ID
-    public mutating func addByteRange(_ transition: Transition) throws(NFAConstructionError) -> NFAStateID {
+    public mutating func addByteRange(start: UInt8, end: UInt8) throws(NFAConstructionError) -> NFAStateID {
         let id = try allocate()
-        states.append(.byteRange(transition))
+        states.append(
+            .byteRange(
+                .init(
+                    start: start,
+                    end: end,
+                    next: .none,
+                ),
+            ),
+        )
         return id
     }
 
@@ -371,38 +379,6 @@ public struct ThompsonBuilder {
         let id = try allocate()
         states.append(.fail)
         return id
-    }
-
-    // MARK: - NFAState Patching
-
-    /// Patches the target of a byte range transition
-    public mutating func patchByteRange(_ stateID: NFAStateID, next: NFAStateID) {
-        guard case var .byteRange(trans) = states[Int(stateID.id)] else {
-            return
-        }
-        trans.next = next
-        states[Int(stateID.id)] = .byteRange(trans)
-    }
-
-    /// Patches all transitions in a sparse state
-    public mutating func patchSparse(_ stateID: NFAStateID, next: NFAStateID) {
-        switch states[Int(stateID.id)] {
-        case var .byteRange(trans):
-            trans.next = next
-            states[Int(stateID.id)] = .byteRange(trans)
-        case var .sparse(transitions):
-            for i in transitions.indices {
-                transitions[i].next = next
-            }
-            states[Int(stateID.id)] = .sparse(transitions)
-        default:
-            break
-        }
-    }
-
-    /// Patches an epsilon state's target
-    public mutating func patchEpsilon(_ stateID: NFAStateID, next: NFAStateID) {
-        states[Int(stateID.id)] = .epsilon(next)
     }
 
     // MARK: - Building
@@ -527,7 +503,7 @@ struct NFAProxy {
 
     mutating func remap(_ map: borrowing [NFAStateID]) {
         for stateIndex in 0 ..< states.count {
-            states[stateIndex] = states[stateIndex].remap(map)
+            states[stateIndex].remap(map)
         }
 
         start = map[start.asIndex]
@@ -543,9 +519,11 @@ struct NFAProxy {
 /// Thompson's construction algorithm for converting HIR to byte-based NFA.
 public struct ThompsonConstruction {
     private var builder: ThompsonBuilder
+    private var utf8State: UTF8State
 
     public init() {
         builder = ThompsonBuilder()
+        utf8State = UTF8State()
     }
 
     public mutating func build(from hirs: [HIRKind]) throws(NFAConstructionError) -> NFA {
@@ -571,7 +549,9 @@ public struct ThompsonConstruction {
 
     // MARK: - HIR Compilation
 
-    private mutating func compileFragments(_ fragments: [NFAFragment]) throws(NFAConstructionError) -> NFAFragment {
+    private mutating func compileFragments(
+        _ fragments: consuming [NFAFragment],
+    ) throws(NFAConstructionError) -> NFAFragment {
         var fragmentIterator = fragments.makeIterator()
 
         guard let firstFragment = fragmentIterator.next() else {
@@ -596,8 +576,8 @@ public struct ThompsonConstruction {
         return NFAFragment(start: union, end: end)
     }
 
-    private mutating func compile(_ hir: HIRKind) throws(NFAConstructionError) -> NFAFragment {
-        switch hir {
+    private mutating func compile(_ hir: consuming HIRKind) throws(NFAConstructionError) -> NFAFragment {
+        switch consume hir {
         case .empty:
             try compileEmpty()
         case let .literal(chars):
@@ -605,7 +585,7 @@ public struct ThompsonConstruction {
         case let .class(charClass):
             try compileClass(charClass)
         case let .concat(children):
-            try compileConcat(children.map { child throws(NFAConstructionError) in
+            try compileConcat(children.map { (child: consuming HIRKind) throws(NFAConstructionError) in
                 try compile(child)
             })
         case let .alternation(alts):
@@ -631,15 +611,40 @@ extension ThompsonConstruction {
 
 extension ThompsonConstruction {
     /// Compiles a literal string by encoding each character as UTF-8 bytes
-    private mutating func compileLiteral(_: [Character]) throws(NFAConstructionError) -> NFAFragment {
-        // FIXME: literal
-        fatalError()
+    private mutating func compileLiteral(
+        _ characters: consuming [Character],
+    ) throws(NFAConstructionError) -> NFAFragment {
+        guard !characters.isEmpty else {
+            return try compileEmpty()
+        }
+
+        do {
+            return try compileConcat(
+                characters.reduce(into: [NFAFragment]()) { partialResult, char throws(NFAConstructionError) in
+                    let bytes = Array(char.utf8)
+                    for byte in bytes {
+                        let stateId = try builder.addByteRange(
+                            start: byte,
+                            end: byte,
+                        )
+
+                        partialResult.append(
+                            .init(start: stateId, end: stateId),
+                        )
+                    }
+                },
+            )
+        } catch {
+            throw error as! NFAConstructionError
+        }
     }
 }
 
 extension ThompsonConstruction {
     /// Compiles a character class to byte range transitions
-    private mutating func compileClass(_ charClass: CharacterClass) throws(NFAConstructionError) -> NFAFragment {
+    private mutating func compileClass(
+        _ charClass: consuming CharacterClass,
+    ) throws(NFAConstructionError) -> NFAFragment {
         if charClass.isAllAscii() {
             try compileASCIIClass(charClass.ranges)
         } else {
@@ -649,7 +654,7 @@ extension ThompsonConstruction {
 
     /// Compiles an ASCII-only character class (all single-byte)
     private mutating func compileASCIIClass(
-        _ ranges: [ClosedRange<Character>],
+        _ ranges: consuming [ClosedRange<Character>],
     ) throws(NFAConstructionError) -> NFAFragment {
         let end = try builder.addEpsilon()
         var transitions: [Transition] = []
@@ -671,12 +676,119 @@ extension ThompsonConstruction {
 
     /// Compiles a Unicode character class using UTF-8 sequences
     private mutating func compileUnicodeClass(
-        _: [ClosedRange<Character>],
+        _ classes: consuming [ClosedRange<Character>],
     ) throws(NFAConstructionError) -> NFAFragment {
-        // Do not compile for reverse and assume shrinked
-        // FIXME: unicode class
+        // Assuming no reverse and assume shrinked
 
-        fatalError()
+        // MARK: compilation utility function
+
+        func addEmptyUTF8Node() {
+            utf8State.uncompiled.append(.init())
+        }
+
+        func findCommonPrefixLength(_ ranges: [UTF8ByteRange]) -> Int {
+            let limit = min(ranges.count, utf8State.uncompiled.count)
+
+            for i in 0 ..< limit {
+                let range = ranges[i]
+                let node = utf8State.uncompiled[i]
+
+                guard let last = node.last,
+                      last.start == range.start,
+                      last.end == range.end else {
+                    return i
+                }
+            }
+
+            return limit
+        }
+
+        func popFreeze(_ next: NFAStateID) -> [Transition] {
+            var node = utf8State.uncompiled.removeLast()
+            node.setLastTransition(next: next)
+            return node.trans
+        }
+
+        func topLastFreeze(_ next: NFAStateID) {
+            guard !utf8State.uncompiled.isEmpty else { return }
+            utf8State.uncompiled[utf8State.uncompiled.count - 1].setLastTransition(next: next)
+        }
+
+        func compileNode(_ transitions: [Transition]) throws(NFAConstructionError) -> NFAStateID {
+            let key = UTF8SuffixKey(transitions: transitions)
+
+            if let cached = utf8State.cacheGet(key) {
+                return cached
+            }
+
+            let id = try builder.addSparse(transitions)
+            utf8State.cacheSet(key, id)
+            return id
+        }
+
+        func compileFrom(_ from: Int) throws(NFAConstructionError) {
+            var next = target
+
+            while from + 1 < utf8State.uncompiled.count {
+                let transitions = popFreeze(next)
+                next = try compileNode(transitions)
+            }
+
+            topLastFreeze(next)
+        }
+
+        func addSuffix(_ ranges: [UTF8ByteRange]) {
+            assert(!ranges.isEmpty)
+            assert(utf8State.uncompiled.count > 0)
+
+            let lastUncompiledIndex = utf8State.uncompiled.count - 1
+
+            assert(utf8State.uncompiled[lastUncompiledIndex].last == nil)
+
+            let first = ranges[0]
+            utf8State.uncompiled[lastUncompiledIndex].last = UTF8LastTransition(start: first.start, end: first.end)
+
+            for range in ranges.dropFirst() {
+                utf8State.uncompiled.append(
+                    .init(
+                        trans: [],
+                        last: .init(start: range.start, end: range.end),
+                    ),
+                )
+            }
+        }
+
+        func add(_ ranges: [UTF8ByteRange]) throws(NFAConstructionError) {
+            let prefixCount = findCommonPrefixLength(ranges)
+            assert(prefixCount < ranges.count)
+            try compileFrom(prefixCount)
+            addSuffix(Array(ranges[prefixCount...]))
+        }
+
+        func finish() throws(NFAConstructionError) -> NFAStateID {
+            try compileFrom(0)
+            assert(utf8State.uncompiled.count == 1)
+            let root = utf8State.uncompiled.removeLast()
+            assert(root.last == nil)
+            return try compileNode(root.trans)
+        }
+
+        // MARK: actual compiling
+
+        let target = try builder.addEpsilon()
+        utf8State.clear()
+        addEmptyUTF8Node()
+
+        for cls in classes {
+            let sequences = UTF8Sequences(range: cls)
+            for sequence in sequences {
+                try add(sequence.ranges)
+            }
+        }
+
+        let start = try finish()
+
+        return .init(start: start, end: target)
     }
 }
 
@@ -684,7 +796,9 @@ extension ThompsonConstruction {
 
 extension ThompsonConstruction {
     /// Compiles concatenation
-    private mutating func compileConcat(_ fragments: [NFAFragment]) throws(NFAConstructionError) -> NFAFragment {
+    private mutating func compileConcat(
+        _ fragments: consuming [NFAFragment],
+    ) throws(NFAConstructionError) -> NFAFragment {
         guard let firstFragment = fragments.first else {
             return try compileEmpty()
         }
@@ -707,7 +821,9 @@ extension ThompsonConstruction {
 
 extension ThompsonConstruction {
     /// Compiles alternation
-    private mutating func compileAlternation(_ alternatives: [HIRKind]) throws(NFAConstructionError) -> NFAFragment {
+    private mutating func compileAlternation(
+        _ alternatives: consuming [HIRKind],
+    ) throws(NFAConstructionError) -> NFAFragment {
         // let literalCount = alternatives.count { hir in
         //     switch hir {
         //     case .literal: true
@@ -730,7 +846,9 @@ extension ThompsonConstruction {
 
 extension ThompsonConstruction {
     /// Compiles quantification
-    private mutating func compileQuantification(_ quant: Quantification) throws(NFAConstructionError) -> NFAFragment {
+    private mutating func compileQuantification(
+        _ quant: consuming Quantification,
+    ) throws(NFAConstructionError) -> NFAFragment {
         let min = quant.min
         let max = quant.max
         let eager = quant.isEager
@@ -778,7 +896,10 @@ extension ThompsonConstruction {
     }
 
     /// Compiles Kleene star (*)
-    private mutating func compileKleeneStar(_ child: HIRKind, eager: Bool) throws(NFAConstructionError) -> NFAFragment {
+    private mutating func compileKleeneStar(
+        _ child: consuming HIRKind,
+        eager: Bool,
+    ) throws(NFAConstructionError) -> NFAFragment {
         // TODO: compute if the child can match empty strings, optimize if it cannot
 
         // Special treatment for * that can match empty strings
@@ -810,7 +931,10 @@ extension ThompsonConstruction {
     }
 
     /// Compiles Kleene plus (+)
-    private mutating func compileKleenePlus(_ child: HIRKind, eager: Bool) throws(NFAConstructionError) -> NFAFragment {
+    private mutating func compileKleenePlus(
+        _ child: consuming HIRKind,
+        eager: Bool,
+    ) throws(NFAConstructionError) -> NFAFragment {
         let inner = try compile(child)
 
         let union: NFAStateID = if eager {
@@ -830,10 +954,6 @@ extension ThompsonConstruction {
 
     /// Compiles exact repetition {n}
     private mutating func compileExact(_ child: HIRKind, count: UInt32) throws(NFAConstructionError) -> NFAFragment {
-        if count == 0 {
-            return try compileEmpty()
-        }
-
         let fragments = try (0 ..< count).map { _ throws(NFAConstructionError) in
             try compile(child)
         }
@@ -881,9 +1001,13 @@ extension ThompsonConstruction {
             return prefix
         }
 
+        // common end
         let empty = try builder.addEpsilon()
         var previousEnd = prefix.end
 
+        // prefix --> inner --> inner -------|
+        //    |         |                    |
+        //    |---------|----------------> empty ----->
         for _ in min ..< max {
             let union = if eager {
                 try builder.addUnion()
@@ -903,7 +1027,7 @@ extension ThompsonConstruction {
 
         return .init(
             start: prefix.start,
-            end: previousEnd,
+            end: empty,
         )
     }
 }

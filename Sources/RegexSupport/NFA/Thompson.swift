@@ -229,7 +229,7 @@ struct NFAFragment {
 
 // MARK: - NFA Construction Error
 
-public enum NFAConstructionError: Error {
+public enum NFAConstructionError: Error, Equatable {
     case stateLimitExceeded
     case patternLimitExceeded
     case invalidOperation(description: String)
@@ -386,6 +386,7 @@ public struct ThompsonBuilder {
     /// Builds the final NFA from accumulated states
     public func build(start: NFAStateID) throws(NFAConstructionError) -> NFA {
         var epsilons: [(from: NFAStateID, to: NFAStateID)] = []
+        // from builder's state ID (index) to NFA state ID (value)
         var remap: [NFAStateID] = .init(repeating: .none, count: states.count)
         var nfaProxy = NFAProxy(
             start: start,

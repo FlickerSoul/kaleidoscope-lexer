@@ -138,21 +138,25 @@ public struct Determinizer {
             }
 
             // For each byte class representative
-            for byte in byteClasses.representatives() {
+            for representative in byteClasses.representatives() {
                 // Compute the next NFA state set
-                let nextNFASet = nextNFAStateSet(from: currentNFASet, byte: byte)
-
-                // Skip if next state is empty (dead state)
-                if nextNFASet.isEmpty {
-                    dfa.setTransition(for: currentDFAID, byte: byte, to: .dead)
-                    continue
-                }
+                let nextNFASet = nextNFAStateSet(from: currentNFASet, byte: representative)
 
                 // Get or create DFA state for this NFA state set
-                let (nextDFAID, isNew) = try getOrCreateDFAState(for: nextNFASet)
+                let nextDFAID: DFAStateID
+                let isNew: Bool
 
-                // Set transition in current state
-                dfa.setTransition(for: currentDFAID, byte: byte, to: nextDFAID)
+                if nextNFASet.isEmpty {
+                    nextDFAID = .dead
+                    isNew = false
+                } else {
+                    (nextDFAID, isNew) = try getOrCreateDFAState(for: nextNFASet)
+                }
+
+                // Set transitions for ALL bytes in this equivalence class
+                for byte in byteClasses.bytesInClass(for: representative) {
+                    dfa.setTransition(for: currentDFAID, byte: byte, to: nextDFAID)
+                }
 
                 // If new state, add to work queue
                 if isNew {

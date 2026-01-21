@@ -5,6 +5,7 @@
 //  Created by Larry Zeng on 1/20/26.
 //
 import CustomDump
+import Foundation
 import Testing
 
 func equals<T: Equatable>(
@@ -39,4 +40,10 @@ func equals<T: Equatable>(
             column: column,
         ),
     )
+}
+
+extension Sequence<UInt8> {
+    func hexString(separator: String = ", ") -> String {
+        map { String(format: "%02X", $0) }.joined(separator: separator)
+    }
 }

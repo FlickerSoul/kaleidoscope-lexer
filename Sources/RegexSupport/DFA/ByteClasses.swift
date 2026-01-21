@@ -52,6 +52,14 @@ public struct ByteClasses: Sendable {
         return reps
     }
 
+    /// Get all bytes belonging to the same equivalence class as the given representative byte
+    public func bytesInClass(for representative: UInt8) -> [UInt8] {
+        let classID = classFor(byte: representative)
+        return (UInt8(0) ... 0xFF).filter { byte in
+            classFor(byte: byte) == classID
+        }
+    }
+
     /// Build byte classes from an NFA by analyzing transition ranges
     ///
     /// This analyzes which bytes can be distinguished in the NFA and groups

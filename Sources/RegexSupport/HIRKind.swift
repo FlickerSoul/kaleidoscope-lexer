@@ -20,6 +20,10 @@ public indirect enum HIRKind: Equatable, Sendable {
     case literal(Scalars)
     case `class`(CharacterClass)
     case group(Group)
+
+    static func literal(_ scalar: Scalar) -> HIRKind {
+        .literal([scalar])
+    }
 }
 
 // MARK: Quantification

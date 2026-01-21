@@ -235,7 +235,7 @@ public enum NFAConstructionError: Error, Equatable {
     case invalidOperation(description: String)
 }
 
-public struct PatternID: Hashable, Sendable, ExpressibleByIntegerLiteral {
+public struct PatternID: Hashable, Sendable, ExpressibleByIntegerLiteral, CustomStringConvertible {
     public typealias IntegerLiteralType = UInt32
 
     let id: UInt32
@@ -246,6 +246,10 @@ public struct PatternID: Hashable, Sendable, ExpressibleByIntegerLiteral {
 
     init(_ id: UInt32) {
         self.id = id
+    }
+
+    public var description: String {
+        "\(id)"
     }
 }
 

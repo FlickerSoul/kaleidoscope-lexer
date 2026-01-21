@@ -1267,7 +1267,7 @@ struct ThompsonTests { // swiftlint:disable:this type_body_length
     }
 
     @Test
-    func `range inside range (a{1,2}){1,2}`() throws {
+    func `range inside range (a{1,2}){2,3}`() throws {
         let nfa = try NFA.build(
             from: .quantification(
                 Quantification(

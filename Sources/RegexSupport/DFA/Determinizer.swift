@@ -77,7 +77,7 @@ private struct NFAStateSet: Hashable {
 /// 1. Compute epsilon closures to find all NFA states reachable without consuming input
 /// 2. For each DFA state and input byte, compute the next set of reachable NFA states
 /// 3. Use a cache to avoid creating duplicate DFA states
-public struct Determinizer {
+struct Determinizer {
     private let nfa: NFA
 
     /// Cache: NFA state set -> DFA state ID (avoid duplicate DFA states)
@@ -99,7 +99,7 @@ public struct Determinizer {
     private var tempSet: Set<NFAStateID> = []
 
     /// Main entry point: build DFA from NFA
-    public static func buildDFA(from nfa: NFA) throws -> DFA {
+    static func buildDFA(from nfa: NFA) throws -> DFA {
         var determinizer = Determinizer(nfa: nfa)
         try determinizer.determinize()
         return determinizer.dfa
@@ -133,7 +133,8 @@ public struct Determinizer {
             let currentDFAID = workQueue.removeFirst()
 
             // Get the NFA state set corresponding to this DFA state
-            guard let currentNFASet = stateCache.first(where: { $0.value == currentDFAID })?.key else {
+            guard let currentNFASet = stateCache.first(where: { $0.value == currentDFAID })?.key
+            else {
                 continue
             }
 
@@ -235,7 +236,7 @@ public struct Determinizer {
 
         // Rebuild transitions with remapped state IDs
         for i in 0 ..< newStates.count {
-            for byte: UInt8 in 0 ... 255 {
+            for byte in UInt8.min ... UInt8.max {
                 let oldNext = newStates[i].transition(for: byte)
                 if let newNext = oldToNew[oldNext] {
                     newStates[i].setTransition(for: byte, to: newNext)

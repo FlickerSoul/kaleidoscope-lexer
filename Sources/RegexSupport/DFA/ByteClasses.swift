@@ -13,35 +13,35 @@ import Foundation
 ///
 /// Byte classes group bytes that always transition to the same state in the DFA.
 /// This reduces the alphabet size and thus the number of transitions that need to be computed.
-public struct ByteClasses: Sendable {
+struct ByteClasses: Sendable {
     /// Buffer type for byte-to-class mapping. Could be replaced by `InlineArray<UInt8, 256>` for optimization
-    public typealias BufferType = [UInt8]
+    typealias BufferType = [UInt8]
     /// Map from byte (0-255) to class ID
     private var byteToClass: BufferType
 
     /// Initialize with singleton classes (one per byte, for debugging)
-    public init() {
+    init() {
         // Identity mapping: byte i maps to class i
         self = .init(byteToClass: .init(0 ... 0xFF))
     }
 
     /// Initialize with specific byte-to-class mapping
-    public init(byteToClass: [UInt8]) {
+    init(byteToClass: [UInt8]) {
         assert(byteToClass.count == 256)
         self.byteToClass = byteToClass
     }
 
     /// Get the equivalence class for a byte
-    public func classFor(byte: UInt8) -> UInt8 {
+    func classFor(byte: UInt8) -> UInt8 {
         byteToClass[Int(byte)]
     }
 
     /// Get representative bytes for each equivalence class
-    public func representatives() -> [UInt8] {
+    func representatives() -> [UInt8] {
         var seen = Set<UInt8>()
         var reps: [UInt8] = []
 
-        for byte: UInt8 in 0 ... 255 {
+        for byte in UInt8.min ... UInt8.max {
             let classID = classFor(byte: byte)
             if !seen.contains(classID) {
                 seen.insert(classID)
@@ -53,9 +53,9 @@ public struct ByteClasses: Sendable {
     }
 
     /// Get all bytes belonging to the same equivalence class as the given representative byte
-    public func bytesInClass(for representative: UInt8) -> [UInt8] {
+    func bytesInClass(for representative: UInt8) -> [UInt8] {
         let classID = classFor(byte: representative)
-        return (UInt8(0) ... 0xFF).filter { byte in
+        return (UInt8.min ... UInt8.max).filter { byte in
             classFor(byte: byte) == classID
         }
     }
@@ -64,11 +64,11 @@ public struct ByteClasses: Sendable {
     ///
     /// This analyzes which bytes can be distinguished in the NFA and groups
     /// indistinguishable bytes into the same equivalence class.
-    public static func fromNFA(_ nfa: NFA) -> ByteClasses {
+    static func fromNFA(_ nfa: NFA) -> ByteClasses {
         // Build a set of all byte boundaries where transitions change
         var boundaries = Set<UInt8>()
         boundaries.insert(0) // Always include 0
-        boundaries.insert(255) // Always include 255
+        boundaries.insert(0xFF) // Always include 255
 
         // Scan all NFA states for byte ranges
         for nfaState in nfa.states {
@@ -76,7 +76,7 @@ public struct ByteClasses: Sendable {
             case let .byteRange(transition):
                 // Add boundaries around this transition
                 boundaries.insert(transition.start)
-                if transition.end < 255 {
+                if transition.end < UInt.max {
                     boundaries.insert(transition.end &+ 1)
                 }
 
@@ -84,7 +84,7 @@ public struct ByteClasses: Sendable {
                 // Add boundaries around all transitions
                 for transition in transitions {
                     boundaries.insert(transition.start)
-                    if transition.end < 255 {
+                    if transition.end < UInt.max {
                         boundaries.insert(transition.end &+ 1)
                     }
                 }
@@ -103,10 +103,10 @@ public struct ByteClasses: Sendable {
         var currentClass: UInt8 = 0
 
         var boundaryIndex = 0
-        for byte: UInt8 in 0 ... 255 {
+        for byte in UInt8.min ... UInt8.max {
             // Check if we've passed the next boundary
             while boundaryIndex < sortedBoundaries.count, byte >= sortedBoundaries[boundaryIndex] {
-                currentClass = UInt8(min(UInt16(currentClass) + 1, 255))
+                currentClass = UInt8(min(UInt16(currentClass) + 1, 0xFF))
                 boundaryIndex += 1
             }
             byteToClass[Int(byte)] = currentClass

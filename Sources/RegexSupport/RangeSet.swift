@@ -8,7 +8,7 @@
 public struct RangeSet<T: RangeSetBound>: ExpressibleByArrayLiteral, Equatable {
     public typealias ArrayLiteralElement = ClosedRange<T>
 
-    var ranges: [ClosedRange<T>]
+    public var ranges: [ClosedRange<T>]
 
     public init(arrayLiteral elements: ClosedRange<T>...) {
         ranges = elements
@@ -20,23 +20,37 @@ public struct RangeSet<T: RangeSetBound>: ExpressibleByArrayLiteral, Equatable {
         normalize()
     }
 
-    var isEmpty: Bool {
+    public var isEmpty: Bool {
         ranges.isEmpty
     }
 
     // MARK: - Set Operations
 
     /// Takes the union of two RangeSets
-    mutating func union(_ other: RangeSet<T>) {
+    public mutating func union(_ other: RangeSet<T>) {
         if other.ranges.isEmpty || ranges == other.ranges {
             return
         }
-        ranges.append(contentsOf: other.ranges)
+
+        union(other.ranges)
+    }
+
+    mutating func union(_ other: any Sequence<ClosedRange<T>>) {
+        if ranges.isEmpty {
+            return
+        }
+
+        ranges.append(contentsOf: other)
+        normalize()
+    }
+
+    mutating func union(_ other: ClosedRange<T>) {
+        ranges.append(other)
         normalize()
     }
 
     /// Takes the intersection of two RangeSets
-    mutating func intersection(_ other: RangeSet<T>) {
+    public mutating func intersection(_ other: RangeSet<T>) {
         if ranges.isEmpty {
             return
         }
@@ -74,7 +88,7 @@ public struct RangeSet<T: RangeSetBound>: ExpressibleByArrayLiteral, Equatable {
     }
 
     /// Takes the subtraction of two RangeSets (self - other)
-    mutating func subtraction(_ other: RangeSet<T>) {
+    public mutating func subtraction(_ other: RangeSet<T>) {
         if ranges.isEmpty || other.ranges.isEmpty {
             return
         }
@@ -175,7 +189,7 @@ public struct RangeSet<T: RangeSetBound>: ExpressibleByArrayLiteral, Equatable {
     }
 
     /// Takes the symmetric difference of two RangeSets
-    mutating func symmetricDifference(_ other: RangeSet<T>) {
+    public mutating func symmetricDifference(_ other: RangeSet<T>) {
         // Symmetric difference = (self union other) - (self intersection other)
         var intersection = self
         intersection.intersection(other)
@@ -185,7 +199,7 @@ public struct RangeSet<T: RangeSetBound>: ExpressibleByArrayLiteral, Equatable {
     }
 
     /// Negates this interval set
-    mutating func invert() {
+    public mutating func invert() {
         if ranges.isEmpty {
             ranges = [T.minValue ... T.maxValue]
             return
@@ -219,7 +233,7 @@ public struct RangeSet<T: RangeSetBound>: ExpressibleByArrayLiteral, Equatable {
     }
 
     /// Returns an inverted copy of this RangeSet
-    func inverting() -> RangeSet<T> {
+    public func inverting() -> RangeSet<T> {
         var copy = self
         copy.invert()
         return copy
@@ -274,8 +288,16 @@ public struct RangeSet<T: RangeSetBound>: ExpressibleByArrayLiteral, Equatable {
         }
         return false
     }
+
+    public mutating func addSingle(_ byte: T) {
+        union(byte ... byte)
+    }
 }
 
 // MARK: - Sendable
 
 extension RangeSet: Sendable where T: Sendable {}
+
+// MARK: - Hashable
+
+extension RangeSet: Hashable where T: Hashable {}

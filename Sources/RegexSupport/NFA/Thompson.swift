@@ -9,7 +9,8 @@ import CasePaths
 // MARK: - State ID
 
 /// A unique identifier for an NFA state
-public struct NFAStateID: Hashable, Equatable, Sendable, CustomStringConvertible, ExpressibleByIntegerLiteral {
+public struct NFAStateID: Hashable, Equatable, Sendable, CustomStringConvertible,
+    ExpressibleByIntegerLiteral {
     public typealias IntegerLiteralType = UInt32
 
     public let id: UInt32
@@ -170,7 +171,8 @@ public enum NFABuilderState: Equatable, Sendable {
             self = .byteRange(transition)
         case let .sparse(transitions):
             self = .sparse(transitions)
-            throw NFAConstructionError.invalidOperation(description: "Cannot patch sparse state directly.")
+            throw NFAConstructionError.invalidOperation(
+                description: "Cannot patch sparse state directly.")
         case .epsilon:
             self = .epsilon(to)
         case var .union(unions):
@@ -235,24 +237,6 @@ public enum NFAConstructionError: Error, Equatable {
     case invalidOperation(description: String)
 }
 
-public struct PatternID: Hashable, Sendable, ExpressibleByIntegerLiteral, CustomStringConvertible {
-    public typealias IntegerLiteralType = UInt32
-
-    let id: UInt32
-
-    public init(integerLiteral value: UInt32) {
-        id = value
-    }
-
-    init(_ id: UInt32) {
-        self.id = id
-    }
-
-    public var description: String {
-        "\(id)"
-    }
-}
-
 // MARK: - Thompson Builder
 
 /// Builder for constructing NFAs using Thompson's construction algorithm.
@@ -282,7 +266,9 @@ public struct ThompsonBuilder {
     // MARK: - Pattern handling
 
     mutating func startPattern() throws(NFAConstructionError) -> PatternID {
-        precondition(patternID == nil, "Please finalize the previous pattern before starting a new one.")
+        precondition(
+            patternID == nil, "Please finalize the previous pattern before starting a new one.",
+        )
 
         let nextPatternID = patternStarts.count
         if nextPatternID > Int(PatternID.IntegerLiteralType.max) {
@@ -298,7 +284,8 @@ public struct ThompsonBuilder {
 
     mutating func endPattern(with stateId: NFAStateID) throws(NFAConstructionError) {
         guard let currentPatternID = patternID else {
-            throw .invalidOperation(description: "Ending a pattern but no pattern is currently being built.")
+            throw .invalidOperation(
+                description: "Ending a pattern but no pattern is currently being built.")
         }
         patternStarts[Int(currentPatternID.id)] = stateId
         patternID = nil
@@ -317,7 +304,9 @@ public struct ThompsonBuilder {
     }
 
     /// Adds a union state and returns its ID
-    public mutating func addUnion(_ alternatives: [NFAStateID]? = nil) throws(NFAConstructionError) -> NFAStateID {
+    public mutating func addUnion(
+        _ alternatives: [NFAStateID]? = nil,
+    ) throws(NFAConstructionError) -> NFAStateID {
         let id = try allocate()
         states.append(.union(alternatives ?? []))
         return id
@@ -338,7 +327,10 @@ public struct ThompsonBuilder {
     }
 
     /// Adds a byte range state and returns its ID
-    public mutating func addByteRange(start: UInt8, end: UInt8) throws(NFAConstructionError) -> NFAStateID {
+    public mutating func addByteRange(
+        start: UInt8,
+        end: UInt8,
+    ) throws(NFAConstructionError) -> NFAStateID {
         let id = try allocate()
         states.append(
             .byteRange(
@@ -353,7 +345,9 @@ public struct ThompsonBuilder {
     }
 
     /// Adds a sparse (multiple byte ranges) state and returns its ID
-    public mutating func addSparse(_ transitions: [Transition]) throws(NFAConstructionError) -> NFAStateID {
+    public mutating func addSparse(
+        _ transitions: [Transition],
+    ) throws(NFAConstructionError) -> NFAStateID {
         let id = try allocate()
         states.append(.sparse(transitions))
         return id
@@ -369,7 +363,8 @@ public struct ThompsonBuilder {
     /// Adds a match state and returns its ID
     public mutating func addMatch() throws(NFAConstructionError) -> NFAStateID {
         guard let currentPatternID = patternID else {
-            throw NFAConstructionError
+            throw
+                NFAConstructionError
                 .invalidOperation(description: "Cannot add match state without an active pattern.")
         }
 
@@ -581,7 +576,8 @@ public struct ThompsonConstruction {
         return NFAFragment(start: union, end: end)
     }
 
-    private mutating func compile(_ hir: consuming HIRKind) throws(NFAConstructionError) -> NFAFragment {
+    private mutating func compile(_ hir: consuming HIRKind) throws(NFAConstructionError)
+        -> NFAFragment {
         switch consume hir {
         case .empty:
             try compileEmpty()
@@ -590,9 +586,10 @@ public struct ThompsonConstruction {
         case let .class(charClass):
             try compileClass(charClass)
         case let .concat(children):
-            try compileConcat(children.map { (child: consuming HIRKind) throws(NFAConstructionError) in
-                try compile(child)
-            })
+            try compileConcat(
+                children.map { (child: consuming HIRKind) throws(NFAConstructionError) in
+                    try compile(child)
+                })
         case let .alternation(alts):
             try compileAlternation(alts)
         case let .quantification(quant):
@@ -625,7 +622,8 @@ extension ThompsonConstruction {
 
         do {
             return try compileConcat(
-                characters.reduce(into: [NFAFragment]()) { partialResult, char throws(NFAConstructionError) in
+                characters.reduce(into: [NFAFragment]()) {
+                    partialResult, char throws(NFAConstructionError) in
                     let bytes = Array(char.utf8)
                     for byte in bytes {
                         let stateId = try builder.addByteRange(
@@ -669,7 +667,8 @@ extension ThompsonConstruction {
             guard let startByte = range.lowerBound.asciiValue,
                   let endByte = range.upperBound.asciiValue
             else {
-                throw .invalidOperation(description: "Non-ASCII character found in ASCII class compilation.")
+                throw .invalidOperation(
+                    description: "Non-ASCII character found in ASCII class compilation.")
             }
 
             transitions.append(Transition(start: startByte, end: endByte, next: end))
@@ -700,7 +699,8 @@ extension ThompsonConstruction {
 
                 guard let last = node.last,
                       last.start == range.start,
-                      last.end == range.end else {
+                      last.end == range.end
+                else {
                     return i
                 }
             }
@@ -751,7 +751,10 @@ extension ThompsonConstruction {
             assert(utf8State.uncompiled[lastUncompiledIndex].last == nil)
 
             let first = ranges[0]
-            utf8State.uncompiled[lastUncompiledIndex].last = UTF8LastTransition(start: first.start, end: first.end)
+            utf8State.uncompiled[lastUncompiledIndex].last = UTF8LastTransition(
+                start: first.start,
+                end: first.end,
+            )
 
             for range in ranges.dropFirst() {
                 utf8State.uncompiled.append(
@@ -868,7 +871,7 @@ extension ThompsonConstruction {
         case (1, nil):
             // + (one or more)
             return try compileKleenePlus(quant.child, eager: eager)
-        case let (min, nil):
+        case (let min, nil):
             // {n,} (n or more)
             return try compileAtLeast(quant.child, count: min, eager: eager)
         case let (min, max?) where min == max:
@@ -881,12 +884,14 @@ extension ThompsonConstruction {
     }
 
     /// Compiles optional (?)
-    private mutating func compileOptional(_ child: HIRKind, eager: Bool) throws(NFAConstructionError) -> NFAFragment {
-        let union = if eager {
-            try builder.addUnion()
-        } else {
-            try builder.addUnionReverse()
-        }
+    private mutating func compileOptional(_ child: HIRKind, eager: Bool)
+        throws(NFAConstructionError) -> NFAFragment {
+        let union =
+            if eager {
+                try builder.addUnion()
+            } else {
+                try builder.addUnionReverse()
+            }
 
         let inner = try compile(child)
         let empty = try builder.addEpsilon()
@@ -909,20 +914,22 @@ extension ThompsonConstruction {
 
         // Special treatment for * that can match empty strings
         let inner = try compile(child)
-        let plus = if eager {
-            try builder.addUnion()
-        } else {
-            try builder.addUnionReverse()
-        }
+        let plus =
+            if eager {
+                try builder.addUnion()
+            } else {
+                try builder.addUnionReverse()
+            }
 
         try builder.patch(from: inner.end, to: plus)
         try builder.patch(from: plus, to: inner.start)
 
-        let question = if eager {
-            try builder.addUnion()
-        } else {
-            try builder.addUnionReverse()
-        }
+        let question =
+            if eager {
+                try builder.addUnion()
+            } else {
+                try builder.addUnionReverse()
+            }
 
         let empty = try builder.addEpsilon()
 
@@ -942,11 +949,12 @@ extension ThompsonConstruction {
     ) throws(NFAConstructionError) -> NFAFragment {
         let inner = try compile(child)
 
-        let union: NFAStateID = if eager {
-            try builder.addUnion()
-        } else {
-            try builder.addUnionReverse()
-        }
+        let union: NFAStateID =
+            if eager {
+                try builder.addUnion()
+            } else {
+                try builder.addUnionReverse()
+            }
 
         try builder.patch(from: inner.end, to: union)
         try builder.patch(from: union, to: inner.start)
@@ -958,7 +966,10 @@ extension ThompsonConstruction {
     }
 
     /// Compiles exact repetition {n}
-    private mutating func compileExact(_ child: HIRKind, count: UInt32) throws(NFAConstructionError) -> NFAFragment {
+    private mutating func compileExact(
+        _ child: HIRKind,
+        count: UInt32,
+    ) throws(NFAConstructionError) -> NFAFragment {
         let fragments = try (0 ..< count).map { _ throws(NFAConstructionError) in
             try compile(child)
         }
@@ -978,11 +989,12 @@ extension ThompsonConstruction {
         )
         let last = try compile(child)
 
-        let union: NFAStateID = if eager {
-            try builder.addUnion()
-        } else {
-            try builder.addUnionReverse()
-        }
+        let union: NFAStateID =
+            if eager {
+                try builder.addUnion()
+            } else {
+                try builder.addUnionReverse()
+            }
 
         try builder.patch(from: prefix.end, to: last.start)
         try builder.patch(from: last.end, to: union)
@@ -1014,11 +1026,12 @@ extension ThompsonConstruction {
         //    |         |                    |
         //    |---------|----------------> empty ----->
         for _ in min ..< max {
-            let union = if eager {
-                try builder.addUnion()
-            } else {
-                try builder.addUnionReverse()
-            }
+            let union =
+                if eager {
+                    try builder.addUnion()
+                } else {
+                    try builder.addUnionReverse()
+                }
 
             let inner = try compile(child)
 
@@ -1044,5 +1057,10 @@ public extension NFA {
     static func build(from hir: HIRKind) throws(NFAConstructionError) -> NFA {
         var construction = ThompsonConstruction()
         return try construction.build(from: hir)
+    }
+
+    static func build(from hirs: [HIRKind]) throws(NFAConstructionError) -> NFA {
+        var construction = ThompsonConstruction()
+        return try construction.build(from: hirs)
     }
 }

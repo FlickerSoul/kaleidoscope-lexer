@@ -10,7 +10,8 @@ import Foundation
 // MARK: - State ID
 
 /// A unique identifier for a DFA state
-public struct DFAStateID: Hashable, Equatable, Sendable, CustomStringConvertible, ExpressibleByIntegerLiteral {
+public struct DFAStateID: Hashable, Sendable, CustomStringConvertible,
+    ExpressibleByIntegerLiteral, Comparable {
     public typealias IntegerLiteralType = UInt32
 
     public let id: UInt32
@@ -37,6 +38,10 @@ public struct DFAStateID: Hashable, Equatable, Sendable, CustomStringConvertible
         Int(id)
     }
 
+    public static func < (lhs: DFAStateID, rhs: DFAStateID) -> Bool {
+        lhs.id < rhs.id
+    }
+
     /// The dead/reject state ID (always 0)
     public static let dead = DFAStateID(0)
 
@@ -47,7 +52,7 @@ public struct DFAStateID: Hashable, Equatable, Sendable, CustomStringConvertible
 // MARK: - DFA State
 
 /// A single state in the DFA
-public struct DFAState: Sendable, Equatable {
+public struct DFAState: Sendable, Hashable {
     /// Transitions indexed by byte value (0-255)
     /// Each transition maps a byte to the next DFA state ID
     public private(set) var transitions: [DFAStateID]
@@ -97,7 +102,7 @@ public struct DFAState: Sendable, Equatable {
 /// A deterministic finite automaton built from an NFA
 ///
 /// Optimized for anchored searches only. Matches must begin at the starting position.
-public struct DFA: Sendable, Equatable {
+public struct DFA: Sendable, Hashable {
     /// All DFA states, indexed by DFAStateID
     private(set) var states: [DFAState]
 
@@ -196,6 +201,12 @@ public struct DFA: Sendable, Equatable {
     /// Check if the DFA is empty (only dead state)
     public var isEmpty: Bool {
         states.count == 1
+    }
+}
+
+public extension DFA {
+    static func build(from nfa: NFA) throws -> DFA {
+        try Determinizer.buildDFA(from: nfa)
     }
 }
 

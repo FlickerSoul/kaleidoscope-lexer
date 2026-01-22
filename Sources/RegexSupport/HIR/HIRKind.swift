@@ -9,7 +9,7 @@
 ///
 /// This HIR only contains constructs that can be completed using finite automata.
 /// Therefore, constructs and features that require backtracking or CFG will not be represented here.
-public indirect enum HIRKind: Equatable, Sendable {
+public indirect enum HIRKind: Hashable, Sendable {
     public typealias Scalar = Character
     public typealias Scalars = [Scalar]
 
@@ -29,7 +29,7 @@ public indirect enum HIRKind: Equatable, Sendable {
 // MARK: Quantification
 
 /// Quantification represents repetition of a sub-expression.
-public struct Quantification: Equatable, Sendable {
+public struct Quantification: Hashable, Sendable {
     /// The minimum number of repititions
     ///
     /// Special constructs like `?`, `+` and `*` all get translated into
@@ -75,6 +75,6 @@ extension CharacterClass {
 /// Group represents a (non-)capturing group.
 ///
 /// Since capturing groups are not relevant in HIR currently, we only have one kind of Group here.
-public struct Group: Equatable, Sendable {
+public struct Group: Hashable, Sendable {
     let child: HIRKind
 }

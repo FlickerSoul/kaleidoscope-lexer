@@ -56,3 +56,16 @@ extension Character: RangeSetBound {
         return Character(prevScalar)
     }
 }
+
+extension UInt8: RangeSetBound {
+    public static var minValue: UInt8 { UInt8.min }
+    public static var maxValue: UInt8 { UInt8.max }
+
+    public func increment() -> UInt8? {
+        self == UInt8.max ? nil : self + 1
+    }
+
+    public func decrement() -> UInt8? {
+        self == UInt8.min ? nil : self - 1
+    }
+}

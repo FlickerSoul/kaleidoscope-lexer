@@ -70,6 +70,15 @@ let package = Package(
                 .product(name: "CasePaths", package: "swift-case-paths"),
             ],
         ),
+        .target(
+            name: "KaleidoscopeMacroSupportNext",
+            dependencies: [
+                "RegexSupport",
+                .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "OrderedCollections", package: "swift-collections"),
+                .product(name: "DequeModule", package: "swift-collections"),
+            ],
+        ),
         // tests
         .testTarget(
             name: "KaleidoscopeMacroTests",

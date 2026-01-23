@@ -1,28 +1,23 @@
 import _RegexParser
 import SnapshotTesting
-import SwiftSyntax
 import Testing
 import TestUtils
 
 @testable import KaleidoscopeMacroSupportNext
 @testable import RegexSupport
 
-extension SwiftSyntax.SourceLocation {
-    static let dummy = SourceLocation(line: 0, column: 0, offset: 0, file: "file")
-}
-
 extension Leaf {
     init(
         source: PatternKind,
         hir: Pattern.HIR,
+        priority: Int = 0,
     ) {
         self.init(
             pattern: .init(
                 source: source,
-                sourceLocation: .dummy,
                 hir: hir,
             ),
-            priority: 0,
+            priority: priority,
             kind: .skip,
             callback: nil,
         )
@@ -44,7 +39,6 @@ struct `Graph Export Tests` {
         let hir = try parseToHIR(regexString)
         return Pattern(
             source: .regex(regexString),
-            sourceLocation: .dummy,
             hir: hir,
         )
     }
@@ -80,14 +74,8 @@ struct `Graph Export Tests` {
                         hir: .class(.init(ranges: ["a" ... "y"])),
                     ),
                     .init(
-                        pattern: .init(
-                            source: .regex("z"),
-                            sourceLocation: .dummy,
-                            hir: .literal(["z"]),
-                        ),
-                        priority: 0,
-                        kind: .skip,
-                        callback: nil,
+                        source: .regex("z"),
+                        hir: .literal(["z"]),
                     ),
                 ],
                 dfa: .init(
@@ -401,14 +389,8 @@ struct `Graph Export Tests` {
                         hir: .literal(["x"]),
                     ),
                     .init(
-                        pattern: .init(
-                            source: .regex("y"),
-                            sourceLocation: .dummy,
-                            hir: .literal(["y"]),
-                        ),
-                        priority: 0,
-                        kind: .skip,
-                        callback: nil,
+                        source: .regex("y"),
+                        hir: .literal(["y"]),
                     ),
                 ],
                 dfa: .init(
@@ -594,24 +576,12 @@ struct `Graph Export Tests` {
                         hir: .literal(["a"]),
                     ),
                     .init(
-                        pattern: .init(
-                            source: .regex("b"),
-                            sourceLocation: .dummy,
-                            hir: .literal(["b"]),
-                        ),
-                        priority: 0,
-                        kind: .skip,
-                        callback: nil,
+                        source: .regex("b"),
+                        hir: .literal(["b"]),
                     ),
                     .init(
-                        pattern: .init(
-                            source: .regex("c"),
-                            sourceLocation: .dummy,
-                            hir: .literal(["c"]),
-                        ),
-                        priority: 0,
-                        kind: .skip,
-                        callback: nil,
+                        source: .regex("c"),
+                        hir: .literal(["c"]),
                     ),
                 ],
                 dfa: .init(
@@ -672,16 +642,10 @@ struct `Graph Export Tests` {
                         ]),
                     ),
                     .init(
-                        pattern: .init(
-                            source: .regex("help"),
-                            sourceLocation: .dummy,
-                            hir: .concat([
-                                .literal(["h"]), .literal(["e"]), .literal(["l"]), .literal(["p"]),
-                            ]),
-                        ),
-                        priority: 0,
-                        kind: .skip,
-                        callback: nil,
+                        source: .regex("help"),
+                        hir: .concat([
+                            .literal(["h"]), .literal(["e"]), .literal(["l"]), .literal(["p"]),
+                        ]),
                     ),
                 ],
                 dfa: .init(
@@ -1094,14 +1058,8 @@ struct `Graph Export Tests` {
                         hir: .class(.init(ranges: ["a" ... "c"])),
                     ),
                     .init(
-                        pattern: .init(
-                            source: .regex("[x-z]"),
-                            sourceLocation: .dummy,
-                            hir: .class(.init(ranges: ["x" ... "z"])),
-                        ),
-                        priority: 0,
-                        kind: .skip,
-                        callback: nil,
+                        source: .regex("[x-z]"),
+                        hir: .class(.init(ranges: ["x" ... "z"])),
                     ),
                 ],
                 dfa: .init(
@@ -1156,14 +1114,8 @@ struct `Graph Export Tests` {
                         hir: .class(.init(ranges: ["a" ... "l"])),
                     ),
                     .init(
-                        pattern: .init(
-                            source: .regex("[f-z]"),
-                            sourceLocation: .dummy,
-                            hir: .class(.init(ranges: ["f" ... "z"])),
-                        ),
-                        priority: 0,
-                        kind: .skip,
-                        callback: nil,
+                        source: .regex("[f-z]"),
+                        hir: .class(.init(ranges: ["f" ... "z"])),
                     ),
                 ],
                 dfa: .init(

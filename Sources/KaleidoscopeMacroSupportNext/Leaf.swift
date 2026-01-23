@@ -9,13 +9,17 @@ public enum PatternKind: Hashable, Sendable {
 public struct Pattern: Hashable, Sendable {
     public typealias HIR = RegexSupport.HIRKind
     public let source: PatternKind
-    public let sourceLocation: SourceLocation
     public let hir: HIR
+
+    public init(source: PatternKind, hir: HIR) {
+        self.source = source
+        self.hir = hir
+    }
 }
 
 public enum LeafKind: Hashable, Sendable {
     case caseOnly(caseName: TokenSyntax)
-    case associatedValues(caseName: TokenSyntax, parameters: EnumCaseParameterClauseSyntax)
+    case associatedValues(caseName: TokenSyntax, parameters: EnumCaseParameterListSyntax)
     case skip
 }
 
@@ -26,9 +30,21 @@ public enum CallbackKind: Hashable, Sendable {
 
 public struct Leaf: Hashable, Sendable {
     public let pattern: Pattern
-    public let priority: UInt
+    public let priority: Int
     public let kind: LeafKind
     public let callback: CallbackKind?
+
+    public init(
+        pattern: Pattern,
+        priority: Int,
+        kind: LeafKind,
+        callback: CallbackKind? = nil,
+    ) {
+        self.pattern = pattern
+        self.priority = priority
+        self.kind = kind
+        self.callback = callback
+    }
 }
 
 public struct LeafID: Hashable, Sendable, ExpressibleByIntegerLiteral {

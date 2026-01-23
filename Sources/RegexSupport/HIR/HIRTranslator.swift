@@ -296,3 +296,14 @@ public extension CharacterClass {
         }
     }
 }
+
+public extension HIRKind {
+    static func from(regex: String, options: SyntaxOptions = .traditional) throws -> HIRKind {
+        let ast = try parse(regex, options)
+        return try HIRKind(ast)
+    }
+
+    static func from(token: String) -> HIRKind {
+        .literal(.init(token))
+    }
+}

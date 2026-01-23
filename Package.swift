@@ -45,6 +45,8 @@ let package = Package(
                 .product(name: "MacroToolkit", package: "swift-macro-toolkit"),
                 "KaleidoscopeLexer",
                 "KaleidoscopeMacroSupport",
+                "KaleidoscopeMacroSupportNext",
+                "RegexSupport",
             ],
         ),
         .target(name: "KaleidoscopeLexer"),

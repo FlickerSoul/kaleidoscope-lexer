@@ -27,13 +27,6 @@ public macro token<T: LexerProtocol, R: Into<TokenResult<T>>>(
     createCallback: @escaping CreateCallback<T, R>,
 ) = #externalMacro(module: "KaleidoscopeMacros", type: "EnumCaseRegistry")
 
-/// Token definition macro, without a callback
-@attached(peer)
-public macro token(_ value: String, priority: UInt? = nil) = #externalMacro(
-    module: "KaleidoscopeMacros",
-    type: "EnumCaseRegistry",
-)
-
 /// Token regex definition macro, with a callback
 @attached(peer)
 public macro regex<T: LexerProtocol, R>(
@@ -65,3 +58,57 @@ public macro kaleidoscope(skip chars: String? = nil) = #externalMacro(
     module: "KaleidoscopeMacros",
     type: "KaleidoscopeBuilder",
 )
+
+// MARK: - New macros
+
+@attached(extension, conformances: LexerProtocol, Into, names: arbitrary)
+public macro kaleidoscope() = #externalMacro(
+    module: "KaleidoscopeMacros",
+    type: "KaleidoscopeBuilder",
+)
+
+public typealias Callback<T: LexerProtocol, R> = @Sendable (inout LexerMachine<T>) -> R
+
+@attached(peer)
+public macro regex<T: LexerProtocol, R>(
+    _ value: Regex<Substring>,
+    priority: UInt? = nil,
+    callback: @escaping Callback<T, R>,
+) = #externalMacro(module: "KaleidoscopeMacros", type: "EnumCaseRegistry")
+
+@attached(peer)
+public macro regex(
+    _ value: Regex<Substring>,
+    priority: UInt? = nil,
+) = #externalMacro(module: "KaleidoscopeMacros", type: "EnumCaseRegistry")
+
+@attached(peer)
+public macro token<T: LexerProtocol, R>(
+    _ value: String,
+    priority: UInt? = nil,
+    callback: @escaping Callback<T, R>,
+) = #externalMacro(module: "KaleidoscopeMacros", type: "EnumCaseRegistry")
+
+@attached(peer)
+public macro token(
+    _ value: String,
+    priority: UInt? = nil,
+) = #externalMacro(module: "KaleidoscopeMacros", type: "EnumCaseRegistry")
+
+/// Mark a regex pattern to be skipped by the lexer
+///
+/// - SeeAlso: ``skip(_:priority:)``
+@attached(peer)
+public macro skip(
+    _ value: Regex<Substring>,
+    priority: UInt? = nil,
+) = #externalMacro(module: "KaleidoscopeMacros", type: "EnumCaseRegistry")
+
+/// Mark a string to be skipped by the lexer
+///
+/// - SeeAlso: ``skip(_:priority:)``
+@attached(peer)
+public macro skip(
+    _ value: String,
+    priority: UInt? = nil,
+) = #externalMacro(module: "KaleidoscopeMacros", type: "EnumCaseRegistry")

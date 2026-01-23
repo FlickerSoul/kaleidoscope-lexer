@@ -41,7 +41,7 @@ func getStateType(
     leaves: borrowing [Leaf],
 ) throws(GraphError) -> StateType {
     // LeafID are the same as PatternID, since they are inserted in the same order
-    let leaves: [(leafID: LeafID, leafPriority: UInt)] = dfa
+    let leaves: [(leafID: LeafID, leafPriority: Int)] = dfa
         .matchingPatterns(stateID)
         .map { patternId in
             (patternId.asLeafId, leaves[patternId.asIndex].priority)

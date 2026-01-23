@@ -10,19 +10,19 @@
 /// and the min/max values of the domain.
 public protocol RangeSetBound: Comparable {
     /// The minimum value in this type's domain
-    static var minValue: Self { get }
+    static var min: Self { get }
     /// The maximum value in this type's domain
-    static var maxValue: Self { get }
-    /// Returns the next value after this one, or nil if this is maxValue
+    static var max: Self { get }
+    /// Returns the next value after this one, or nil if this is ``.max``
     func increment() -> Self?
-    /// Returns the previous value before this one, or nil if this is minValue
+    /// Returns the previous value before this one, or nil if this is ``.min``
     func decrement() -> Self?
 }
 
 /// - SeeAlso: https://github.com/rust-lang/regex/blob/5ea3eb1e95f0338e283f5f0b4681f0891a1cd836/regex-syntax/src/hir/interval.rs#L538
 extension Character: RangeSetBound {
-    public static var minValue: Character { "\u{0000}" }
-    public static var maxValue: Character { "\u{10FFFF}" }
+    public static var min: Character { "\u{0000}" }
+    public static var max: Character { "\u{10FFFF}" }
 
     public func increment() -> Character? {
         guard let scalar = unicodeScalars.first else { return nil }
@@ -58,9 +58,6 @@ extension Character: RangeSetBound {
 }
 
 extension UInt8: RangeSetBound {
-    public static var minValue: UInt8 { UInt8.min }
-    public static var maxValue: UInt8 { UInt8.max }
-
     public func increment() -> UInt8? {
         self == UInt8.max ? nil : self + 1
     }

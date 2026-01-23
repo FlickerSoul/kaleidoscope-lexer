@@ -66,7 +66,7 @@ extension CharacterClass {
 extension CharacterClass {
     // FIXME: more cases of unicode representation of `.`
     static func dot() -> CharacterClass {
-        [Character.minValue ... Character.maxValue]
+        [Character.min ... Character.max]
     }
 }
 

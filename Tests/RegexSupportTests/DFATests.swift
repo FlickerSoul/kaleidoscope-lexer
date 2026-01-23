@@ -935,7 +935,7 @@ struct DFATests {
 
     @Test
     func `all character classes`() throws {
-        let hir: HIRKind = .class([Character.minValue ... Character.maxValue])
+        let hir: HIRKind = .class([Character.min ... Character.max])
         let dfa = try dfa(from: hir)
 
         equals(

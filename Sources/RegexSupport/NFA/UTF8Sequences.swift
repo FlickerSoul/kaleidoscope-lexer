@@ -11,21 +11,21 @@
 // MARK: - UTF-8 Byte Range
 
 /// A range of bytes [start, end] inclusive
-public struct UTF8ByteRange: Equatable, Sendable {
-    public let start: UInt8
-    public let end: UInt8
+struct UTF8ByteRange: Equatable, Sendable {
+    let start: UInt8
+    let end: UInt8
 
-    public init(start: UInt8, end: UInt8) {
+    init(start: UInt8, end: UInt8) {
         self.start = start
         self.end = end
     }
 
-    public init(_ byte: UInt8) {
+    init(_ byte: UInt8) {
         start = byte
         end = byte
     }
 
-    public func matches(_ byte: UInt8) -> Bool {
+    func matches(_ byte: UInt8) -> Bool {
         byte >= start && byte <= end
     }
 }
@@ -38,18 +38,18 @@ public struct UTF8ByteRange: Equatable, Sendable {
 /// Each byte range in the sequence corresponds to a position in the
 /// UTF-8 encoding. For example, a 2-byte UTF-8 sequence has two ranges:
 /// one for the first byte and one for the second byte.
-public struct UTF8Sequence: Equatable, Sendable {
-    public private(set) var ranges: [UTF8ByteRange]
+struct UTF8Sequence: Equatable, Sendable {
+    private(set) var ranges: [UTF8ByteRange]
 
-    public init(ranges: [UTF8ByteRange]) {
+    init(ranges: [UTF8ByteRange]) {
         self.ranges = ranges
     }
 
-    public var length: Int {
+    var length: Int {
         ranges.count
     }
 
-    public func matches(_ bytes: [UInt8]) -> Bool {
+    func matches(_ bytes: [UInt8]) -> Bool {
         if bytes.count < ranges.count {
             return false
         }
@@ -70,12 +70,12 @@ public struct UTF8Sequence: Equatable, Sendable {
     ///
     /// This is useful when constructing a UTF-8 automaton to match
     /// character classes in reverse.
-    public mutating func reverse() {
+    mutating func reverse() {
         ranges.reverse()
     }
 
     /// Returns a new sequence with the ranges reversed.
-    public func reversed() -> UTF8Sequence {
+    func reversed() -> UTF8Sequence {
         UTF8Sequence(ranges: ranges.reversed())
     }
 }
@@ -170,14 +170,14 @@ private let MAX_UTF8_BYTES = 4
 /// - `[0x61-0x7F]` for ASCII characters 'a' through DEL
 /// - `[0xC2][0x80-0xBF]` for U+0080...U+00BF
 /// - `[0xC3][0x80-0xA9]` for U+00C0...U+00E9
-public struct UTF8Sequences: Sequence, IteratorProtocol {
+struct UTF8Sequences: Sequence, IteratorProtocol {
     private var rangeStack: [ScalarRange]
 
-    public init(start: Unicode.Scalar, end: Unicode.Scalar) {
+    init(start: Unicode.Scalar, end: Unicode.Scalar) {
         rangeStack = [ScalarRange(start: start.value, end: end.value)]
     }
 
-    public mutating func next() -> UTF8Sequence? {
+    mutating func next() -> UTF8Sequence? {
         while let popedRange = rangeStack.popLast() {
             var range = popedRange
 
@@ -215,7 +215,8 @@ public struct UTF8Sequences: Sequence, IteratorProtocol {
                     let mask: UInt32 = (1 << (6 * i)) - 1
                     if (range.start & ~mask) != (range.end & ~mask) {
                         if (range.start & mask) != 0 {
-                            rangeStack.append(ScalarRange(start: (range.start | mask) + 1, end: range.end))
+                            rangeStack.append(
+                                ScalarRange(start: (range.start | mask) + 1, end: range.end))
                             range.end = range.start | mask
                             continue innerLoop
                         }
@@ -245,7 +246,7 @@ public struct UTF8Sequences: Sequence, IteratorProtocol {
 
 // MARK: - Convenience Extensions
 
-public extension UTF8Sequences {
+extension UTF8Sequences {
     /// Creates sequences for a single character
     init(character: Character) {
         if let scalar = character.unicodeScalars.first {

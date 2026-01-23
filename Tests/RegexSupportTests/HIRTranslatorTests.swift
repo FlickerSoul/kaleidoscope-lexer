@@ -5,9 +5,9 @@
 //  Created by Larry Zeng on 1/15/26.
 //
 
+import _RegexParser
 import Testing
 
-import _RegexParser
 @testable import RegexSupport
 
 /// Parses a regex pattern string and converts it to HIRKind
@@ -47,15 +47,18 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     @Test(arguments: [
         (
             "a*",
-            HIRKind.quantification(Quantification(min: 0, max: nil, isEager: true, child: .literal(["a"]))),
+            HIRKind.quantification(
+                Quantification(min: 0, max: nil, isEager: true, child: .literal(["a"]))),
         ),
         (
             "a+",
-            HIRKind.quantification(Quantification(min: 1, max: nil, isEager: true, child: .literal(["a"]))),
+            HIRKind.quantification(
+                Quantification(min: 1, max: nil, isEager: true, child: .literal(["a"]))),
         ),
         (
             "a?",
-            HIRKind.quantification(Quantification(min: 0, max: 1, isEager: true, child: .literal(["a"]))),
+            HIRKind.quantification(
+                Quantification(min: 0, max: 1, isEager: true, child: .literal(["a"]))),
         ),
     ])
     func `basic quantifiers`(pattern: String, expected: HIRKind) throws {
@@ -66,15 +69,18 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     @Test(arguments: [
         (
             "a*?",
-            HIRKind.quantification(Quantification(min: 0, max: nil, isEager: false, child: .literal(["a"]))),
+            HIRKind.quantification(
+                Quantification(min: 0, max: nil, isEager: false, child: .literal(["a"]))),
         ),
         (
             "a+?",
-            HIRKind.quantification(Quantification(min: 1, max: nil, isEager: false, child: .literal(["a"]))),
+            HIRKind.quantification(
+                Quantification(min: 1, max: nil, isEager: false, child: .literal(["a"]))),
         ),
         (
             "a??",
-            HIRKind.quantification(Quantification(min: 0, max: 1, isEager: false, child: .literal(["a"]))),
+            HIRKind.quantification(
+                Quantification(min: 0, max: 1, isEager: false, child: .literal(["a"]))),
         ),
     ])
     func `reluctant quantifiers`(pattern: String, expected: HIRKind) throws {
@@ -85,19 +91,23 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     @Test(arguments: [
         (
             "a{3}",
-            HIRKind.quantification(Quantification(min: 3, max: 3, isEager: true, child: .literal(["a"]))),
+            HIRKind.quantification(
+                Quantification(min: 3, max: 3, isEager: true, child: .literal(["a"]))),
         ),
         (
             "a{2,5}",
-            HIRKind.quantification(Quantification(min: 2, max: 5, isEager: true, child: .literal(["a"]))),
+            HIRKind.quantification(
+                Quantification(min: 2, max: 5, isEager: true, child: .literal(["a"]))),
         ),
         (
             "a{2,}",
-            HIRKind.quantification(Quantification(min: 2, max: nil, isEager: true, child: .literal(["a"]))),
+            HIRKind.quantification(
+                Quantification(min: 2, max: nil, isEager: true, child: .literal(["a"]))),
         ),
         (
             "a{,3}",
-            HIRKind.quantification(Quantification(min: 0, max: 3, isEager: true, child: .literal(["a"]))),
+            HIRKind.quantification(
+                Quantification(min: 0, max: 3, isEager: true, child: .literal(["a"]))),
         ),
     ])
     func `range quantifiers`(pattern: String, expected: HIRKind) throws {
@@ -200,11 +210,12 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     @Test
     func `multiple characters class`() throws {
         let result = try parseToHIR("[abc]")
-        let expected = HIRKind.class(CharacterClass(ranges: [
-            "a" ... "a",
-            "b" ... "b",
-            "c" ... "c",
-        ]))
+        let expected = HIRKind.class(
+            CharacterClass(ranges: [
+                "a" ... "a",
+                "b" ... "b",
+                "c" ... "c",
+            ]))
         #expect(result == expected)
     }
 
@@ -220,12 +231,13 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     @Test
     func `dot with quantifier`() throws {
         let result = try parseToHIR(".*")
-        let expected = HIRKind.quantification(Quantification(
-            min: 0,
-            max: nil,
-            isEager: true,
-            child: .class(CharacterClass.dot()),
-        ))
+        let expected = HIRKind.quantification(
+            Quantification(
+                min: 0,
+                max: nil,
+                isEager: true,
+                child: .class(CharacterClass.dot()),
+            ))
         #expect(result == expected)
     }
 
@@ -269,39 +281,44 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     @Test
     func `combined quantifier and alternation`() throws {
         let result = try parseToHIR("(a|b)*")
-        let expected = HIRKind.quantification(Quantification(
-            min: 0,
-            max: nil,
-            isEager: true,
-            child: .group(Group(child: .alternation([.literal(["a"]), .literal(["b"])]))),
-        ))
+        let expected = HIRKind.quantification(
+            Quantification(
+                min: 0,
+                max: nil,
+                isEager: true,
+                child: .group(Group(child: .alternation([.literal(["a"]), .literal(["b"])]))),
+            ))
         #expect(result == expected)
     }
 
     @Test
     func `character class with quantifier`() throws {
         let result = try parseToHIR("[a-z]+")
-        let expected = HIRKind.quantification(Quantification(
-            min: 1,
-            max: nil,
-            isEager: true,
-            child: .class(CharacterClass(ranges: ["a" ... "z"])),
-        ))
+        let expected = HIRKind.quantification(
+            Quantification(
+                min: 1,
+                max: nil,
+                isEager: true,
+                child: .class(CharacterClass(ranges: ["a" ... "z"])),
+            ))
         #expect(result == expected)
     }
 
     @Test
     func `nested groups with quantifiers`() throws {
         let result = try parseToHIR("((ab)+)")
-        let expected = HIRKind.group(Group(
-            child:
-            .quantification(Quantification(
-                min: 1,
-                max: nil,
-                isEager: true,
-                child: .group(Group(child: .concat([.literal(["a"]), .literal(["b"])]))),
-            )),
-        ))
+        let expected = HIRKind.group(
+            Group(
+                child:
+                .quantification(
+                    Quantification(
+                        min: 1,
+                        max: nil,
+                        isEager: true,
+                        child: .group(
+                            Group(child: .concat([.literal(["a"]), .literal(["b"])]))),
+                    )),
+            ))
         #expect(result == expected)
     }
 
@@ -362,11 +379,13 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     @Test
     func `alternation with middle empty`() throws {
         let result = try parseToHIR("(a||c)")
-        let expected = HIRKind.group(Group(child: .alternation([
-            .literal(["a"]),
-            .empty,
-            .literal(["c"]),
-        ])))
+        let expected = HIRKind.group(
+            Group(
+                child: .alternation([
+                    .literal(["a"]),
+                    .empty,
+                    .literal(["c"]),
+                ])))
         #expect(result == expected)
     }
 
@@ -410,48 +429,52 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     @Test
     func `repetition with exact count`() throws {
         let result = try parseToHIR("a{1}")
-        let expected = HIRKind.quantification(Quantification(
-            min: 1,
-            max: 1,
-            isEager: true,
-            child: .literal(["a"]),
-        ))
+        let expected = HIRKind.quantification(
+            Quantification(
+                min: 1,
+                max: 1,
+                isEager: true,
+                child: .literal(["a"]),
+            ))
         #expect(result == expected)
     }
 
     @Test
     func `repetition exact count reluctant`() throws {
         let result = try parseToHIR("a{1}?")
-        let expected = HIRKind.quantification(Quantification(
-            min: 1,
-            max: 1,
-            isEager: false,
-            child: .literal(["a"]),
-        ))
+        let expected = HIRKind.quantification(
+            Quantification(
+                min: 1,
+                max: 1,
+                isEager: false,
+                child: .literal(["a"]),
+            ))
         #expect(result == expected)
     }
 
     @Test
     func `repetition range reluctant`() throws {
         let result = try parseToHIR("a{1,2}?")
-        let expected = HIRKind.quantification(Quantification(
-            min: 1,
-            max: 2,
-            isEager: false,
-            child: .literal(["a"]),
-        ))
+        let expected = HIRKind.quantification(
+            Quantification(
+                min: 1,
+                max: 2,
+                isEager: false,
+                child: .literal(["a"]),
+            ))
         #expect(result == expected)
     }
 
     @Test
     func `repetition unbounded reluctant`() throws {
         let result = try parseToHIR("a{1,}?")
-        let expected = HIRKind.quantification(Quantification(
-            min: 1,
-            max: nil,
-            isEager: false,
-            child: .literal(["a"]),
-        ))
+        let expected = HIRKind.quantification(
+            Quantification(
+                min: 1,
+                max: nil,
+                isEager: false,
+                child: .literal(["a"]),
+            ))
         #expect(result == expected)
     }
 
@@ -468,12 +491,13 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     @Test
     func `quantifier on group`() throws {
         let result = try parseToHIR("(ab)?")
-        let expected = HIRKind.quantification(Quantification(
-            min: 0,
-            max: 1,
-            isEager: true,
-            child: .group(Group(child: .concat([.literal(["a"]), .literal(["b"])]))),
-        ))
+        let expected = HIRKind.quantification(
+            Quantification(
+                min: 0,
+                max: 1,
+                isEager: true,
+                child: .group(Group(child: .concat([.literal(["a"]), .literal(["b"])]))),
+            ))
         #expect(result == expected)
     }
 
@@ -499,7 +523,8 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     @Test
     func `nested alternation in group`() throws {
         let result = try parseToHIR("(a|b)")
-        let expected = HIRKind.group(Group(child: .alternation([.literal(["a"]), .literal(["b"])])))
+        let expected = HIRKind.group(
+            Group(child: .alternation([.literal(["a"]), .literal(["b"])])))
         #expect(result == expected)
     }
 
@@ -516,10 +541,12 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     @Test
     func `deeply nested groups`() throws {
         let result = try parseToHIR("((a|b)|(c|d))")
-        let expected = HIRKind.group(Group(child: .alternation([
-            .group(Group(child: .alternation([.literal(["a"]), .literal(["b"])]))),
-            .group(Group(child: .alternation([.literal(["c"]), .literal(["d"])]))),
-        ])))
+        let expected = HIRKind.group(
+            Group(
+                child: .alternation([
+                    .group(Group(child: .alternation([.literal(["a"]), .literal(["b"])]))),
+                    .group(Group(child: .alternation([.literal(["c"]), .literal(["d"])]))),
+                ])))
         #expect(result == expected)
     }
 
@@ -651,10 +678,11 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
         let result = try parseToHIR("[a-w&&[^c-g]z]")
         // [a-w] intersect [^c-g union z] = [a-w] intersect [a-b, h-z]
         // = [a-b, h-w]
-        let expected = HIRKind.class(CharacterClass(ranges: [
-            "a" ... "b",
-            "h" ... "w",
-        ]))
+        let expected = HIRKind.class(
+            CharacterClass(ranges: [
+                "a" ... "b",
+                "h" ... "w",
+            ]))
         #expect(result == expected)
     }
 
@@ -664,10 +692,11 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     func `character class difference basic`() throws {
         // [a-z--m-n] = a-z minus m-n = [a-l, o-z]
         let result = try parseToHIR("[a-z--m-n]")
-        let expected = HIRKind.class(CharacterClass(ranges: [
-            "a" ... "l",
-            "o" ... "z",
-        ]))
+        let expected = HIRKind.class(
+            CharacterClass(ranges: [
+                "a" ... "l",
+                "o" ... "z",
+            ]))
         #expect(result == expected)
     }
 
@@ -686,10 +715,11 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
         // [a-g~~c-j] = (a-g union c-j) minus (a-g intersect c-j)
         // = [a-j] minus [c-g] = [a-b, h-j]
         let result = try parseToHIR("[a-g~~c-j]")
-        let expected = HIRKind.class(CharacterClass(ranges: [
-            "a" ... "b",
-            "h" ... "j",
-        ]))
+        let expected = HIRKind.class(
+            CharacterClass(ranges: [
+                "a" ... "b",
+                "h" ... "j",
+            ]))
         #expect(result == expected)
     }
 
@@ -705,10 +735,11 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     func `character class symmetric difference disjoint`() throws {
         // [a-c~~x-z] = [a-c, x-z] (no overlap)
         let result = try parseToHIR("[a-c~~x-z]")
-        let expected = HIRKind.class(CharacterClass(ranges: [
-            "a" ... "c",
-            "x" ... "z",
-        ]))
+        let expected = HIRKind.class(
+            CharacterClass(ranges: [
+                "a" ... "c",
+                "x" ... "z",
+            ]))
         #expect(result == expected)
     }
 
@@ -717,10 +748,11 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     @Test
     func `character class union basic`() throws {
         let result = try parseToHIR("[a-zA-Z]")
-        let expected = HIRKind.class(CharacterClass(ranges: [
-            "A" ... "Z",
-            "a" ... "z",
-        ]))
+        let expected = HIRKind.class(
+            CharacterClass(ranges: [
+                "A" ... "Z",
+                "a" ... "z",
+            ]))
         #expect(result == expected)
     }
 
@@ -730,7 +762,7 @@ struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
     func `negated character class single char`() throws {
         let result = try parseToHIR("[^a]")
         // Negation of [a] should be everything except 'a'
-        // This creates [minValue...('a'-1), ('a'+1)...maxValue]
+        // This creates [min...('a'-1), ('a'+1)...max]
         let negatedClass = CharacterClass(ranges: ["a" ... "a"]).inverting()
         let expected = HIRKind.class(negatedClass)
         #expect(result == expected)

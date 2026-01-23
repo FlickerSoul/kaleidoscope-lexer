@@ -201,16 +201,16 @@ public struct RangeSet<T: RangeSetBound>: ExpressibleByArrayLiteral, Equatable {
     /// Negates this interval set
     public mutating func invert() {
         if ranges.isEmpty {
-            ranges = [T.minValue ... T.maxValue]
+            ranges = [T.min ... T.max]
             return
         }
 
         let drainEnd = ranges.count
 
         // Add range before first interval if needed
-        if ranges[0].lowerBound > T.minValue {
+        if ranges[0].lowerBound > T.min {
             if let upper = ranges[0].lowerBound.decrement() {
-                ranges.append(T.minValue ... upper)
+                ranges.append(T.min ... upper)
             }
         }
 
@@ -223,9 +223,9 @@ public struct RangeSet<T: RangeSetBound>: ExpressibleByArrayLiteral, Equatable {
         }
 
         // Add range after last interval if needed
-        if ranges[drainEnd - 1].upperBound < T.maxValue {
+        if ranges[drainEnd - 1].upperBound < T.max {
             if let lower = ranges[drainEnd - 1].upperBound.increment() {
-                ranges.append(lower ... T.maxValue)
+                ranges.append(lower ... T.max)
             }
         }
 

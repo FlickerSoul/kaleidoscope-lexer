@@ -125,7 +125,7 @@ public enum NFAState: Equatable, Sendable {
     }
 }
 
-public enum NFABuilderState: Equatable, Sendable {
+enum NFABuilderState: Equatable, Sendable {
     /// A state with a single byte range transition.
     /// Matches if the current input byte falls within [start, end].
     case byteRange(Transition)
@@ -244,7 +244,7 @@ public enum NFAConstructionError: Error, Equatable {
 /// The builder provides a two-phase construction:
 /// 1. Add states and transitions, using placeholder StateIDs where needed
 /// 2. Patch placeholders and finalize the NFA
-public struct ThompsonBuilder {
+struct ThompsonBuilder {
     /// The id of the pattern we are currently building.
     ///
     /// Each pattern is referring to a different regex expr.
@@ -261,7 +261,7 @@ public struct ThompsonBuilder {
     /// Pattern start state (set when building begins)
     private var patternStart: NFAStateID = .none
 
-    public init() {}
+    init() {}
 
     // MARK: - Pattern handling
 
@@ -304,7 +304,7 @@ public struct ThompsonBuilder {
     }
 
     /// Adds a union state and returns its ID
-    public mutating func addUnion(
+    mutating func addUnion(
         _ alternatives: [NFAStateID]? = nil,
     ) throws(NFAConstructionError) -> NFAStateID {
         let id = try allocate()
@@ -312,7 +312,7 @@ public struct ThompsonBuilder {
         return id
     }
 
-    public mutating func addUnionReverse(
+    mutating func addUnionReverse(
         _ alternatives: [NFAStateID]? = nil,
     ) throws(NFAConstructionError) -> NFAStateID {
         let id = try allocate()
@@ -327,7 +327,7 @@ public struct ThompsonBuilder {
     }
 
     /// Adds a byte range state and returns its ID
-    public mutating func addByteRange(
+    mutating func addByteRange(
         start: UInt8,
         end: UInt8,
     ) throws(NFAConstructionError) -> NFAStateID {
@@ -345,7 +345,7 @@ public struct ThompsonBuilder {
     }
 
     /// Adds a sparse (multiple byte ranges) state and returns its ID
-    public mutating func addSparse(
+    mutating func addSparse(
         _ transitions: [Transition],
     ) throws(NFAConstructionError) -> NFAStateID {
         let id = try allocate()
@@ -354,14 +354,14 @@ public struct ThompsonBuilder {
     }
 
     /// Adds an epsilon state and returns its ID
-    public mutating func addEpsilon() throws(NFAConstructionError) -> NFAStateID {
+    mutating func addEpsilon() throws(NFAConstructionError) -> NFAStateID {
         let id = try allocate()
         states.append(.epsilon(.none))
         return id
     }
 
     /// Adds a match state and returns its ID
-    public mutating func addMatch() throws(NFAConstructionError) -> NFAStateID {
+    mutating func addMatch() throws(NFAConstructionError) -> NFAStateID {
         guard let currentPatternID = patternID else {
             throw
                 NFAConstructionError
@@ -374,7 +374,7 @@ public struct ThompsonBuilder {
     }
 
     /// Adds a fail state and returns its ID
-    public mutating func addFail() throws(NFAConstructionError) -> NFAStateID {
+    mutating func addFail() throws(NFAConstructionError) -> NFAStateID {
         let id = try allocate()
         states.append(.fail)
         return id
@@ -383,7 +383,7 @@ public struct ThompsonBuilder {
     // MARK: - Building
 
     /// Builds the final NFA from accumulated states
-    public func build(start: NFAStateID) throws(NFAConstructionError) -> NFA {
+    func build(start: NFAStateID) throws(NFAConstructionError) -> NFA {
         var epsilons: [(from: NFAStateID, to: NFAStateID)] = []
         // from builder's state ID (index) to NFA state ID (value)
         var remap: [NFAStateID] = .init(repeating: .none, count: states.count)
@@ -525,16 +525,16 @@ struct NFAProxy {
 // MARK: - Thompson Construction
 
 /// Thompson's construction algorithm for converting HIR to byte-based NFA.
-public struct ThompsonConstruction {
+struct ThompsonConstruction {
     private var builder: ThompsonBuilder
     private var utf8State: UTF8State
 
-    public init() {
+    init() {
         builder = ThompsonBuilder()
         utf8State = UTF8State()
     }
 
-    public mutating func build(from hirs: [HIRKind]) throws(NFAConstructionError) -> NFA {
+    mutating func build(from hirs: [HIRKind]) throws(NFAConstructionError) -> NFA {
         // assume all HIRs are anchored
         let fragments = try hirs.map { hir throws(NFAConstructionError) in
             _ = try builder.startPattern()
@@ -551,7 +551,7 @@ public struct ThompsonConstruction {
     }
 
     /// Builds an NFA from the given HIR
-    public mutating func build(from hir: HIRKind) throws(NFAConstructionError) -> NFA {
+    mutating func build(from hir: HIRKind) throws(NFAConstructionError) -> NFA {
         try build(from: [hir])
     }
 

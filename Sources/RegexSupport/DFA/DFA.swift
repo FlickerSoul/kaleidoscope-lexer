@@ -71,14 +71,14 @@ public struct DFAState: Sendable, Hashable, CustomStringConvertible, CustomDumpS
     }
 
     /// Initialize a DFA state with all transitions pointing to the dead state
-    public init() {
+    init() {
         // Initialize all 256 byte transitions to dead state
         transitions = Array(repeating: .dead, count: 256)
         matchPatternIDs = []
     }
 
     /// Initialize a DFA state with explicit transitions and pattern IDs
-    public init(transitions: [DFAStateID], matchPatternIDs: [PatternID]) {
+    init(transitions: [DFAStateID], matchPatternIDs: [PatternID]) {
         assert(transitions.count == 256)
         self.transitions = transitions
         self.matchPatternIDs = matchPatternIDs
@@ -104,12 +104,12 @@ public struct DFAState: Sendable, Hashable, CustomStringConvertible, CustomDumpS
     }
 
     /// Set the transition for a given byte
-    public mutating func setTransition(for byte: UInt8, to state: DFAStateID) {
+    mutating func setTransition(for byte: UInt8, to state: DFAStateID) {
         transitions[Int(byte)] = state
     }
 
     /// Get the transition for a given byte
-    public func transition(for byte: UInt8) -> DFAStateID {
+    func transition(for byte: UInt8) -> DFAStateID {
         transitions[Int(byte)]
     }
 
@@ -148,7 +148,7 @@ public struct DFAState: Sendable, Hashable, CustomStringConvertible, CustomDumpS
 /// Optimized for anchored searches only. Matches must begin at the starting position.
 public struct DFA: Sendable, Hashable {
     /// All DFA states, indexed by DFAStateID
-    private(set) var states: [DFAState]
+    public private(set) var states: [DFAState]
 
     /// Starting state for the automaton
     public private(set) var start: DFAStateID
@@ -157,7 +157,7 @@ public struct DFA: Sendable, Hashable {
     public private(set) var patternIDs: [PatternID]
 
     /// Initialize an empty DFA with just a dead state
-    public init() {
+    init() {
         // State 0 is always the dead state
         states = [DFAState()]
         start = .dead
@@ -165,7 +165,7 @@ public struct DFA: Sendable, Hashable {
     }
 
     /// Initialize a DFA with states and start state
-    public init(
+    init(
         states: [DFAState],
         start: DFAStateID,
         patternIDs: [PatternID],

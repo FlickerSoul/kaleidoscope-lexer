@@ -36,10 +36,6 @@ public struct RangeSet<T: RangeSetBound>: ExpressibleByArrayLiteral, Equatable {
     }
 
     mutating func union(_ other: any Sequence<ClosedRange<T>>) {
-        if ranges.isEmpty {
-            return
-        }
-
         ranges.append(contentsOf: other)
         normalize()
     }

@@ -9,10 +9,8 @@ func getSpanningStates(from dfa: borrowing DFA, root: DFAStateID) -> [DFAStateID
 
     while let next = exploreStack.popLast() {
         let children = childrenStates(on: dfa, from: next)
-        for child in children {
-            if states.insert(child).inserted {
-                exploreStack.append(child)
-            }
+        for child in children where states.insert(child).inserted {
+            exploreStack.append(child)
         }
     }
 
@@ -43,10 +41,11 @@ func getStateType(
     leaves: borrowing [Leaf],
 ) throws(GraphError) -> StateType {
     // LeafID are the same as PatternID, since they are inserted in the same order
-    let leaves: [(leafID: LeafID, leafPriority: UInt)] = dfa.matchingPatterns(stateID).map {
-        patternId in
-        (patternId.asLeafId, leaves[patternId.asIndex].priority)
-    }
+    let leaves: [(leafID: LeafID, leafPriority: UInt)] = dfa
+        .matchingPatterns(stateID)
+        .map { patternId in
+            (patternId.asLeafId, leaves[patternId.asIndex].priority)
+        }
 
     guard let maxPriorityLeaf = leaves.max(by: { $0.leafPriority < $1.leafPriority }) else {
         return StateType()

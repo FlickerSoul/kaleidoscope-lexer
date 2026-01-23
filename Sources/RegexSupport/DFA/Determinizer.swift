@@ -176,11 +176,9 @@ struct Determinizer {
 
         var uniquePatterns: [PatternID] = []
         var seenPatterns = Set<UInt32>()
-        for pattern in allPatterns {
-            if !seenPatterns.contains(pattern.id) {
-                seenPatterns.insert(pattern.id)
-                uniquePatterns.append(pattern)
-            }
+        for pattern in allPatterns where !seenPatterns.contains(pattern.id) {
+            seenPatterns.insert(pattern.id)
+            uniquePatterns.append(pattern)
         }
 
         dfa.setPatternIDs(uniquePatterns)
@@ -206,10 +204,8 @@ struct Determinizer {
 
             // Add all states reachable from this state
             let state = dfa.state(stateID)
-            for nextID in state.transitions {
-                if !reachable.contains(nextID) {
-                    queue.append(nextID)
-                }
+            for nextID in state.transitions where !reachable.contains(nextID) {
+                queue.append(nextID)
             }
         }
 
@@ -285,22 +281,18 @@ struct Determinizer {
             switch nfaState {
             case let .union(alternatives):
                 // Union states are epsilon transitions
-                for altID in alternatives {
-                    if !tempSet.contains(altID) {
-                        tempSet.insert(altID)
-                        workStack.append(altID)
-                        result.insert(altID)
-                    }
+                for altID in alternatives where !tempSet.contains(altID) {
+                    tempSet.insert(altID)
+                    workStack.append(altID)
+                    result.insert(altID)
                 }
 
             case let .binaryUnion(alt1, alt2):
                 // Binary union is two epsilon transitions
-                for altID in [alt1, alt2] {
-                    if !tempSet.contains(altID) {
-                        tempSet.insert(altID)
-                        workStack.append(altID)
-                        result.insert(altID)
-                    }
+                for altID in [alt1, alt2] where !tempSet.contains(altID) {
+                    tempSet.insert(altID)
+                    workStack.append(altID)
+                    result.insert(altID)
                 }
 
             case let .match(patternID):
@@ -334,10 +326,8 @@ struct Determinizer {
                 }
 
             case let .sparse(transitions):
-                for transition in transitions {
-                    if transition.matches(byte) {
-                        result.insert(transition.next)
-                    }
+                for transition in transitions where transition.matches(byte) {
+                    result.insert(transition.next)
                 }
 
             case .union, .binaryUnion:

@@ -50,7 +50,7 @@ func s_fail() -> NFAState {
 // MARK: - Basic Construct Tests
 
 @Suite("Thompson Tests")
-struct ThompsonTests { // swiftlint:disable:this type_body_length
+struct ThompsonTests {
     @Test
     func `empty produces epsilon to match`() throws {
         let nfa = try NFA.build(from: .empty)

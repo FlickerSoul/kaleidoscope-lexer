@@ -17,7 +17,7 @@ repos:
         stages: [pre-commit]
       - id: swiftlint check
         name: SwiftLintCheck
-        entry: swiftlint . --strict --config .swiftlint.yml
+        entry: swiftlint . --strict
         language: system
         types: [swift]
         stages: [pre-commit]

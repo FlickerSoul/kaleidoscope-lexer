@@ -153,10 +153,8 @@ extension Graph {
         while let state = visitStack.popLast() {
             let data = getStateData(state)
 
-            for backward in data.backEdges {
-                if reachAccept.insert(backward).inserted {
-                    visitStack.append(backward)
-                }
+            for backward in data.backEdges where reachAccept.insert(backward).inserted {
+                visitStack.append(backward)
             }
         }
 

@@ -17,7 +17,7 @@ func parseToHIR(_ pattern: String) throws -> HIRKind {
 }
 
 @Suite("HIRTranslator Tests")
-struct HIRTranslatorTests { // swiftlint:disable:this type_body_length
+struct HIRTranslatorTests {
     // MARK: - Literal Tests
 
     @Test(arguments: [

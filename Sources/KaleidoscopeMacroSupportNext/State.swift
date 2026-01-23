@@ -18,7 +18,7 @@ public struct State: Hashable, Sendable, Comparable, Strideable, ExpressibleByIn
         other.id - id
     }
 
-    public func advanced(by n: Int) -> State {
-        State(id + n)
+    public func advanced(by length: Int) -> State {
+        State(id + length)
     }
 }

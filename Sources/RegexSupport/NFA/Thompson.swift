@@ -391,7 +391,27 @@ struct ThompsonBuilder {
             start: start,
             patternStarts: patternStarts,
         )
+        try collectRemapping(
+            remap: &remap,
+            nfaProxy: &nfaProxy,
+            epsilons: &epsilons,
+        )
 
+        var remapped: [Bool] = .init(repeating: false, count: states.count)
+        markRemapped(remapped: &remapped, remap: &remap, epsilons: epsilons)
+
+        nfaProxy.remap(remap)
+
+        // FIXME: implement final shrinking
+
+        return NFA(states: nfaProxy.states, start: nfaProxy.start)
+    }
+
+    private func collectRemapping(
+        remap: inout [NFAStateID],
+        nfaProxy: inout NFAProxy,
+        epsilons: inout [(from: NFAStateID, to: NFAStateID)],
+    ) throws(NFAConstructionError) {
         for (sidIndex, state) in states.enumerated() {
             let sid = NFAStateID(UInt32(sidIndex))
 
@@ -450,7 +470,13 @@ struct ThompsonBuilder {
                 remap[sid.asIndex] = nfaProxy.add(state: .fail)
             }
         }
-        var remapped: [Bool] = .init(repeating: false, count: states.count)
+    }
+
+    private func markRemapped(
+        remapped: inout [Bool],
+        remap: inout [NFAStateID],
+        epsilons: [(from: NFAStateID, to: NFAStateID)],
+    ) {
         for (from, to) in epsilons {
             if remapped[from.asIndex] {
                 continue
@@ -479,11 +505,6 @@ struct ThompsonBuilder {
                 next2 = next
             }
         }
-
-        nfaProxy.remap(remap)
-        // FIXME: implement final shrinking
-
-        return NFA(states: nfaProxy.states, start: nfaProxy.start)
     }
 }
 
@@ -630,8 +651,7 @@ extension ThompsonConstruction {
 
         do {
             return try compileConcat(
-                characters.reduce(into: [NFAFragment]()) {
-                    partialResult, char throws(NFAConstructionError) in
+                characters.reduce(into: [NFAFragment]()) { partialResult, char throws(NFAConstructionError) in
                     let bytes = Array(char.utf8)
                     for byte in bytes {
                         let stateId = try builder.addByteRange(
@@ -646,6 +666,8 @@ extension ThompsonConstruction {
                 },
             )
         } catch {
+            // it's guaranteed to be NFAConstructionError but compiler can't infer...
+            // swiftlint:disable:next force_cast
             throw error as! NFAConstructionError
         }
     }

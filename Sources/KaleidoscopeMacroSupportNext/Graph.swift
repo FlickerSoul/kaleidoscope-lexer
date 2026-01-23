@@ -75,7 +75,7 @@ public struct State: Hashable, Sendable, Comparable, Strideable, ExpressibleByIn
 }
 
 public enum GraphError: Error, Hashable, Sendable {
-    case multipleLeavesWithSamePriority([Leaf], priority: UInt)
+    case multipleLeavesWithSamePriority(Set<LeafID>, priority: UInt)
 }
 
 public struct Graph: Hashable, Sendable {
@@ -206,9 +206,12 @@ extension Graph {
             let data = getStateData(state)
 
             if let acceptLeaf = data.type.accept {
-                if data.backEdges.all({ state in
-                    self.getStateData(state).type.early == acceptLeaf
-                }) {
+                // note: ignoring starting states (backEdges.isEmpty) who also are accepting states
+                // since they have no back edges
+                if !data.backEdges.isEmpty,
+                   data.backEdges.all({ state in
+                       self.getStateData(state).type.early == acceptLeaf
+                   }) {
                     statesData[state.id].type.accept = nil
                 }
             }
@@ -345,7 +348,7 @@ func childrenStates(on dfa: borrowing DFA, from currentState: DFAStateID) -> [DF
     // TODO: integrate EOI when we have look
 }
 
-public struct LeafId: Hashable, Sendable, ExpressibleByIntegerLiteral {
+public struct LeafID: Hashable, Sendable, ExpressibleByIntegerLiteral {
     public typealias IntegerLiteralType = Int
     public let id: IntegerLiteralType
 
@@ -359,15 +362,15 @@ public struct LeafId: Hashable, Sendable, ExpressibleByIntegerLiteral {
 }
 
 public struct StateType: Hashable, Sendable {
-    var accept: LeafId?
-    var early: LeafId?
+    var accept: LeafID?
+    var early: LeafID?
 
-    init(accept: LeafId? = nil, early: LeafId? = nil) {
+    init(accept: LeafID? = nil, early: LeafID? = nil) {
         self.accept = accept
         self.early = early
     }
 
-    var earlyOrAccept: LeafId? {
+    var earlyOrAccept: LeafID? {
         early ?? accept
     }
 }
@@ -377,8 +380,8 @@ extension PatternID {
         Int(id)
     }
 
-    var asLeafId: LeafId {
-        LeafId(.init(id))
+    var asLeafId: LeafID {
+        LeafID(.init(id))
     }
 }
 
@@ -387,20 +390,22 @@ func getStateType(
     stateID: DFAStateID,
     leaves: borrowing [Leaf],
 ) throws(GraphError) -> StateType {
-    let leaves: [(leafId: LeafId, leaf: Leaf)] = dfa.matchingPatterns(stateID).map { patternId in
-        (patternId.asLeafId, leaves[patternId.asIndex])
+    // LeafID are the same as PatternID, since they are inserted in the same order
+    let leaves: [(leafID: LeafID, leafPriority: UInt)] = dfa.matchingPatterns(stateID).map {
+        patternId in
+        (patternId.asLeafId, leaves[patternId.asIndex].priority)
     }
 
-    guard let maxPriorityLeaf = leaves.max(by: { $0.leaf.priority < $1.leaf.priority }) else {
+    guard let maxPriorityLeaf = leaves.max(by: { $0.leafPriority < $1.leafPriority }) else {
         return StateType()
     }
 
-    let maxPriorityLeaves = leaves.filter { $0.leaf.priority == maxPriorityLeaf.leaf.priority }
+    let maxPriorityLeaves = leaves.filter { $0.leafPriority == maxPriorityLeaf.leafPriority }
     if maxPriorityLeaves.count > 1 {
         throw GraphError.multipleLeavesWithSamePriority(
-            maxPriorityLeaves.map(\.leaf), priority: maxPriorityLeaf.leaf.priority,
+            Set(maxPriorityLeaves.map(\.leafID)), priority: maxPriorityLeaf.leafPriority,
         )
     }
 
-    return .init(accept: maxPriorityLeaf.leafId, early: nil)
+    return .init(accept: maxPriorityLeaf.leafID, early: nil)
 }

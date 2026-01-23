@@ -1,0 +1,13 @@
+flowchart TB
+n0["State 0"]
+style n0 stroke:#000000
+en0n1{"a"}
+style en0n1 stroke:#000000
+n0-->en0n1
+en0n1-->n1
+n1["State 1<br>late(0)"]
+style n1 stroke:#00C853
+en1n1{"a"}
+style en1n1 stroke:#000000
+n1-->en1n1
+en1n1-->n1

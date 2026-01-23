@@ -30,7 +30,7 @@ public func equals<T: Equatable>(
             But got
             \(actualString)
             Diff
-            \(diff(actualString, expectedString))
+            \(diff(expectedString, actualString))
             """
         }(),
         sourceLocation: .init(

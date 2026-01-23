@@ -30,3 +30,16 @@ public struct Leaf: Hashable, Sendable {
     public let kind: LeafKind
     public let callback: CallbackKind?
 }
+
+public struct LeafID: Hashable, Sendable, ExpressibleByIntegerLiteral {
+    public typealias IntegerLiteralType = Int
+    public let id: IntegerLiteralType
+
+    public init(integerLiteral value: IntegerLiteralType) {
+        id = value
+    }
+
+    init(_ id: IntegerLiteralType) {
+        self.id = id
+    }
+}

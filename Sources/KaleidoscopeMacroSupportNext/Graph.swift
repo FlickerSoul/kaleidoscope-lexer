@@ -1,83 +1,6 @@
 import OrderedCollections
 import RegexSupport
 
-public struct StateData: Hashable, Sendable {
-    public struct Normal: Hashable, Sendable {
-        public let byteClass: ByteClass
-        public let state: State
-    }
-
-    public var type: StateType
-    public var normal: [Normal]
-    public var backEdges: [State]
-
-    init(type: StateType = .init(), normal: [Normal] = [], backEdges: [State] = []) {
-        self.type = type
-        self.normal = normal
-        self.backEdges = backEdges
-    }
-
-    mutating func setNormalEdges(_ edges: [State: ByteClass]) {
-        normal = edges.map { state, byteClass in
-            Normal(byteClass: byteClass, state: state)
-        }
-        normal.sort { lhs, rhs in
-            lhs.state < rhs.state
-        }
-    }
-
-    // Add back edge while maintaining sorted order
-    mutating func addBackEdge(to state: State) {
-        let insertIndex = backEdges.firstIndex { $0 >= state }
-        backEdges.insert(state, at: insertIndex ?? backEdges.count)
-    }
-
-    /// Determine if there exists a byte that doesn't have a next state
-    func canError() -> Bool {
-        let coverRanges = normal.flatMap(\.byteClass.ranges)
-        let byteClass = ByteClass(ranges: coverRanges)
-
-        guard !byteClass.isEmpty else {
-            return true
-        }
-
-        guard byteClass.ranges.count == 1 else {
-            return true
-        }
-        let range = byteClass.ranges[0]
-        return range.lowerBound != UInt.min || range.upperBound != UInt.max
-    }
-}
-
-public struct State: Hashable, Sendable, Comparable, Strideable, ExpressibleByIntegerLiteral {
-    public typealias IntegerLiteralType = Int
-    public let id: Int
-
-    init(_ id: Int) {
-        self.id = id
-    }
-
-    public init(integerLiteral value: Int) {
-        id = value
-    }
-
-    public static func < (lhs: State, rhs: State) -> Bool {
-        lhs.id < rhs.id
-    }
-
-    public func distance(to other: State) -> Int {
-        other.id - id
-    }
-
-    public func advanced(by n: Int) -> State {
-        State(id + n)
-    }
-}
-
-public enum GraphError: Error, Hashable, Sendable {
-    case multipleLeavesWithSamePriority(Set<LeafID>, priority: UInt)
-}
-
 public struct Graph: Hashable, Sendable {
     public let leaves: [Leaf]
     public let dfa: DFA
@@ -121,7 +44,7 @@ extension Graph {
 
         let dfaStartId = dfa.start
         let dfaLookup = OrderedDictionary(
-            uniqueKeysWithValues: getStates(from: dfa, root: dfa.start)
+            uniqueKeysWithValues: getSpanningStates(from: dfa, root: dfa.start)
                 .enumerated()
                 .map { index, stateID in
                     (stateID, State(index))
@@ -317,95 +240,4 @@ extension Graph {
             root = newRoot
         }
     }
-}
-
-public typealias ByteClass = RangeSet<UInt8>
-
-func getStates(from dfa: borrowing DFA, root: DFAStateID) -> [DFAStateID] {
-    var states = Set<DFAStateID>()
-    states.insert(root)
-
-    var exploreStack = [DFAStateID]()
-    exploreStack.append(root)
-
-    while let next = exploreStack.popLast() {
-        let children = childrenStates(on: dfa, from: next)
-        for child in children {
-            if states.insert(child).inserted {
-                exploreStack.append(child)
-            }
-        }
-    }
-
-    return states.sorted()
-}
-
-func childrenStates(on dfa: borrowing DFA, from currentState: DFAStateID) -> [DFAStateID] {
-    (0 ... UInt8.max)
-        .map { byte in
-            dfa.nextState(currentState, byte: byte)
-        }
-    // TODO: integrate EOI when we have look
-}
-
-public struct LeafID: Hashable, Sendable, ExpressibleByIntegerLiteral {
-    public typealias IntegerLiteralType = Int
-    public let id: IntegerLiteralType
-
-    public init(integerLiteral value: IntegerLiteralType) {
-        id = value
-    }
-
-    init(_ id: IntegerLiteralType) {
-        self.id = id
-    }
-}
-
-public struct StateType: Hashable, Sendable {
-    var accept: LeafID?
-    var early: LeafID?
-
-    init(accept: LeafID? = nil, early: LeafID? = nil) {
-        self.accept = accept
-        self.early = early
-    }
-
-    var earlyOrAccept: LeafID? {
-        early ?? accept
-    }
-}
-
-extension PatternID {
-    var asIndex: Int {
-        Int(id)
-    }
-
-    var asLeafId: LeafID {
-        LeafID(.init(id))
-    }
-}
-
-func getStateType(
-    on dfa: borrowing DFA,
-    stateID: DFAStateID,
-    leaves: borrowing [Leaf],
-) throws(GraphError) -> StateType {
-    // LeafID are the same as PatternID, since they are inserted in the same order
-    let leaves: [(leafID: LeafID, leafPriority: UInt)] = dfa.matchingPatterns(stateID).map {
-        patternId in
-        (patternId.asLeafId, leaves[patternId.asIndex].priority)
-    }
-
-    guard let maxPriorityLeaf = leaves.max(by: { $0.leafPriority < $1.leafPriority }) else {
-        return StateType()
-    }
-
-    let maxPriorityLeaves = leaves.filter { $0.leafPriority == maxPriorityLeaf.leafPriority }
-    if maxPriorityLeaves.count > 1 {
-        throw GraphError.multipleLeavesWithSamePriority(
-            Set(maxPriorityLeaves.map(\.leafID)), priority: maxPriorityLeaf.leafPriority,
-        )
-    }
-
-    return .init(accept: maxPriorityLeaf.leafID, early: nil)
 }

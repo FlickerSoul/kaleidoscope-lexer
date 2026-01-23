@@ -4,21 +4,20 @@
 //
 //  Created by Larry Zeng on 1/17/26.
 //
+import Foundation
 
-// MARK: - Dot Format
-
-struct DotFormat: GraphExportFormatWriter {
-    static func writeHeader(_ output: inout String) {
-        output += "digraph NFA {\n"
-        output += "rankdir=LR;\n"
-        output += "node[shape=circle];\n"
+public struct DotFormat: GraphExportFormatWriter {
+    public static func writeHeader(_ output: inout String) {
+        output += "digraph {\n"
+        output += "node[shape=box];\n"
+        output += "splines=ortho;\n"
     }
 
-    static func writeFooter(_ output: inout String) {
+    public static func writeFooter(_ output: inout String) {
         output += "}\n"
     }
 
-    static func writeNode(
+    public static func writeNode(
         _ output: inout String,
         id: String,
         label: String,
@@ -34,7 +33,7 @@ struct DotFormat: GraphExportFormatWriter {
         output += "\(id)[label=\"\(label)\",color=\(color.dotValue),shape=\(shapeStr)];\n"
     }
 
-    static func writeLink(_ output: inout String, from: String, to: String, label: String?) {
+    public static func writeLink(_ output: inout String, from: String, to: String, label: String?) {
         if let label {
             output += "\(from)->\(to)[label=\"\(label)\"];\n"
         } else {
@@ -42,7 +41,7 @@ struct DotFormat: GraphExportFormatWriter {
         }
     }
 
-    static func escape(_ string: String) -> String {
+    public static func escape(_ string: String) -> String {
         var result = ""
         for char in string {
             switch char {

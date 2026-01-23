@@ -64,8 +64,13 @@ let package = Package(
             ],
         ),
         .target(
+            name: "GraphExportSupport",
+            dependencies: [],
+        ),
+        .target(
             name: "RegexSupport",
             dependencies: [
+                "GraphExportSupport",
                 .product(name: "_RegexParser", package: "swift-experimental-string-processing"),
                 .product(name: "CasePaths", package: "swift-case-paths"),
                 .product(name: "CustomDump", package: "swift-custom-dump"),
@@ -74,6 +79,7 @@ let package = Package(
         .target(
             name: "KaleidoscopeMacroSupportNext",
             dependencies: [
+                "GraphExportSupport",
                 "RegexSupport",
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
                 .product(name: "OrderedCollections", package: "swift-collections"),

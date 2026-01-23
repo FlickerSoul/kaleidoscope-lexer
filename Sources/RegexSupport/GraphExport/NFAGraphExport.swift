@@ -5,6 +5,8 @@
 //  Created by Larry Zeng on 1/16/26.
 //
 
+import GraphExportSupport
+
 // MARK: - NFA Graph Export Extension
 
 public extension NFA {

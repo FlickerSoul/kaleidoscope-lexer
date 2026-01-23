@@ -7,7 +7,7 @@
 
 // MARK: - Export Format Protocol
 
-protocol GraphExportFormatWriter {
+public protocol GraphExportFormatWriter {
     static func writeHeader(_ output: inout String)
     static func writeFooter(_ output: inout String)
     static func writeNode(
@@ -23,7 +23,7 @@ protocol GraphExportFormatWriter {
 
 // MARK: - Node Styling
 
-enum GraphNodeColor {
+public enum GraphNodeColor {
     case black
     case green
     case red
@@ -48,7 +48,7 @@ enum GraphNodeColor {
     }
 }
 
-enum GraphNodeShape {
+public enum GraphNodeShape {
     case rectangle
     case rhombus
     case ellipse

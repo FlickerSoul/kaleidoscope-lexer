@@ -4,19 +4,18 @@
 //
 //  Created by Larry Zeng on 1/17/26.
 //
+import Foundation
 
-// MARK: - Mermaid Format
-
-struct MermaidFormat: GraphExportFormatWriter {
-    static func writeHeader(_ output: inout String) {
-        output += "flowchart LR\n"
+public struct MermaidFormat: GraphExportFormatWriter {
+    public static func writeHeader(_ output: inout String) {
+        output += "flowchart TB\n"
     }
 
-    static func writeFooter(_: inout String) {
+    public static func writeFooter(_: inout String) {
         // No footer needed for mermaid
     }
 
-    static func writeNode(
+    public static func writeNode(
         _ output: inout String,
         id: String,
         label: String,
@@ -36,7 +35,7 @@ struct MermaidFormat: GraphExportFormatWriter {
         output += "style \(id) stroke:\(color.mermaidValue)\n"
     }
 
-    static func writeLink(_ output: inout String, from: String, to: String, label: String?) {
+    public static func writeLink(_ output: inout String, from: String, to: String, label: String?) {
         if let label {
             output += "\(from)-->|\"\(label)\"|\(to)\n"
         } else {
@@ -44,7 +43,7 @@ struct MermaidFormat: GraphExportFormatWriter {
         }
     }
 
-    static func escape(_ string: String) -> String {
+    public static func escape(_ string: String) -> String {
         var result = ""
         for char in string {
             switch char {

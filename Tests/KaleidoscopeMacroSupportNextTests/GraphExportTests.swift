@@ -29,7 +29,7 @@ extension Leaf {
     }
 }
 
-@Suite
+@Suite(.snapshots(record: .failed))
 struct `Graph Export Tests` {
     // MARK: - Helper Functions
 

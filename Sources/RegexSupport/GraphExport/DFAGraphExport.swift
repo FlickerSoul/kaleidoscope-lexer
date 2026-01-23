@@ -5,6 +5,8 @@
 //  Created by Larry Zeng on 1/17/26.
 //
 
+import GraphExportSupport
+
 // MARK: - DFA Graph Export Extension
 
 extension DFA {

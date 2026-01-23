@@ -68,6 +68,7 @@ let package = Package(
             dependencies: [
                 .product(name: "_RegexParser", package: "swift-experimental-string-processing"),
                 .product(name: "CasePaths", package: "swift-case-paths"),
+                .product(name: "CustomDump", package: "swift-custom-dump"),
             ],
         ),
         .target(
@@ -80,6 +81,13 @@ let package = Package(
             ],
         ),
         // tests
+        .target(
+            name: "TestUtils",
+            dependencies: [
+                .product(name: "CustomDump", package: "swift-custom-dump"),
+            ],
+            path: "Tests/TestUtils",
+        ),
         .testTarget(
             name: "KaleidoscopeMacroTests",
             dependencies: [
@@ -95,6 +103,15 @@ let package = Package(
             ],
         ),
         .testTarget(
+            name: "KaleidoscopeMacroSupportNextTests",
+            dependencies: [
+                "KaleidoscopeMacroSupportNext",
+                .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
+                "TestUtils",
+            ],
+            exclude: ["__Snapshots__"],
+        ),
+        .testTarget(
             name: "KaleidoscopeMacroSupportTest",
             dependencies: [
                 "KaleidoscopeMacroSupport",
@@ -106,8 +123,8 @@ let package = Package(
             name: "RegexSupportTests",
             dependencies: [
                 "RegexSupport",
+                "TestUtils",
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
-                .product(name: "CustomDump", package: "swift-custom-dump"),
             ],
         ),
         // example

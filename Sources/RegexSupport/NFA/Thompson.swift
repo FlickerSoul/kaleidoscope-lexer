@@ -457,16 +457,24 @@ public struct ThompsonBuilder {
             }
 
             var new_next = to
-            while let next = states[new_next.asIndex].goTo() {
+            while new_next != .none, let next = states[new_next.asIndex].goTo() {
                 new_next = next
             }
 
-            remap[from.asIndex] = remap[new_next.asIndex]
-            remapped[from.asIndex] = true
+            if new_next == .none {
+                remap[from.asIndex] = .none
+            } else {
+                remap[from.asIndex] = remap[new_next.asIndex]
+                remapped[from.asIndex] = true
+            }
 
             var next2 = to
-            while let next = states[next2.asIndex].goTo() {
-                remap[next2.asIndex] = remap[new_next.asIndex]
+            while next2 != .none, let next = states[next2.asIndex].goTo() {
+                if new_next == .none {
+                    remap[next2.asIndex] = .none
+                } else {
+                    remap[next2.asIndex] = remap[new_next.asIndex]
+                }
                 remapped[next2.asIndex] = true
                 next2 = next
             }

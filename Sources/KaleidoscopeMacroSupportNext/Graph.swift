@@ -1,4 +1,3 @@
-import DequeModule
 import OrderedCollections
 import RegexSupport
 
@@ -12,10 +11,10 @@ public struct StateData: Hashable, Sendable {
     public var normal: [Normal]
     public var backEdges: [State]
 
-    public init() {
-        type = .init()
-        normal = []
-        backEdges = []
+    init(type: StateType = .init(), normal: [Normal] = [], backEdges: [State] = []) {
+        self.type = type
+        self.normal = normal
+        self.backEdges = backEdges
     }
 
     mutating func setNormalEdges(_ edges: [State: ByteClass]) {
@@ -46,7 +45,7 @@ public struct StateData: Hashable, Sendable {
             return true
         }
         let range = byteClass.ranges[0]
-        return range.lowerBound > UInt.min || range.upperBound < UInt.max
+        return range.lowerBound != UInt.min || range.upperBound != UInt.max
     }
 }
 
@@ -85,6 +84,14 @@ public struct Graph: Hashable, Sendable {
     public internal(set) var statesData: [StateData]
     public internal(set) var root: State
     public internal(set) var errors: [GraphError]
+
+    init(leaves: [Leaf], dfa: DFA, statesData: [StateData], root: State, errors: [GraphError]) {
+        self.leaves = leaves
+        self.dfa = dfa
+        self.statesData = statesData
+        self.root = root
+        self.errors = errors
+    }
 
     init(leaves: [Leaf], dfa: DFA) {
         self.leaves = leaves
@@ -180,9 +187,11 @@ extension Graph {
 
             if !data.canError() {
                 let childrenAcceptStates = Set(
-                    data.normal.map(\.state).map { state in
-                        self.getStateData(state).type.accept
-                    },
+                    data.normal
+                        .map(\.state)
+                        .map { state in
+                            self.getStateData(state).type.accept
+                        },
                 )
 
                 if childrenAcceptStates.count == 1,
@@ -208,13 +217,13 @@ extension Graph {
 
     private mutating func pruneUnreachable() {
         // prune unreachable states
-        var visitStack = Deque(
-            states().filter { state in
-                self.getStateData(state).type.earlyOrAccept != nil
-            },
-        )
+        var visitStack = states().filter { state in
+            self.getStateData(state).type.earlyOrAccept != nil
+        }
         visitStack.append(root)
+
         var reachAccept = Set<State>(visitStack)
+
         while let state = visitStack.popLast() {
             let data = getStateData(state)
 
@@ -263,13 +272,14 @@ extension Graph {
 
     private mutating func retainStates(_ statesToRetain: borrowing Set<State>, keep: Bool) {
         let rewriteMap = Dictionary(
-            uniqueKeysWithValues: states().filter { state in
-                statesToRetain.contains(state) == keep
-            }
-            .enumerated()
-            .map { newIndex, oldIndex in
-                (oldIndex, State(newIndex))
-            },
+            uniqueKeysWithValues: states()
+                .filter { state in
+                    statesToRetain.contains(state) == keep
+                }
+                .enumerated()
+                .map { newIndex, oldIndex in
+                    (oldIndex, State(newIndex))
+                },
         )
 
         var index = 0
@@ -284,25 +294,24 @@ extension Graph {
 
     private mutating func rewriteStates(_ rewriteMap: borrowing [State: State]) {
         for state in states() {
-            var data = statesData[state.id]
+            let data = statesData[state.id]
 
-            data.normal = data.normal.map { normal in
-                var newNormal = normal
-                if let rewrittenState = rewriteMap[normal.state] {
-                    newNormal = .init(byteClass: normal.byteClass, state: rewrittenState)
-                }
-                return newNormal
-            }
+            var edgeDedup = [State: ByteClass]()
 
-            data.backEdges = data.backEdges.map { backEdge in
-                if let rewrittenState = rewriteMap[backEdge] {
-                    rewrittenState
+            for normal in data.normal {
+                let nextState = rewriteMap[normal.state] ?? normal.state
+                if edgeDedup[nextState] != nil {
+                    edgeDedup[nextState]?.union(normal.byteClass)
                 } else {
-                    backEdge
+                    edgeDedup[nextState] = normal.byteClass
                 }
             }
 
-            statesData[state.id] = data
+            statesData[state.id].setNormalEdges(edgeDedup)
+        }
+
+        if let newRoot = rewriteMap[root] {
+            root = newRoot
         }
     }
 }
@@ -312,10 +321,11 @@ public typealias ByteClass = RangeSet<UInt8>
 func getStates(from dfa: borrowing DFA, root: DFAStateID) -> [DFAStateID] {
     var states = Set<DFAStateID>()
     states.insert(root)
-    var exploreStack = Deque<DFAStateID>()
+
+    var exploreStack = [DFAStateID]()
     exploreStack.append(root)
 
-    while let next = exploreStack.popFirst() {
+    while let next = exploreStack.popLast() {
         let children = childrenStates(on: dfa, from: next)
         for child in children {
             if states.insert(child).inserted {

@@ -8,7 +8,7 @@ import CustomDump
 import Foundation
 import Testing
 
-func equals<T: Equatable>(
+public func equals<T: Equatable>(
     actual: T,
     expected: T,
     fileID: String = #fileID,
@@ -42,7 +42,7 @@ func equals<T: Equatable>(
     )
 }
 
-extension Sequence<UInt8> {
+public extension Sequence<UInt8> {
     func hexString(separator: String = ", ") -> String {
         map { String(format: "%02X", $0) }.joined(separator: separator)
     }

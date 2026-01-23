@@ -4,13 +4,14 @@
 //
 //  Created by Larry Zeng on 1/20/26.
 //
-
+import CustomDump
 import Foundation
 
 // MARK: - State ID
 
 /// A unique identifier for a DFA state
-public struct DFAStateID: Hashable, Sendable, CustomStringConvertible,
+public struct DFAStateID: Hashable, Sendable,
+    CustomDumpStringConvertible, CustomStringConvertible,
     ExpressibleByIntegerLiteral, Comparable {
     public typealias IntegerLiteralType = UInt32
 
@@ -26,12 +27,16 @@ public struct DFAStateID: Hashable, Sendable, CustomStringConvertible,
 
     public var description: String {
         if self == .dead {
-            "dead"
+            ".dead"
         } else if self == .none {
-            "none"
+            ".none"
         } else {
             "\(id)"
         }
+    }
+
+    public var customDumpDescription: String {
+        description
     }
 
     var asIndex: Int {
@@ -52,7 +57,7 @@ public struct DFAStateID: Hashable, Sendable, CustomStringConvertible,
 // MARK: - DFA State
 
 /// A single state in the DFA
-public struct DFAState: Sendable, Hashable {
+public struct DFAState: Sendable, Hashable, CustomStringConvertible, CustomDumpStringConvertible {
     /// Transitions indexed by byte value (0-255)
     /// Each transition maps a byte to the next DFA state ID
     public private(set) var transitions: [DFAStateID]
@@ -74,6 +79,7 @@ public struct DFAState: Sendable, Hashable {
 
     /// Initialize a DFA state with explicit transitions and pattern IDs
     public init(transitions: [DFAStateID], matchPatternIDs: [PatternID]) {
+        assert(transitions.count == 256)
         self.transitions = transitions
         self.matchPatternIDs = matchPatternIDs
     }
@@ -86,6 +92,17 @@ public struct DFAState: Sendable, Hashable {
         self.matchPatternIDs = matchPatternIDs
     }
 
+    init(transitions: [Range<Int>: DFAStateID], matchPatternIDs: [PatternID]) {
+        self = .init()
+        for (byteRange, state) in transitions {
+            assert(byteRange.lowerBound >= 0 && byteRange.upperBound <= 256)
+            for byte in byteRange {
+                self.transitions[byte] = state
+            }
+        }
+        self.matchPatternIDs = matchPatternIDs
+    }
+
     /// Set the transition for a given byte
     public mutating func setTransition(for byte: UInt8, to state: DFAStateID) {
         transitions[Int(byte)] = state
@@ -94,6 +111,33 @@ public struct DFAState: Sendable, Hashable {
     /// Get the transition for a given byte
     public func transition(for byte: UInt8) -> DFAStateID {
         transitions[Int(byte)]
+    }
+
+    public var description: String {
+        guard let firstTransition = transitions.first else {
+            return "[:]"
+        }
+        var previous = (offset: 0, element: firstTransition)
+        var results: [String] = []
+
+        func appendResult(nextOffset: Int) {
+            results.append("\(previous.offset) ..< \(nextOffset): \(previous.element)")
+        }
+
+        for transitionWithIndex in transitions.enumerated()
+            where transitionWithIndex.element != previous.element {
+            appendResult(nextOffset: transitionWithIndex.offset)
+            previous = transitionWithIndex
+        }
+
+        appendResult(nextOffset: transitions.count)
+
+        return
+            "DFAState(transitions: [\(results.joined(separator: ", "))], matchPatternIDs: \(matchPatternIDs))"
+    }
+
+    public var customDumpDescription: String {
+        description
     }
 }
 

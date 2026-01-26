@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import KaleidoscopeMacroSupport
 import SwiftSyntax
 import SwiftSyntaxMacros
 

@@ -47,7 +47,6 @@ let package = Package(
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
                 .product(name: "MacroToolkit", package: "swift-macro-toolkit"),
                 "KaleidoscopeLexer",
-                "KaleidoscopeMacroSupport",
                 "KaleidoscopeMacroSupportNext",
                 "RegexSupport",
             ],
@@ -58,14 +57,6 @@ let package = Package(
             dependencies: [
                 "KaleidoscopeMacros",
                 "KaleidoscopeLexer",
-                "KaleidoscopeMacroSupport",
-            ],
-        ),
-        .target(
-            name: "KaleidoscopeMacroSupport",
-            dependencies: [
-                .product(name: "_RegexParser", package: "swift-experimental-string-processing"),
-                .product(name: "OrderedCollections", package: "swift-collections"),
             ],
         ),
         .target(
@@ -104,7 +95,6 @@ let package = Package(
             dependencies: [
                 .product(name: "MacroTesting", package: "swift-macro-testing"),
                 "KaleidoscopeMacros",
-                "KaleidoscopeMacroSupport",
             ],
         ),
         .testTarget(
@@ -119,14 +109,6 @@ let package = Package(
                 "KaleidoscopeMacroSupportNext",
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
                 "TestUtils",
-            ],
-            exclude: ["__Snapshots__"],
-        ),
-        .testTarget(
-            name: "KaleidoscopeMacroSupportTest",
-            dependencies: [
-                "KaleidoscopeMacroSupport",
-                .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
             ],
             exclude: ["__Snapshots__"],
         ),

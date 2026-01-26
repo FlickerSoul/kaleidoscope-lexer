@@ -1,9 +1,0 @@
-flowchart TB
-n0["Root Node 0"]
-style n0 stroke:#000000
-en0n1{"rope"}
-style en0n1 stroke:#000000
-n0-->en0n1
-en0n1-->n1
-n1["Node 1<br/>leaf(Token0)"]
-style n1 stroke:#00C853

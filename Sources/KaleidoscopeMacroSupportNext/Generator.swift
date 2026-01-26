@@ -46,5 +46,6 @@ public struct Generator {
 
     mutating func generateState(state: State) -> StateMatchingCode {
         let stateData = graph.getStateData(state)
+        fatalError("Not implemented yet")
     }
 }

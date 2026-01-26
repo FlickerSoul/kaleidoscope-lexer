@@ -11,7 +11,7 @@ import SwiftSyntaxMacros
 import Testing
 
 let macros: [String: Macro.Type] = [
-    "kaleidoscope": KaleidoscopeBuilder.self,
+    // "kaleidoscope": KaleidoscopeBuilder.self,
     "Kaleidoscope": KaleidoscopeBuilderNext.self,
     "token": EnumCaseRegistry.self,
     "regex": EnumCaseRegistry.self,

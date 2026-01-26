@@ -1,9 +1,0 @@
-digraph {
-node[shape=box];
-splines=ortho;
-n0[label="Root Node 0",color=black,shape=box];
-en0n1[label="rope",color=black,shape=diamond];
-n0->en0n1;
-en0n1->n1;
-n1[label="Node 1<br/>leaf(Token0)",color=green,shape=box];
-}

@@ -1,52 +1,9 @@
 //
-//  Lexer.swift
+//  LexerMachine.swift
 //
 //
 //  Created by Larry Zeng on 12/4/23.
 //
-
-public enum LexerError: Error {
-    case sourceBoundExceeded
-    case emptyToken
-    case duplicatedToken
-    case notMatch
-}
-
-public protocol LexerProtocol {
-    associatedtype TokenType: LexerProtocol
-    associatedtype Source: LexerSource
-
-    typealias TokenStream = [TokenType]
-
-    // TODO: allow user to customize Error type
-    typealias Error = Swift.Error
-
-    static func lex(_ lexer: inout LexerMachine<Self>) -> Result<Self, Self.Error>?
-    static func lexer(source: Source) -> LexerMachine<Self>
-}
-
-public enum TokenResult<Token: LexerProtocol> {
-    public typealias IntoType = Self
-
-    case result(Token)
-    case skipped
-
-    public var isSkip: Bool {
-        switch self {
-        case .skipped: true
-        default: false
-        }
-    }
-}
-
-extension TokenResult: Equatable where Token: Equatable {}
-
-extension TokenResult: Into {
-    public func into() -> TokenResult<Token> {
-        self
-    }
-}
-
 public struct LexerMachine<Token: LexerProtocol> {
     @usableFromInline
     let source: Token.Source

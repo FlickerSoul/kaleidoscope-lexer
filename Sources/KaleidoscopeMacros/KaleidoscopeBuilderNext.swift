@@ -47,6 +47,7 @@ public struct KaleidoscopeBuilderNext: ExtensionMacro {
             useStateMachineCodeGen: useStateMachineCodeGen,
         )
         var generator = KaleidoscopeMacroSupportNext.Generator(
+            enumType: type,
             config: config,
             graph: graph,
             context: context,

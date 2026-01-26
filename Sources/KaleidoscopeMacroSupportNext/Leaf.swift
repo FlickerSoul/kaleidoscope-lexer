@@ -8,12 +8,14 @@ public enum PatternKind: Hashable, Sendable {
 
 public struct Pattern: Hashable, Sendable {
     public typealias HIR = RegexSupport.HIRKind
-    public let source: PatternKind
+    public let kind: PatternKind
     public let hir: HIR
+    public let source: Syntax
 
-    public init(source: PatternKind, hir: HIR) {
-        self.source = source
+    public init(kind: PatternKind, hir: HIR, source: Syntax) {
+        self.kind = kind
         self.hir = hir
+        self.source = source
     }
 }
 
@@ -47,7 +49,7 @@ public struct Leaf: Hashable, Sendable {
     }
 }
 
-public struct LeafID: Hashable, Sendable, ExpressibleByIntegerLiteral {
+public struct LeafID: Hashable, Sendable, ExpressibleByIntegerLiteral, Comparable {
     public typealias IntegerLiteralType = Int
     public let id: IntegerLiteralType
 
@@ -57,5 +59,9 @@ public struct LeafID: Hashable, Sendable, ExpressibleByIntegerLiteral {
 
     init(_ id: IntegerLiteralType) {
         self.id = id
+    }
+
+    public static func < (lhs: LeafID, rhs: LeafID) -> Bool {
+        lhs.id < rhs.id
     }
 }

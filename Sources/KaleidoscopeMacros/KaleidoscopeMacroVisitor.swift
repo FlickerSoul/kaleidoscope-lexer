@@ -6,17 +6,16 @@ import SwiftSyntax
 import SwiftSyntaxMacros
 
 enum MacroInfoError: Error, DiagnosticMessage {
-    case notAnEnum
     case multipleMacroDeclaration(macro: String)
     case invalidMacroArgument(reason: String)
     case regexParsingError(reason: String)
     case onlyOneEnumCaseAllowed
     case fatalError(reason: String)
     case noSkipInEnumCase
+    case noMarkedCasesFound
 
     var message: String {
         switch self {
-        case .notAnEnum: "@kaleidoscope can only be applied to enums."
         case let .multipleMacroDeclaration(macro):
             "Multiple @\(macro) declarations found on the same enum."
         case let .invalidMacroArgument(reason):
@@ -29,6 +28,8 @@ enum MacroInfoError: Error, DiagnosticMessage {
             "Fatal error during macro expansion: \(reason)"
         case .noSkipInEnumCase:
             "`@skip` macro cannot be applied to enum cases."
+        case .noMarkedCasesFound:
+            "No enum cases marked with @regex or @token found."
         }
     }
 
@@ -60,11 +61,17 @@ class KaleidoscopeMacroVisitor: SyntaxVisitor {
     }
 
     func walk(enumDecl: EnumDeclSyntax) throws(KaleidoscopeError) {
-        walk(enumDecl)
-        try validate()
+        self.enumDecl = enumDecl
+
+        walk(enumDecl.memberBlock)
+        try validate(node: enumDecl)
     }
 
-    func validate() throws(KaleidoscopeError) {
+    func validate(node: some SyntaxProtocol) throws(KaleidoscopeError) {
+        if leaves.isEmpty {
+            errors.append(.init(node: node, message: MacroInfoError.noMarkedCasesFound))
+        }
+
         for error in errors {
             context.diagnose(error)
         }
@@ -74,16 +81,13 @@ class KaleidoscopeMacroVisitor: SyntaxVisitor {
         }
     }
 
-    override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
-        guard enumDecl == nil else {
-            print("Multiple enum declarations found.")
-            return .skipChildren
-        }
-        enumDecl = node
-
+    func parseEnumDecl(_ node: EnumDeclSyntax) {
         checkMacroCount(node.attributes, of: [Constants.Macro.kaleidoscope])
+    }
 
-        return .visitChildren
+    override func visit(_: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
+        print("Nested enum declarations found.")
+        return .skipChildren
     }
 
     override func visit(_ node: EnumCaseDeclSyntax) -> SyntaxVisitorContinueKind {
@@ -131,7 +135,11 @@ class KaleidoscopeMacroVisitor: SyntaxVisitor {
                         HIRKind.from(token: token)
                     }
 
-                    return Pattern(source: arguments.patternKind, hir: hir)
+                    return Pattern(
+                        kind: arguments.patternKind,
+                        hir: hir,
+                        source: Syntax(attribute),
+                    )
                 }
                 .mapError { error in
                     MacroInfoError.regexParsingError(reason: error.localizedDescription)
@@ -222,7 +230,6 @@ class KaleidoscopeMacroVisitor: SyntaxVisitor {
             throw .fatalError(reason: "Empty enum case parameters. This should have been rejected by compiler.")
         }
 
-        // TODO: handle skip?
         return .associatedValues(caseName: caseElement.name, parameters: caseParameters)
     }
 

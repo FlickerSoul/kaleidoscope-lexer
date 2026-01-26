@@ -19,6 +19,7 @@ enum KaleidoscopeError: Error {
 
     // new cases
     case macroInfoError
+    case graphCompositionError
 }
 
 extension KaleidoscopeError: DiagnosticMessage {
@@ -32,6 +33,7 @@ extension KaleidoscopeError: DiagnosticMessage {
         case .expectingIntegerLiteral: "Expected an integer literal."
         case .onlyFillOrCreateCallbackIsAllowed: "Only 'fillCallback' or 'createCallback' options are allowed, not both."
         case .macroInfoError: "Error processing macro information. Please check specific error messages."
+        case .graphCompositionError: "Error composing the lexer graph. Please check specific error messages."
         }
     }
 

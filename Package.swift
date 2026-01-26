@@ -18,6 +18,9 @@ let package = Package(
             targets: ["Kaleidoscope"],
         ),
     ],
+    traits: [
+        .trait(name: "StateMachineCodegen"),
+    ],
     dependencies: [
         // Depend on the Swift 5.9 release of SwiftSyntax
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),
@@ -84,8 +87,8 @@ let package = Package(
                 "GraphExportSupport",
                 "RegexSupport",
                 .product(name: "SwiftSyntax", package: "swift-syntax"),
+                .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "OrderedCollections", package: "swift-collections"),
-                .product(name: "DequeModule", package: "swift-collections"),
             ],
         ),
         // tests

@@ -30,4 +30,9 @@ enum Constants {
         static let priority = "priority"
         static let callback = "callback"
     }
+
+    enum Types {
+        static let lexerProtocol = PackageEntity(name: "LexerProtocol")
+        static let lexerMachine = PackageEntity(name: "LexerMachine")
+    }
 }

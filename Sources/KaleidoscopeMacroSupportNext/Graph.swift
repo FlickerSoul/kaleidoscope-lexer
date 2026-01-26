@@ -34,7 +34,7 @@ public struct Graph: Hashable, Sendable {
 }
 
 extension Graph {
-    static func build(from leaves: [Leaf]) throws -> Graph {
+    public static func build(from leaves: [Leaf]) throws -> Graph {
         let hirs = leaves.map(\.pattern.hir)
 
         let nfa = try NFA.build(from: hirs)

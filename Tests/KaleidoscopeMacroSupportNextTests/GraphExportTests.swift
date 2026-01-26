@@ -1,10 +1,15 @@
 import _RegexParser
 import SnapshotTesting
+import SwiftSyntax
 import Testing
 import TestUtils
 
 @testable import KaleidoscopeMacroSupportNext
 @testable import RegexSupport
+
+extension Syntax {
+    static let dummy = Syntax(ExprSyntax(""))
+}
 
 extension Leaf {
     init(
@@ -14,8 +19,9 @@ extension Leaf {
     ) {
         self.init(
             pattern: .init(
-                source: source,
+                kind: source,
                 hir: hir,
+                source: .dummy,
             ),
             priority: priority,
             kind: .skip,
@@ -38,8 +44,9 @@ struct `Graph Export Tests` {
     private func createPattern(from regexString: String) throws -> Pattern {
         let hir = try parseToHIR(regexString)
         return Pattern(
-            source: .regex(regexString),
+            kind: .regex(regexString),
             hir: hir,
+            source: .dummy,
         )
     }
 

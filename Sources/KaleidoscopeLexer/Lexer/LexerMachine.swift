@@ -54,7 +54,7 @@ public struct LexerMachine<Token: LexerProtocol> {
 }
 
 extension LexerMachine: Sequence, IteratorProtocol {
-    public mutating func next() -> Result<Token, Error>? {
+    public mutating func next() -> Result<Token, Token.LexerError>? {
         tokenStart = tokenEnd
         return Token.lex(&self)
     }
@@ -70,7 +70,7 @@ public struct SpannedLexerIter<Token: LexerProtocol>: Sequence, IteratorProtocol
         self.lexer = lexer
     }
 
-    public mutating func next() -> (Result<Token, Error>, Span)? {
+    public mutating func next() -> (Result<Token, Token.LexerError>, Span)? {
         lexer.next().map { token in
             (token, lexer.span)
         }
@@ -84,13 +84,18 @@ public extension LexerMachine {
     }
 
     @inlinable
+    func read(offset: Int) -> UInt8? {
+        source.read(offset: offset)
+    }
+
+    @inlinable
     mutating func trivia() {
         tokenStart = tokenEnd
     }
 
     @inlinable
-    func endToBoundary(offset: Int) -> Int {
-        source.findBoundary(index: offset)
+    mutating func endToBoundary(offset: Int) {
+        tokenEnd = source.findBoundary(index: offset)
     }
 
     @inlinable

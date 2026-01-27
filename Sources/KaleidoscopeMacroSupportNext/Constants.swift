@@ -19,7 +19,7 @@ public struct PackageEntity: CustomStringConvertible, Hashable, Sendable {
 }
 
 public enum Constants {
-    public static let packageName = "Kaleidoscope"
+    public static let packageName = "KaleidoscopeLexer"
 
     public enum Macro {
         public static let kaleidoscope = PackageEntity(name: "kaleidoscope")
@@ -39,19 +39,10 @@ public enum Constants {
         public static let callbackResult = PackageEntity(name: "_CallbackResult")
         public static let skipResult = PackageEntity(name: "_SkipResult")
         public static let skipResultSource = PackageEntity(name: "SkipResultSource")
+        public static let lexerError: TokenSyntax = .identifier("LexerError")
     }
 
     public enum Helpers {
         public static let __convertTupleToEnum = "__convertTupleToEnum"
-    }
-
-    enum Identifiers {
-        static let keleidoscopeStates: TokenSyntax = .identifier("__KaleidoscopeStates")
-        static let keleidoscopeLeaves: TokenSyntax = .identifier("__KaleidoscopeLeaves")
-        static let lexerMachineIdent: TokenSyntax = .identifier("lexer")
-        static let getAction: TokenSyntax = .identifier("__getAction")
-        static let offset: TokenSyntax = .identifier("offset")
-        static let context: TokenSyntax = .identifier("context")
-        static let state: TokenSyntax = .identifier("state")
     }
 }

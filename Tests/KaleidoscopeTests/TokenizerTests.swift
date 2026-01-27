@@ -5,17 +5,17 @@
 //  Created by Larry Zeng on 12/7/23.
 //
 
-import Kaleidoscope
+import KaleidoscopeLexer
 import Testing
 
-// @Kaleidoscope
-// enum Test {
-//     @regex(/a/)
-//     case a
+@Kaleidoscope
+enum Test {
+    @regex(/a/)
+    case a
 
-//     @regex(/b/)
-//     case b
-// }
+    @regex(/b/)
+    case b
+}
 
 // @kaleidoscope()
 // enum PriorityTest: Equatable {

@@ -36,7 +36,7 @@ extension KaleidoscopeMacroTests {
                         case leaf0 = 0
                         case leaf1 = 1
                     }
-                    func __getAction(lexer: inout LexerMachine<Test>, offset: Int, context: __KaleidoscopeLeaves?) -> Kaleidoscope._CallbackResult<Test> {
+                    func __getAction(lexer: inout Kaleidoscope.LexerMachine<Test>, offset: Int, context: __KaleidoscopeLeaves?) -> Kaleidoscope._CallbackResult<Test> {
                         switch context {
                         case nil:
                             lexer.end_to_boundary(Swift.max(offset, lexer.offset() + 1))
@@ -47,7 +47,9 @@ extension KaleidoscopeMacroTests {
                             return .Kaleidoscope._CallbackResult.emit(Test.b)
                         }
                     }
-                    func jumpTo_0(_ lexer: inout LexerMachine<Test>) throws {
+                    func jumpTo_0(_ lexer: inout Kaleidoscope.LexerMachine<Test>, _ offset: Int, _ context: __KaleidoscopeLeaves?) throws {
+                        var offset = offset
+                        var context = context
                         let other = try lexer.read(offset: offset)
                         if let other {
                             enum NextState {
@@ -94,7 +96,9 @@ extension KaleidoscopeMacroTests {
                             return .failure(NSError(domain: "Kaleidoscope", code: -1, userInfo: nil))
                         }
                     }
-                    func jumpTo_1(_ lexer: inout LexerMachine<Test>) throws {
+                    func jumpTo_1(_ lexer: inout Kaleidoscope.LexerMachine<Test>, _ offset: Int, _ context: __KaleidoscopeLeaves?) throws {
+                        var offset = offset
+                        var context = context
                         lexer.end(at: offset - 1)
                         context = .leaf0
                         let other = try lexer.read(offset: offset)
@@ -130,7 +134,9 @@ extension KaleidoscopeMacroTests {
                             return .failure(NSError(domain: "Kaleidoscope", code: -1, userInfo: nil))
                         }
                     }
-                    func jumpTo_2(_ lexer: inout LexerMachine<Test>) throws {
+                    func jumpTo_2(_ lexer: inout Kaleidoscope.LexerMachine<Test>, _ offset: Int, _ context: __KaleidoscopeLeaves?) throws {
+                        var offset = offset
+                        var context = context
                         lexer.end(at: offset - 1)
                         context = .leaf1
                         let other = try lexer.read(offset: offset)

@@ -56,10 +56,10 @@ public struct KaleidoscopeBuilderNext: ExtensionMacro {
         return try [
             ExtensionDeclSyntax("extension \(type): \(raw: Constants.Types.lexerProtocol)") {
                 "typealias TokenType = Self"
-                "typealias RawSource = String" // TODO: allow this to be customizable
+                "typealias Source = String" // TODO: allow this to be customizable
 
                 try FunctionDeclSyntax(
-                    "public static func lex(_ lexer: inout \(raw: Constants.Types.lexerMachine)<Self>) throws",
+                    "public static func lex(_ lexer: inout \(raw: Constants.Types.lexerMachine)<Self>) -> Result<Self, Self.\(raw: Constants.Types.lexerError)>?",
                 ) {
                     try generator.generateLex()
                 }

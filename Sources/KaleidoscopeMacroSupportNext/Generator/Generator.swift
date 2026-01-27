@@ -14,10 +14,31 @@ public struct Generator {
         }
     }
 
+    struct NameSpace {
+        let lexerMachineIdent: TokenSyntax
+        let keleidoscopeStates: TokenSyntax
+        let keleidoscopeLeaves: TokenSyntax
+        let getAction: TokenSyntax
+        let offset: TokenSyntax
+        let context: TokenSyntax
+        let state: TokenSyntax
+
+        init(macroContext: any MacroExpansionContext) {
+            lexerMachineIdent = .identifier("lexer")
+            keleidoscopeStates = macroContext.makeUniqueName("__KaleidoscopeStates")
+            keleidoscopeLeaves = macroContext.makeUniqueName("__KaleidoscopeLeaves")
+            getAction = macroContext.makeUniqueName("__getAction")
+            offset = macroContext.makeUniqueName("offset")
+            context = macroContext.makeUniqueName("context")
+            state = macroContext.makeUniqueName("state")
+        }
+    }
+
     public let enumType: any TypeSyntaxProtocol
     public let config: Config
     public let graph: Graph
     public let context: any MacroExpansionContext
+    let nameSpace: NameSpace
 
     // State and leaf identifiers (cached for performance)
     private var stateIdentifiers: [State: TokenSyntax] = [:]
@@ -37,6 +58,7 @@ public struct Generator {
         self.config = config
         self.graph = graph
         self.context = context
+        nameSpace = NameSpace(macroContext: context)
 
         // Pre-compute state identifiers
         stateIdentifiers = graph
@@ -68,7 +90,7 @@ public struct Generator {
     func stateValue(_ state: State) throws(GeneratorError) -> TokenSyntax {
         let ident = try getIdentifier(state)
         if config.useStateMachineCodeGen {
-            return "\(Constants.Identifiers.keleidoscopeStates).\(ident)"
+            return "\(nameSpace.keleidoscopeStates).\(ident)"
         } else {
             return "\(ident)"
         }
@@ -91,14 +113,14 @@ public struct Generator {
         if let earlyLeaf = stateData.type.early {
             let leafIdent = leafIdentifiers[earlyLeaf.id]
             return CodeBlockItemListSyntax {
-                "lexer.end(at: offset)"
-                "context = .\(leafIdent)"
+                "lexer.end(at: \(nameSpace.offset))"
+                "\(nameSpace.context) = .\(leafIdent)"
             }
         } else if let acceptLeaf = stateData.type.accept {
             let leafIdent = leafIdentifiers[acceptLeaf.id]
             return CodeBlockItemListSyntax {
-                "lexer.end(at: offset - 1)"
-                "context = .\(leafIdent)"
+                "lexer.end(at: \(nameSpace.offset) - 1)"
+                "\(nameSpace.context) = .\(leafIdent)"
             }
         } else {
             return CodeBlockItemListSyntax {}
@@ -132,8 +154,10 @@ public struct Generator {
         let thisIdent = try getIdentifier(state)
 
         return try FunctionDeclSyntax(
-            "func \(thisIdent)(_ lexer: inout LexerMachine<\(enumType)>) throws",
+            "func \(thisIdent)(_ \(raw: nameSpace.lexerMachineIdent): inout \(raw: Constants.Types.lexerMachine)<\(enumType)>, _ offset: Int, _ context: \(raw: nameSpace.keleidoscopeLeaves)?) -> Result<\(enumType), \(enumType).\(Constants.Types.lexerError)>?",
         ) {
+            "var \(raw: nameSpace.offset) = offset"
+            "var \(raw: nameSpace.context) = context"
             try generateStateImpl(state: state)
         }
     }
@@ -169,9 +193,9 @@ public struct Generator {
                 }
                 try fastLoop(
                     unrollFactor: 8,
-                    lexer: Constants.Identifiers.lexerMachineIdent,
+                    lexer: nameSpace.lexerMachineIdent,
                     test: loopTest,
-                    offset: Constants.Identifiers.offset,
+                    offset: nameSpace.offset,
                 )
             }
         } else {
@@ -199,57 +223,12 @@ public struct Generator {
         )
     }
 
-    // MARK: - Main Generation Entry Point
-
-    public mutating func generateLex() throws -> CodeBlockItemListSyntax {
-        let states = graph.states()
-
-        let initStateIdent = try getIdentifier(graph.root)
-        let commons = try generateLexCommon()
-
-        if config.useStateMachineCodeGen {
-            return try CodeBlockItemListSyntax {
-                commons
-
-                try EnumDeclSyntax("enum \(Constants.Identifiers.keleidoscopeStates)") {
-                    for state in states {
-                        try EnumCaseDeclSyntax(elements: [.init(name: getIdentifier(state))])
-                    }
-                }
-
-                "var \(Constants.Identifiers.state) = \(Constants.Identifiers.keleidoscopeStates).\(initStateIdent)"
-                "var \(Constants.Identifiers.offset) = lexer.offset()"
-                "var \(Constants.Identifiers.context): \(Constants.Identifiers.keleidoscopeLeaves)? = nil"
-
-                try WhileStmtSyntax("while true") {
-                    try SwitchExprSyntax("switch \(Constants.Identifiers.state)") {
-                        for state in states {
-                            try generateState(state: state)
-                        }
-                    }
-                }
-            }
-        } else {
-            return try CodeBlockItemListSyntax {
-                commons
-
-                for state in states {
-                    try generateState(state: state)
-                }
-
-                "try \(initStateIdent)(&\(Constants.Identifiers.lexerMachineIdent), \(Constants.Identifiers.lexerMachineIdent).offset(), nil)"
-            }
-        }
-    }
-
     private func generateLexCommon() throws -> CodeBlockItemListSyntax {
         try CodeBlockItemListSyntax {
-            try EnumDeclSyntax("enum \(Constants.Identifiers.keleidoscopeLeaves): Int") {
-                for (idx, ident) in leafIdentifiers.enumerated() {
-                    EnumCaseDeclSyntax(elements: [.init(
-                        name: ident,
-                        rawValue: .init(value: ExprSyntax("\(raw: idx)")),
-                    )])
+            // compiler crahses :((
+            try EnumDeclSyntax("enum \(nameSpace.keleidoscopeLeaves)") {
+                for ident in leafIdentifiers {
+                    EnumCaseDeclSyntax(elements: [.init(name: ident)])
                 }
             }
 
@@ -260,9 +239,9 @@ public struct Generator {
     private func generateCallback(from leaf: borrowing Leaf) -> CodeBlockItemListSyntax {
         let callbackOp: ExprSyntax? = switch leaf.callback {
         case let .named(callbackName: callbackRef):
-            ExprSyntax("\(callbackRef)(&\(Constants.Identifiers.lexerMachineIdent))")
+            ExprSyntax("\(callbackRef)(&\(nameSpace.lexerMachineIdent))")
         case let .lambda(closure: callbackFunc):
-            ExprSyntax("\(callbackFunc)(&\(Constants.Identifiers.lexerMachineIdent))")
+            ExprSyntax("\(callbackFunc)(&\(nameSpace.lexerMachineIdent))")
         case nil:
             nil
         }
@@ -270,12 +249,12 @@ public struct Generator {
         return CodeBlockItemListSyntax {
             switch (leaf.kind, callbackOp) {
             case (.skip, nil):
-                "return .\(raw: Constants.Types.callbackResult).skip"
+                "return \(raw: Constants.Types.callbackResult).skip"
             case let (.skip, callback?):
                 "let cb = \(callback) as \(raw: Constants.Types.skipResultSource)"
                 "return cb.convert()"
             case let (.caseOnly(caseName), nil):
-                "return .\(raw: Constants.Types.callbackResult).emit(\(enumType).\(caseName))"
+                "return \(raw: Constants.Types.callbackResult).emit(\(enumType).\(caseName))"
             case let (.caseOnly(caseName), callback?):
                 "let cb: Void = \(callback)"
                 "return \(enumType).\(caseName)"
@@ -288,7 +267,7 @@ public struct Generator {
         }
     }
 
-    private func tokenFunctions() throws -> CodeBlockItemListSyntax {
+    private func tokenFunctions() throws -> FunctionDeclSyntax {
         let leafBodies = graph
             .leaves
             .map { leaf in
@@ -298,20 +277,18 @@ public struct Generator {
 
         assert(leafBodies.count == leafIdents.count, "Leaf identifiers and bodies count mismatch")
 
-        return try CodeBlockItemListSyntax {
-            try FunctionDeclSyntax(
-                "func \(Constants.Identifiers.getAction)(lexer: inout \(raw: Constants.Types.lexerMachine)<\(enumType)>, offset: Int, context: \(Constants.Identifiers.keleidoscopeLeaves)?) -> \(raw: Constants.Types.callbackResult)<\(enumType)>",
-            ) {
-                try SwitchExprSyntax("switch context") {
-                    SwitchCaseSyntax("case nil:") {
-                        "lexer.end_to_boundary(Swift.max(offset, lexer.offset() + 1))"
+        return try FunctionDeclSyntax(
+            "func \(nameSpace.getAction)(lexer: inout \(raw: Constants.Types.lexerMachine)<\(enumType)>, offset: Int, context: \(nameSpace.keleidoscopeLeaves)?) -> \(raw: Constants.Types.callbackResult)<\(enumType)>",
+        ) {
+            try SwitchExprSyntax("switch context") {
+                SwitchCaseSyntax("case nil:") {
+                    "lexer.endToBoundary(offset: Swift.max(offset, lexer.offset() + 1))"
 
-                        "return \(raw: Constants.Types.callbackResult).defaultError"
-                    }
-                    for (ident, body) in zip(leafIdents, leafBodies) {
-                        SwitchCaseSyntax("case \(ident):") {
-                            body
-                        }
+                    "return \(raw: Constants.Types.callbackResult).defaultError"
+                }
+                for (leafIdent, leafBody) in zip(leafIdents, leafBodies) {
+                    SwitchCaseSyntax("case .\(leafIdent):") {
+                        leafBody
                     }
                 }
             }
@@ -356,7 +333,7 @@ public struct Generator {
             }
         } else {
             CodeBlockItemListSyntax {
-                "return try \(stateIdent)(&\(Constants.Identifiers.lexerMachineIdent), \(Constants.Identifiers.offset), \(Constants.Identifiers.context))"
+                "return \(stateIdent)(&\(nameSpace.lexerMachineIdent), \(nameSpace.offset), \(nameSpace.context))"
             }
         }
     }
@@ -373,12 +350,12 @@ public struct Generator {
                 "\(state) = \(stateIdent)"
                 "continue"
             } else {
-                "return \(stateIdent)(\(lex), \(offset), \(context))"
+                "return \(stateIdent)(&\(lex), \(offset), \(context))"
             }
         }
 
         return try CodeBlockItemListSyntax {
-            "let action = \(Constants.Identifiers.getAction)(lexer: &\(lex), offset: \(offset), context: \(context))"
+            "let action = \(nameSpace.getAction)(lexer: &\(lex), offset: \(offset), context: \(context))"
 
             try SwitchExprSyntax("switch action") {
                 SwitchCaseSyntax("case .emit(let token):") {
@@ -391,11 +368,54 @@ public struct Generator {
                     restartLexer
                 }
                 SwitchCaseSyntax("case .error(let error):") {
-                    "return .failure(error)"
+                    "return .failure(.userError(error))"
                 }
                 SwitchCaseSyntax("case .defaultError:") {
-                    "return .failure(NSError(domain: \"Kaleidoscope\", code: -1, userInfo: nil))" // FIXME: use user's error
+                    "return .failure(.lexerError)"
                 }
+            }
+        }
+    }
+
+    // MAKR: - Fix compiler crash
+
+    public mutating func generateLex() throws -> CodeBlockItemListSyntax {
+        let states = graph.states()
+
+        let initStateIdent = try getIdentifier(graph.root)
+        let commons = try generateLexCommon()
+
+        if config.useStateMachineCodeGen {
+            return try CodeBlockItemListSyntax {
+                commons
+
+                try EnumDeclSyntax("enum \(nameSpace.keleidoscopeStates)") {
+                    for state in states {
+                        try EnumCaseDeclSyntax(elements: [.init(name: getIdentifier(state))])
+                    }
+                }
+
+                "var \(nameSpace.state) = \(nameSpace.keleidoscopeStates).\(initStateIdent)"
+                "var \(nameSpace.offset) = lexer.offset()"
+                "var \(nameSpace.context): \(nameSpace.keleidoscopeLeaves)? = nil"
+
+                try WhileStmtSyntax("while true") {
+                    try SwitchExprSyntax("switch \(nameSpace.state)") {
+                        for state in states {
+                            try generateState(state: state)
+                        }
+                    }
+                }
+            }
+        } else {
+            return try CodeBlockItemListSyntax {
+                commons
+
+                for state in states {
+                    try generateState(state: state)
+                }
+
+                "return \(initStateIdent)(&\(nameSpace.lexerMachineIdent), \(nameSpace.lexerMachineIdent).offset(), nil)"
             }
         }
     }

@@ -39,13 +39,13 @@ extension Generator {
             let action = stateAction(stateIdent: nextState)
 
             body = try CodeBlockItemListSyntax {
-                "let \(nextState): \(Constants.Identifiers.keleidoscopeStates)?"
+                "let \(nextState): \(nameSpace.keleidoscopeStates)?"
 
                 try SwitchExprSyntax("switch byte") {
                     for (index, state) in table.enumerated() {
                         if let state {
                             try SwitchCaseSyntax("case \(raw: index):") {
-                                try "\(nextState) = \(stateValue(state))"
+                                try "\(nextState) = .\(stateValue(state))"
                             }
                         }
                     }
@@ -56,7 +56,7 @@ extension Generator {
                 }
 
                 try IfExprSyntax("if let \(nextState)") {
-                    "\(Constants.Identifiers.offset) += 1"
+                    "\(nameSpace.offset) += 1"
                     action
                 }
             }
@@ -82,13 +82,13 @@ extension Generator {
 
                 "let \(nextState): \(nextStateType)?"
 
-                "\(Constants.Identifiers.offset) += 1"
+                "\(nameSpace.offset) += 1"
 
                 try SwitchExprSyntax("switch byte") {
                     for (index, state) in table.enumerated() {
                         if let state {
                             try SwitchCaseSyntax("case \(raw: index):") {
-                                try "\(nextState) = \(stateValue(state))"
+                                try "\(nextState) = .\(stateValue(state))"
                             }
                         }
                     }
@@ -105,31 +105,31 @@ extension Generator {
                         }
                     }
 
-                    SwitchCaseSyntax("case .\(noneState)") {
+                    SwitchCaseSyntax("case .\(noneState), nil:") {
                         "break"
                     }
                 }
 
-                "\(Constants.Identifiers.offset) -= 1"
+                "\(nameSpace.offset) -= 1"
             }
         }
 
         let eoi = try forkEOI(state: state)
 
         return try CodeBlockItemListSyntax {
-            "let other = try lexer.read(offset: offset)"
+            "let byte = lexer.read(offset: \(nameSpace.offset))"
 
-            try IfExprSyntax("if let other") {
+            try IfExprSyntax("if let byte") {
                 body
             } else: {
                 eoi
             }
 
             try takeAction(
-                lex: Constants.Identifiers.lexerMachineIdent,
-                offset: Constants.Identifiers.offset,
-                context: Constants.Identifiers.context,
-                state: Constants.Identifiers.state,
+                lex: nameSpace.lexerMachineIdent,
+                offset: nameSpace.offset,
+                context: nameSpace.context,
+                state: nameSpace.state,
             )
         }
     }
@@ -138,7 +138,7 @@ extension Generator {
         try CodeBlockItemListSyntax {
             if state == graph.root {
                 try IfExprSyntax(
-                    "if \(Constants.Identifiers.lexerMachineIdent).offset() == \(Constants.Identifiers.offset)",
+                    "if \(nameSpace.lexerMachineIdent).offset() == \(nameSpace.offset)",
                 ) {
                     "return nil"
                 }
@@ -159,7 +159,7 @@ extension Generator {
     //     return try CodeBlockItemListSyntax {
     //         let other = TokenSyntax.identifier("other")
 
-    //         "let \(other) = try lexer.read(offset: \(Constants.Identifiers.offset))"
+    //         "let \(other) = try lexer.read(offset: \(nameSpace.offset))"
 
     //         try IfExprSyntax("if let \(other)") {
     //             innerCase
@@ -168,10 +168,10 @@ extension Generator {
     //         }
 
     //         try takeAction(
-    //             lex: Constants.Identifiers.lexerMachineIdent,
-    //             offset: Constants.Identifiers.offset,
-    //             context: Constants.Identifiers.context,
-    //             state: Constants.Identifiers.state,
+    //             lex: nameSpace.lexerMachineIdent,
+    //             offset: nameSpace.offset,
+    //             context: nameSpace.context,
+    //             state: nameSpace.state,
     //         )
     //     }
     // }

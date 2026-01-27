@@ -1,7 +1,7 @@
 
 public enum _CallbackResult<Token: LexerProtocol> {
     case emit(Token)
-    case error(Token.Error)
+    case error(Token.UserError)
     case defaultError
     case skip
 }
@@ -10,7 +10,7 @@ public enum _SkipResult<Token: LexerProtocol> {
     public typealias CToken = Token
 
     case skip
-    case error(Token.Error)
+    case error(Token.UserError)
 }
 
 public protocol SkipResultSource<SToken> {

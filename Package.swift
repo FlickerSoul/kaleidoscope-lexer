@@ -14,8 +14,8 @@ let package = Package(
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
-            name: "Kaleidoscope",
-            targets: ["Kaleidoscope"],
+            name: "KaleidoscopeLexer",
+            targets: ["KaleidoscopeLexer"],
         ),
     ],
     traits: [
@@ -46,22 +46,15 @@ let package = Package(
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
                 .product(name: "MacroToolkit", package: "swift-macro-toolkit"),
-                "KaleidoscopeLexer",
                 "KaleidoscopeMacroSupportNext",
                 "RegexSupport",
             ],
         ),
-        .target(name: "KaleidoscopeLexer"),
         .target(
-            name: "Kaleidoscope",
+            name: "KaleidoscopeLexer",
             dependencies: [
                 "KaleidoscopeMacros",
-                "KaleidoscopeLexer",
             ],
-        ),
-        .target(
-            name: "GraphExportSupport",
-            dependencies: [],
         ),
         .target(
             name: "RegexSupport",
@@ -82,6 +75,7 @@ let package = Package(
                 .product(name: "OrderedCollections", package: "swift-collections"),
             ],
         ),
+        .target(name: "GraphExportSupport"),
         // tests
         .target(
             name: "TestUtils",
@@ -95,12 +89,14 @@ let package = Package(
             dependencies: [
                 .product(name: "MacroTesting", package: "swift-macro-testing"),
                 "KaleidoscopeMacros",
+                "KaleidoscopeMacroSupportNext",
+                "RegexSupport",
             ],
         ),
         .testTarget(
             name: "KaleidoscopeTests",
             dependencies: [
-                "Kaleidoscope",
+                "KaleidoscopeLexer",
             ],
         ),
         .testTarget(
@@ -121,7 +117,7 @@ let package = Package(
             ],
         ),
         // example
-        .executableTarget(name: "KaleidoscopeClient", dependencies: ["Kaleidoscope"]),
+        .executableTarget(name: "KaleidoscopeClient", dependencies: ["KaleidoscopeLexer"]),
     ],
     swiftLanguageModes: [.v6],
 )

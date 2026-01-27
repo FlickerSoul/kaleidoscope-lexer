@@ -4,7 +4,7 @@
 //
 //  Created by Larry Zeng on 1/13/26.
 //
-import Kaleidoscope
+import KaleidoscopeLexer
 
 @kaleidoscope(skip: "\t| |\n")
 enum BenchmarkTestType {

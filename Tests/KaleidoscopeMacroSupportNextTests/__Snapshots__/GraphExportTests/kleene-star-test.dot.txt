@@ -1,0 +1,8 @@
+digraph {
+node[shape=box];
+splines=ortho;
+n0[label="State 0\nlate(0)",color=green,shape=box];
+en0n0[label="a",color=black,shape=diamond];
+n0->en0n0;
+en0n0->n0;
+}

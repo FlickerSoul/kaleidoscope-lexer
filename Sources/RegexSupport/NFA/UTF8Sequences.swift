@@ -41,10 +41,6 @@ struct UTF8ByteRange: Equatable, Sendable {
 struct UTF8Sequence: Equatable, Sendable {
     private(set) var ranges: [UTF8ByteRange]
 
-    init(ranges: [UTF8ByteRange]) {
-        self.ranges = ranges
-    }
-
     var length: Int {
         ranges.count
     }
@@ -88,7 +84,9 @@ private struct ScalarRange {
     var end: UInt32
 
     /// Returns true if start <= end
-    var isValid: Bool { start <= end }
+    var isValid: Bool {
+        start <= end
+    }
 
     /// Splits this range if it overlaps with surrogate codepoints (0xD800-0xDFFF).
     /// Returns nil if no split is needed.
@@ -216,7 +214,8 @@ struct UTF8Sequences: Sequence, IteratorProtocol {
                     if (range.start & ~mask) != (range.end & ~mask) {
                         if (range.start & mask) != 0 {
                             rangeStack.append(
-                                ScalarRange(start: (range.start | mask) + 1, end: range.end))
+                                ScalarRange(start: (range.start | mask) + 1, end: range.end),
+                            )
                             range.end = range.start | mask
                             continue innerLoop
                         }

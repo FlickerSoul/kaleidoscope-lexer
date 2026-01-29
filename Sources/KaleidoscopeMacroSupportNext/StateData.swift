@@ -37,7 +37,7 @@ public struct StateData: Hashable, Sendable {
         }
     }
 
-    // Add back edge while maintaining sorted order
+    /// Add back edge while maintaining sorted order
     mutating func addBackEdge(to state: State) {
         let insertIndex = backEdges.firstIndex { $0 >= state }
         backEdges.insert(state, at: insertIndex ?? backEdges.count)

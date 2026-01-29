@@ -70,47 +70,49 @@ extension Generator {
             }
 
             body = try CodeBlockItemListSyntax {
-                let noneState: TokenSyntax = .identifier("__none")
-                let nextStateType = TokenSyntax.identifier("NextState")
+                if !stateIdents.isEmpty {
+                    let noneState: TokenSyntax = .identifier("__none")
+                    let nextStateType = TokenSyntax.identifier("NextState")
 
-                try EnumDeclSyntax("enum \(nextStateType)") {
-                    for stateIdent in stateIdents {
-                        EnumCaseDeclSyntax(elements: [.init(name: stateIdent)])
+                    try EnumDeclSyntax("enum \(nextStateType)") {
+                        for stateIdent in stateIdents {
+                            EnumCaseDeclSyntax(elements: [.init(name: stateIdent)])
+                        }
+                        EnumCaseDeclSyntax(elements: [.init(name: noneState)])
                     }
-                    EnumCaseDeclSyntax(elements: [.init(name: noneState)])
-                }
 
-                "let \(nextState): \(nextStateType)?"
+                    "let \(nextState): \(nextStateType)?"
 
-                "\(nameSpace.offset) += 1"
+                    "\(nameSpace.offset) += 1"
 
-                try SwitchExprSyntax("switch byte") {
-                    for (index, state) in table.enumerated() {
-                        if let state {
-                            try SwitchCaseSyntax("case \(raw: index):") {
-                                try "\(nextState) = .\(stateValue(state))"
+                    try SwitchExprSyntax("switch byte") {
+                        for (index, state) in table.enumerated() {
+                            if let state {
+                                try SwitchCaseSyntax("case \(raw: index):") {
+                                    try "\(nextState) = .\(stateValue(state))"
+                                }
                             }
                         }
-                    }
 
-                    SwitchCaseSyntax("default:") {
-                        "nextState = nil"
-                    }
-                }
-
-                try SwitchExprSyntax("switch \(nextState)") {
-                    for (stateIdent, action) in zip(stateIdents, actions) {
-                        SwitchCaseSyntax("case .\(stateIdent):") {
-                            action
+                        SwitchCaseSyntax("default:") {
+                            "nextState = nil"
                         }
                     }
 
-                    SwitchCaseSyntax("case .\(noneState), nil:") {
-                        "break"
-                    }
-                }
+                    try SwitchExprSyntax("switch \(nextState)") {
+                        for (stateIdent, action) in zip(stateIdents, actions) {
+                            SwitchCaseSyntax("case .\(stateIdent):") {
+                                action
+                            }
+                        }
 
-                "\(nameSpace.offset) -= 1"
+                        SwitchCaseSyntax("case .\(noneState), nil:") {
+                            "break"
+                        }
+                    }
+
+                    "\(nameSpace.offset) -= 1"
+                }
             }
         }
 

@@ -21,8 +21,13 @@ public protocol RangeSetBound: Comparable {
 
 /// - SeeAlso: https://github.com/rust-lang/regex/blob/5ea3eb1e95f0338e283f5f0b4681f0891a1cd836/regex-syntax/src/hir/interval.rs#L538
 extension Character: RangeSetBound {
-    public static var min: Character { "\u{0000}" }
-    public static var max: Character { "\u{10FFFF}" }
+    public static var min: Character {
+        "\u{0000}"
+    }
+
+    public static var max: Character {
+        "\u{10FFFF}"
+    }
 
     public func increment() -> Character? {
         guard let scalar = unicodeScalars.first else { return nil }

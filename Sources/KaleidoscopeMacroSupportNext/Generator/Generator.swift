@@ -44,8 +44,8 @@ public struct Generator {
     private var stateIdentifiers: [State: TokenSyntax] = [:]
     private var leafIdentifiers: [TokenSyntax] = []
 
-    // LUT optimization - maps bit tables to indices
-    // BitTable is a 256-element array where each element indicates if that byte matches
+    /// LUT optimization - maps bit tables to indices
+    /// BitTable is a 256-element array where each element indicates if that byte matches
     private var loopMasks: [[Bool]: Int] = [:]
 
     public init(

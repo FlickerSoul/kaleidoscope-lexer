@@ -5,9 +5,8 @@
 //  Created by Larry Zeng on 1/15/26.
 //
 
-import Testing
-
 @testable import RegexSupport
+import Testing
 
 @Suite("RangeSet Tests")
 struct RangeSetTests {
@@ -29,7 +28,8 @@ struct RangeSetTests {
             (["x" ... "z", "a" ... "c"], ["a" ... "c", "x" ... "z"]),
             // Multiple overlapping ranges
             (["a" ... "c", "b" ... "e", "d" ... "g"], ["a" ... "g"]),
-        ] as [([ClosedRange<Character>], [ClosedRange<Character>])])
+        ] as [([ClosedRange<Character>], [ClosedRange<Character>])],
+    )
     func `normalize merges and sorts ranges`(
         input: [ClosedRange<Character>],
         expected: [ClosedRange<Character>],
@@ -54,7 +54,8 @@ struct RangeSetTests {
             (["a" ... "c"], ["d" ... "f"], ["a" ... "f"]),
             // Same set union
             (["a" ... "c"], ["a" ... "c"], ["a" ... "c"]),
-        ] as [([ClosedRange<Character>], [ClosedRange<Character>], [ClosedRange<Character>])])
+        ] as [([ClosedRange<Character>], [ClosedRange<Character>], [ClosedRange<Character>])],
+    )
     func `union combines ranges`(
         first: [ClosedRange<Character>],
         second: [ClosedRange<Character>],
@@ -83,7 +84,8 @@ struct RangeSetTests {
             (["a" ... "c"], ["a" ... "c"], ["a" ... "c"]),
             // Multiple ranges intersection
             (["a" ... "e", "m" ... "q"], ["c" ... "o"], ["c" ... "e", "m" ... "o"]),
-        ] as [([ClosedRange<Character>], [ClosedRange<Character>], [ClosedRange<Character>])])
+        ] as [([ClosedRange<Character>], [ClosedRange<Character>], [ClosedRange<Character>])],
+    )
     func `intersection finds common ranges`(
         first: [ClosedRange<Character>],
         second: [ClosedRange<Character>],
@@ -116,7 +118,8 @@ struct RangeSetTests {
             (["a" ... "g"], ["c" ... "e"], ["a" ... "b", "f" ... "g"]),
             // Multiple subtractions
             (["a" ... "z"], ["c" ... "e", "m" ... "o"], ["a" ... "b", "f" ... "l", "p" ... "z"]),
-        ] as [([ClosedRange<Character>], [ClosedRange<Character>], [ClosedRange<Character>])])
+        ] as [([ClosedRange<Character>], [ClosedRange<Character>], [ClosedRange<Character>])],
+    )
     func `subtraction removes ranges`(
         first: [ClosedRange<Character>],
         second: [ClosedRange<Character>],
@@ -141,7 +144,8 @@ struct RangeSetTests {
             (["a" ... "c"], ["a" ... "c"], []),
             // Partial overlap
             (["a" ... "e"], ["c" ... "g"], ["a" ... "b", "f" ... "g"]),
-        ] as [([ClosedRange<Character>], [ClosedRange<Character>], [ClosedRange<Character>])])
+        ] as [([ClosedRange<Character>], [ClosedRange<Character>], [ClosedRange<Character>])],
+    )
     func `symmetric difference finds exclusive ranges`(
         first: [ClosedRange<Character>],
         second: [ClosedRange<Character>],

@@ -53,7 +53,7 @@ private func matches(seqs: [UTF8Sequence], bytes: [UInt8]) -> Bool {
 @Suite("UTF8Sequences Tests")
 struct UTF8SequencesTests {
     @Test
-    func `ASCII character produces single sequence`() throws {
+    func `ASCII character produces single sequence`() {
         let sequences = Array(UTF8Sequences(character: "a"))
 
         #expect(sequences.count == 1)
@@ -61,7 +61,7 @@ struct UTF8SequencesTests {
     }
 
     @Test
-    func `two-byte character produces single sequence`() throws {
+    func `two-byte character produces single sequence`() {
         let sequences = Array(UTF8Sequences(character: "é"))
 
         #expect(sequences.count == 1)
@@ -74,7 +74,7 @@ struct UTF8SequencesTests {
     }
 
     @Test
-    func `ASCII range produces single sequence`() throws {
+    func `ASCII range produces single sequence`() {
         let sequences = Array(UTF8Sequences(range: "a" ... "z"))
 
         #expect(sequences.count == 1)
@@ -82,7 +82,7 @@ struct UTF8SequencesTests {
     }
 
     @Test
-    func `range spanning UTF8 lengths produces multiple sequences`() throws {
+    func `range spanning UTF8 lengths produces multiple sequences`() {
         // Range from 'a' (U+0061) to 'é' (U+00E9) spans:
         // - ASCII: U+0061 to U+007F (1 byte)
         // - 2-byte: U+0080 to U+00E9
@@ -99,7 +99,7 @@ struct UTF8SequencesTests {
     }
 
     @Test
-    func `full UTF8 range`() throws {
+    func `full UTF8 range`() {
         let sequences = Array(UTF8Sequences(range: "\u{0000}" ... "\u{FFFF}"))
 
         // UTF-8 encoding of 'a'.
@@ -118,7 +118,7 @@ struct UTF8SequencesTests {
 
     /// Tests that no sequence accepts surrogate codepoints
     @Test
-    func `codepoints no surrogates`() throws {
+    func `codepoints no surrogates`() {
         neverAcceptsSurrogateCodepoints(start: "\u{0}", end: "\u{FFFF}")
         neverAcceptsSurrogateCodepoints(start: "\u{0}", end: "\u{10FFFF}")
         neverAcceptsSurrogateCodepoints(start: "\u{0}", end: "\u{10FFFE}")
@@ -129,7 +129,7 @@ struct UTF8SequencesTests {
     /// Tests that every range of scalar values that contains a single
     /// scalar value is recognized by one sequence of byte ranges.
     @Test
-    func `single codepoint one sequence`() throws {
+    func `single codepoint one sequence`() {
         for i: UInt32 in 0x0 ... 0x0010_FFFF {
             guard let scalar = Unicode.Scalar(i) else { continue }
             let seqs = Array(UTF8Sequences(start: scalar, end: scalar))
@@ -142,7 +142,7 @@ struct UTF8SequencesTests {
 
     /// Tests the exact sequences produced for the Basic Multilingual Plane (BMP)
     @Test
-    func `basic multilingual plane`() throws {
+    func `basic multilingual plane`() {
         let seqs = Array(UTF8Sequences(start: "\u{0}", end: "\u{FFFF}"))
 
         let expected: [UTF8Sequence] = [
@@ -222,7 +222,7 @@ struct UTF8SequencesTests {
             ),
         ],
     )
-    func reverse(input: [UTF8ByteRange], expected: [UTF8ByteRange]) throws {
+    func reverse(input: [UTF8ByteRange], expected: [UTF8ByteRange]) {
         var sequence = UTF8Sequence(ranges: input)
         sequence.reverse()
         #expect(sequence.ranges == expected)

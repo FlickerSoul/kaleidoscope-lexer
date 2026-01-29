@@ -6,7 +6,7 @@
 //
 import Benchmark
 
-// Custom metric to track bytes per iteration (multiply by throughput for bytes/sec)
+/// Custom metric to track bytes per iteration (multiply by throughput for bytes/sec)
 extension BenchmarkMetric {
     static let bytesPerIteration: Self = .custom("Bytes", polarity: .prefersLarger, useScalingFactor: true)
 }

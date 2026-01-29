@@ -23,7 +23,8 @@ public extension HIRKind {
             self = try .init(group)
         case let .conditional(conditional):
             throw .unsupportedConstruct("Conditional is not supported`").toError(
-                with: conditional.location)
+                with: conditional.location,
+            )
         case let .quantification(quantification):
             self = try .init(quantification)
         case let .quote(quote):
@@ -68,7 +69,8 @@ public extension HIRKind {
                 false
             case .possessive:
                 throw .unsupportedConstruct("Possessive quantifiers are not supported").toError(
-                    with: quantification.kind.location)
+                    with: quantification.kind.location,
+                )
             }
 
         let min: Int
@@ -87,32 +89,37 @@ public extension HIRKind {
         case let .exactly(number):
             guard let exactNumber = number.value else {
                 throw .invalid("Exact quantifier parsing failed").toError(
-                    with: quantification.amount.location)
+                    with: quantification.amount.location,
+                )
             }
             min = exactNumber
             max = exactNumber
         case let .nOrMore(number):
             guard let nOrMoreNumber = number.value else {
                 throw .invalid("N or more quantifier parsing failed").toError(
-                    with: quantification.amount.location)
+                    with: quantification.amount.location,
+                )
             }
             min = nOrMoreNumber
             max = nil
         case let .upToN(number):
             guard let upToNNumber = number.value else {
                 throw .invalid("Up to N quantifier parsing failed").toError(
-                    with: quantification.amount.location)
+                    with: quantification.amount.location,
+                )
             }
             min = 0
             max = upToNNumber
         case let .range(lhs, rhs):
             guard let rangeMin = lhs.value else {
                 throw .invalid("Range min quantifier parsing failed").toError(
-                    with: quantification.amount.location)
+                    with: quantification.amount.location,
+                )
             }
             guard let rangeMax = rhs.value else {
                 throw .invalid("Range max quantifier parsing failed").toError(
-                    with: quantification.amount.location)
+                    with: quantification.amount.location,
+                )
             }
             min = rangeMin
             max = rangeMax
@@ -165,7 +172,8 @@ public extension HIRKind {
 
             guard characterString != wrappedName else {
                 throw .invalid("Failed to parse named character: \(namedCharacter)").toError(
-                    with: atom.location)
+                    with: atom.location,
+                )
             }
 
             guard let char = characterString.first else {
@@ -184,18 +192,21 @@ public extension HIRKind {
             throw .unavailable("Dollar anchor $ not supported").toError(with: atom.location)
         case let .backreference(reference):
             throw .unsupportedConstruct("Back reference is not supported").toError(
-                with: reference.innerLoc)
+                with: reference.innerLoc,
+            )
         case let .subpattern(subpattern):
             throw .unavailable("Subpattern not supported").toError(with: subpattern.innerLoc)
         case .callout:
             throw .unavailable("Calllout is not supported").toError(with: atom.location)
         case .backtrackingDirective:
             throw .unsupportedConstruct("Backtracking directive is not supported").toError(
-                with: atom.location)
+                with: atom.location,
+            )
         case .changeMatchingOptions:
             // FIXME: support change matching options/flags
             throw .unavailable("Change matching options is not supported").toError(
-                with: atom.location)
+                with: atom.location,
+            )
         case .invalid:
             throw .invalid("Encountered invalid atom").toError(with: atom.location)
         }
@@ -245,11 +256,13 @@ public extension CharacterClass {
             let rhsCharacter = range.rhs.literalCharacterValue
             guard let lhsCharacter else {
                 throw .invalid("Character class range lhs is not a single character").toError(
-                    with: range.lhs.location)
+                    with: range.lhs.location,
+                )
             }
             guard let rhsCharacter else {
                 throw .invalid("Character class range rhs is not a single character").toError(
-                    with: range.rhs.location)
+                    with: range.rhs.location,
+                )
             }
             guard lhsCharacter <= rhsCharacter else {
                 throw .invalid(
@@ -266,7 +279,8 @@ public extension CharacterClass {
             let character = atom.literalCharacterValue
             guard let character else {
                 throw .invalid("Character class atom is not a single character").toError(
-                    with: atom.location)
+                    with: atom.location,
+                )
             }
             self = .init(
                 ranges: [character ... character],

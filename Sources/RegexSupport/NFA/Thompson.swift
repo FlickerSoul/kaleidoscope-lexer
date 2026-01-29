@@ -172,7 +172,8 @@ enum NFABuilderState: Equatable, Sendable {
         case let .sparse(transitions):
             self = .sparse(transitions)
             throw NFAConstructionError.invalidOperation(
-                description: "Cannot patch sparse state directly.")
+                description: "Cannot patch sparse state directly.",
+            )
         case .epsilon:
             self = .epsilon(to)
         case var .union(unions):
@@ -285,7 +286,8 @@ struct ThompsonBuilder {
     mutating func endPattern(with stateId: NFAStateID) throws(NFAConstructionError) {
         guard let currentPatternID = patternID else {
             throw .invalidOperation(
-                description: "Ending a pattern but no pattern is currently being built.")
+                description: "Ending a pattern but no pattern is currently being built.",
+            )
         }
         patternStarts[Int(currentPatternID.id)] = stateId
         patternID = nil
@@ -298,9 +300,7 @@ struct ThompsonBuilder {
         if states.count >= Int(UInt32.max) {
             throw .stateLimitExceeded
         }
-        let id = NFAStateID(UInt32(states.count))
-
-        return id
+        return NFAStateID(UInt32(states.count))
     }
 
     /// Adds a union state and returns its ID
@@ -618,7 +618,8 @@ struct ThompsonConstruction {
             try compileConcat(
                 children.map { (child: consuming HIRKind) throws(NFAConstructionError) in
                     try compile(child)
-                })
+                },
+            )
         case let .alternation(alts):
             try compileAlternation(alts)
         case let .quantification(quant):
@@ -698,7 +699,8 @@ extension ThompsonConstruction {
                   let endByte = range.upperBound.asciiValue
             else {
                 throw .invalidOperation(
-                    description: "Non-ASCII character found in ASCII class compilation.")
+                    description: "Non-ASCII character found in ASCII class compilation.",
+                )
             }
 
             transitions.append(Transition(start: startByte, end: endByte, next: end))

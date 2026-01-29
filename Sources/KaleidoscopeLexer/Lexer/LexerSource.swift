@@ -72,7 +72,7 @@ extension String: LexerSource {
         return slice.map(Slice.init)
     }
 
-    // - Complexity: O(1)
+    /// - Complexity: O(1)
     public func slice(unchecked _: Void, range: Range<Int>) -> SubSequence {
         assert(
             range.startIndex <= byteCount && range.endIndex <= byteCount,

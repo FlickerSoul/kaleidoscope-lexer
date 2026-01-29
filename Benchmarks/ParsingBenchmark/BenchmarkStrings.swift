@@ -1,9 +1,9 @@
-//
-//  BenchmarkStrings.swift
-//  Kaleidoscope
-//
-//  Created by Larry Zeng on 1/13/26.
-//
+///
+///  BenchmarkStrings.swift
+///  Kaleidoscope
+///
+///  Created by Larry Zeng on 1/13/26.
+///
 private let FUNCTIONS = """
 foobar(protected primitive private instanceof in) { + ++ = == === => }
 foobar(protected primitive private instanceof in) { + ++ = == === => }

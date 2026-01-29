@@ -6,9 +6,8 @@
 //
 
 import _RegexParser
-import Testing
-
 @testable import RegexSupport
+import Testing
 
 /// Parses a regex pattern string and converts it to HIRKind
 func parseToHIR(_ pattern: String) throws -> HIRKind {
@@ -48,17 +47,20 @@ struct HIRTranslatorTests {
         (
             "a*",
             HIRKind.quantification(
-                Quantification(min: 0, max: nil, isEager: true, child: .literal(["a"]))),
+                Quantification(min: 0, max: nil, isEager: true, child: .literal(["a"])),
+            ),
         ),
         (
             "a+",
             HIRKind.quantification(
-                Quantification(min: 1, max: nil, isEager: true, child: .literal(["a"]))),
+                Quantification(min: 1, max: nil, isEager: true, child: .literal(["a"])),
+            ),
         ),
         (
             "a?",
             HIRKind.quantification(
-                Quantification(min: 0, max: 1, isEager: true, child: .literal(["a"]))),
+                Quantification(min: 0, max: 1, isEager: true, child: .literal(["a"])),
+            ),
         ),
     ])
     func `basic quantifiers`(pattern: String, expected: HIRKind) throws {
@@ -70,17 +72,20 @@ struct HIRTranslatorTests {
         (
             "a*?",
             HIRKind.quantification(
-                Quantification(min: 0, max: nil, isEager: false, child: .literal(["a"]))),
+                Quantification(min: 0, max: nil, isEager: false, child: .literal(["a"])),
+            ),
         ),
         (
             "a+?",
             HIRKind.quantification(
-                Quantification(min: 1, max: nil, isEager: false, child: .literal(["a"]))),
+                Quantification(min: 1, max: nil, isEager: false, child: .literal(["a"])),
+            ),
         ),
         (
             "a??",
             HIRKind.quantification(
-                Quantification(min: 0, max: 1, isEager: false, child: .literal(["a"]))),
+                Quantification(min: 0, max: 1, isEager: false, child: .literal(["a"])),
+            ),
         ),
     ])
     func `reluctant quantifiers`(pattern: String, expected: HIRKind) throws {
@@ -92,22 +97,26 @@ struct HIRTranslatorTests {
         (
             "a{3}",
             HIRKind.quantification(
-                Quantification(min: 3, max: 3, isEager: true, child: .literal(["a"]))),
+                Quantification(min: 3, max: 3, isEager: true, child: .literal(["a"])),
+            ),
         ),
         (
             "a{2,5}",
             HIRKind.quantification(
-                Quantification(min: 2, max: 5, isEager: true, child: .literal(["a"]))),
+                Quantification(min: 2, max: 5, isEager: true, child: .literal(["a"])),
+            ),
         ),
         (
             "a{2,}",
             HIRKind.quantification(
-                Quantification(min: 2, max: nil, isEager: true, child: .literal(["a"]))),
+                Quantification(min: 2, max: nil, isEager: true, child: .literal(["a"])),
+            ),
         ),
         (
             "a{,3}",
             HIRKind.quantification(
-                Quantification(min: 0, max: 3, isEager: true, child: .literal(["a"]))),
+                Quantification(min: 0, max: 3, isEager: true, child: .literal(["a"])),
+            ),
         ),
     ])
     func `range quantifiers`(pattern: String, expected: HIRKind) throws {
@@ -215,7 +224,8 @@ struct HIRTranslatorTests {
                 "a" ... "a",
                 "b" ... "b",
                 "c" ... "c",
-            ]))
+            ]),
+        )
         #expect(result == expected)
     }
 
@@ -237,7 +247,8 @@ struct HIRTranslatorTests {
                 max: nil,
                 isEager: true,
                 child: .class(CharacterClass.dot()),
-            ))
+            ),
+        )
         #expect(result == expected)
     }
 
@@ -287,7 +298,8 @@ struct HIRTranslatorTests {
                 max: nil,
                 isEager: true,
                 child: .group(Group(child: .alternation([.literal(["a"]), .literal(["b"])]))),
-            ))
+            ),
+        )
         #expect(result == expected)
     }
 
@@ -300,7 +312,8 @@ struct HIRTranslatorTests {
                 max: nil,
                 isEager: true,
                 child: .class(CharacterClass(ranges: ["a" ... "z"])),
-            ))
+            ),
+        )
         #expect(result == expected)
     }
 
@@ -316,9 +329,12 @@ struct HIRTranslatorTests {
                         max: nil,
                         isEager: true,
                         child: .group(
-                            Group(child: .concat([.literal(["a"]), .literal(["b"])]))),
-                    )),
-            ))
+                            Group(child: .concat([.literal(["a"]), .literal(["b"])])),
+                        ),
+                    ),
+                ),
+            ),
+        )
         #expect(result == expected)
     }
 
@@ -385,7 +401,9 @@ struct HIRTranslatorTests {
                     .literal(["a"]),
                     .empty,
                     .literal(["c"]),
-                ])))
+                ]),
+            ),
+        )
         #expect(result == expected)
     }
 
@@ -435,7 +453,8 @@ struct HIRTranslatorTests {
                 max: 1,
                 isEager: true,
                 child: .literal(["a"]),
-            ))
+            ),
+        )
         #expect(result == expected)
     }
 
@@ -448,7 +467,8 @@ struct HIRTranslatorTests {
                 max: 1,
                 isEager: false,
                 child: .literal(["a"]),
-            ))
+            ),
+        )
         #expect(result == expected)
     }
 
@@ -461,7 +481,8 @@ struct HIRTranslatorTests {
                 max: 2,
                 isEager: false,
                 child: .literal(["a"]),
-            ))
+            ),
+        )
         #expect(result == expected)
     }
 
@@ -474,7 +495,8 @@ struct HIRTranslatorTests {
                 max: nil,
                 isEager: false,
                 child: .literal(["a"]),
-            ))
+            ),
+        )
         #expect(result == expected)
     }
 
@@ -497,7 +519,8 @@ struct HIRTranslatorTests {
                 max: 1,
                 isEager: true,
                 child: .group(Group(child: .concat([.literal(["a"]), .literal(["b"])]))),
-            ))
+            ),
+        )
         #expect(result == expected)
     }
 
@@ -524,7 +547,8 @@ struct HIRTranslatorTests {
     func `nested alternation in group`() throws {
         let result = try parseToHIR("(a|b)")
         let expected = HIRKind.group(
-            Group(child: .alternation([.literal(["a"]), .literal(["b"])])))
+            Group(child: .alternation([.literal(["a"]), .literal(["b"])])),
+        )
         #expect(result == expected)
     }
 
@@ -546,7 +570,9 @@ struct HIRTranslatorTests {
                 child: .alternation([
                     .group(Group(child: .alternation([.literal(["a"]), .literal(["b"])]))),
                     .group(Group(child: .alternation([.literal(["c"]), .literal(["d"])]))),
-                ])))
+                ]),
+            ),
+        )
         #expect(result == expected)
     }
 
@@ -682,7 +708,8 @@ struct HIRTranslatorTests {
             CharacterClass(ranges: [
                 "a" ... "b",
                 "h" ... "w",
-            ]))
+            ]),
+        )
         #expect(result == expected)
     }
 
@@ -696,7 +723,8 @@ struct HIRTranslatorTests {
             CharacterClass(ranges: [
                 "a" ... "l",
                 "o" ... "z",
-            ]))
+            ]),
+        )
         #expect(result == expected)
     }
 
@@ -719,7 +747,8 @@ struct HIRTranslatorTests {
             CharacterClass(ranges: [
                 "a" ... "b",
                 "h" ... "j",
-            ]))
+            ]),
+        )
         #expect(result == expected)
     }
 
@@ -739,7 +768,8 @@ struct HIRTranslatorTests {
             CharacterClass(ranges: [
                 "a" ... "c",
                 "x" ... "z",
-            ]))
+            ]),
+        )
         #expect(result == expected)
     }
 
@@ -752,7 +782,8 @@ struct HIRTranslatorTests {
             CharacterClass(ranges: [
                 "A" ... "Z",
                 "a" ... "z",
-            ]))
+            ]),
+        )
         #expect(result == expected)
     }
 

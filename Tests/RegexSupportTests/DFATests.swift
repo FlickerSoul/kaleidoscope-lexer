@@ -5,10 +5,9 @@
 //  Created by Larry Zeng on 1/20/26.
 //
 import Foundation
+@testable import RegexSupport
 import Testing
 import TestUtils
-
-@testable import RegexSupport
 
 // MARK: - DFA Test Helpers
 
@@ -903,7 +902,8 @@ struct DFATests {
                     max: nil,
                     isEager: true,
                     child: .literal(["a"]),
-                )),
+                ),
+            ),
             .literal(["b"]),
         ])
         let dfa = try dfa(from: hir)

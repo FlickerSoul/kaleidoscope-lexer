@@ -1,11 +1,10 @@
 import _RegexParser
+@testable import KaleidoscopeMacroSupportNext
+@testable import RegexSupport
 import SnapshotTesting
 import SwiftSyntax
 import Testing
 import TestUtils
-
-@testable import KaleidoscopeMacroSupportNext
-@testable import RegexSupport
 
 extension Syntax {
     static let dummy = Syntax(ExprSyntax(""))
@@ -214,8 +213,11 @@ struct `Graph Export Tests` {
                                     min: 0, max: 1, isEager: true,
                                     child: .group(
                                         .init(
-                                            child: .concat([.literal(["e"]), .literal(["e"])]))),
-                                )),
+                                            child: .concat([.literal(["e"]), .literal(["e"])]),
+                                        ),
+                                    ),
+                                ),
+                            ),
                         ]),
                     ),
                 ],
@@ -284,7 +286,8 @@ struct `Graph Export Tests` {
                                 .init(
                                     min: 0, max: 2, isEager: true,
                                     child: .literal(["e"]),
-                                )),
+                                ),
+                            ),
                         ]),
                     ),
                 ],
@@ -449,7 +452,8 @@ struct `Graph Export Tests` {
                     .init(
                         source: .regex("(a|b)"),
                         hir: .group(
-                            .init(child: .alternation([.literal(["a"]), .literal(["b"])]))),
+                            .init(child: .alternation([.literal(["a"]), .literal(["b"])])),
+                        ),
                     ),
                 ],
                 dfa: .init(
@@ -493,7 +497,8 @@ struct `Graph Export Tests` {
                     .init(
                         source: .regex("a?"),
                         hir: .quantification(
-                            .init(min: 0, max: 1, isEager: true, child: .literal(["a"]))),
+                            .init(min: 0, max: 1, isEager: true, child: .literal(["a"])),
+                        ),
                     ),
                 ],
                 dfa: .init(
@@ -741,7 +746,8 @@ struct `Graph Export Tests` {
                     .init(
                         source: .regex("a+"),
                         hir: .quantification(
-                            .init(min: 1, max: nil, isEager: true, child: .literal(["a"]))),
+                            .init(min: 1, max: nil, isEager: true, child: .literal(["a"])),
+                        ),
                     ),
                 ],
                 dfa: .init(
@@ -793,7 +799,8 @@ struct `Graph Export Tests` {
                     .init(
                         source: .regex("a*"),
                         hir: .quantification(
-                            .init(min: 0, max: nil, isEager: true, child: .literal(["a"]))),
+                            .init(min: 0, max: nil, isEager: true, child: .literal(["a"])),
+                        ),
                     ),
                 ],
                 dfa: .init(
@@ -840,7 +847,8 @@ struct `Graph Export Tests` {
                     .init(
                         source: .regex("a{3}"),
                         hir: .quantification(
-                            .init(min: 3, max: 3, isEager: true, child: .literal(["a"]))),
+                            .init(min: 3, max: 3, isEager: true, child: .literal(["a"])),
+                        ),
                     ),
                 ],
                 dfa: .init(
@@ -902,7 +910,8 @@ struct `Graph Export Tests` {
                     .init(
                         source: .regex("a{3,5}"),
                         hir: .quantification(
-                            .init(min: 3, max: 5, isEager: true, child: .literal(["a"]))),
+                            .init(min: 3, max: 5, isEager: true, child: .literal(["a"])),
+                        ),
                     ),
                 ],
                 dfa: .init(
@@ -984,7 +993,8 @@ struct `Graph Export Tests` {
                     .init(
                         source: .regex("a{4,}"),
                         hir: .quantification(
-                            .init(min: 4, max: nil, isEager: true, child: .literal(["a"]))),
+                            .init(min: 4, max: nil, isEager: true, child: .literal(["a"])),
+                        ),
                     ),
                 ],
                 dfa: .init(

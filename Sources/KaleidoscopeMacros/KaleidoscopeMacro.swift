@@ -7,6 +7,6 @@ import SwiftSyntaxMacros
 struct KaleidoscopePlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
         EnumCaseRegistry.self,
-        KaleidoscopeBuilder.self,
+        KaleidoscopeBuilderNext.self,
     ]
 }

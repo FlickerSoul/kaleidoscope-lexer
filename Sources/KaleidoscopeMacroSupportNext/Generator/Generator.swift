@@ -110,14 +110,14 @@ public struct Generator {
     // MARK: - State Setup
 
     func generateStateSetup(stateData: StateData) -> CodeBlockItemListSyntax {
-        if let earlyLeaf = stateData.type.early {
-            let leafIdent = leafIdentifiers[earlyLeaf.id]
+        if let currentLeaf = stateData.type.acceptCurrent {
+            let leafIdent = leafIdentifiers[currentLeaf.id]
             return CodeBlockItemListSyntax {
                 "lexer.end(at: \(nameSpace.offset))"
                 "\(nameSpace.context) = .\(leafIdent)"
             }
-        } else if let acceptLeaf = stateData.type.accept {
-            let leafIdent = leafIdentifiers[acceptLeaf.id]
+        } else if let beforeLeaf = stateData.type.acceptBefore {
+            let leafIdent = leafIdentifiers[beforeLeaf.id]
             return CodeBlockItemListSyntax {
                 "lexer.end(at: \(nameSpace.offset) - 1)"
                 "\(nameSpace.context) = .\(leafIdent)"

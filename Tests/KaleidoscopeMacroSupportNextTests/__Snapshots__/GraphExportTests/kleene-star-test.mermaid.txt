@@ -1,5 +1,5 @@
 flowchart TB
-n0["State 0<br>late(0)"]
+n0["State 0<br>current(0)"]
 style n0 stroke:#00C853
 en0n0{"a"}
 style en0n0 stroke:#000000

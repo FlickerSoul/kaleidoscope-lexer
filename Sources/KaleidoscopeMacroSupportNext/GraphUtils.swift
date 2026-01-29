@@ -58,5 +58,6 @@ func getStateType(
         )
     }
 
-    return .init(accept: maxPriorityLeaf.leafID, early: nil)
+    // FIXME: so if landing on this state, does that mean there is a match for all previous, or including current???
+    return .init(acceptBefore: nil, acceptCurrent: maxPriorityLeaf.leafID)
 }

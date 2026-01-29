@@ -24,6 +24,6 @@ n4[label="State 4",color=black,shape=box];
 en4n6[label="o",color=black,shape=diamond];
 n4->en4n6;
 en4n6->n6;
-n5[label="State 5\nlate(1)",color=green,shape=box];
-n6[label="State 6\nlate(0)",color=green,shape=box];
+n5[label="State 5\ncurrent(1)",color=green,shape=box];
+n6[label="State 6\ncurrent(0)",color=green,shape=box];
 }

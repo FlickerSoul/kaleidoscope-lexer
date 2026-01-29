@@ -64,10 +64,10 @@ public extension Graph {
         let shapeNames = states().map { state in
             let stateId = state.id
             let stateData = getStateData(state)
-            let rendered = if let earlyLeafId = stateData.type.early {
-                "State \(stateId)\nearly(\(earlyLeafId.id))"
-            } else if let acceptLeafId = stateData.type.accept {
-                "State \(stateId)\nlate(\(acceptLeafId.id))"
+            let rendered = if let currentLeaf = stateData.type.acceptCurrent {
+                "State \(stateId)\ncurrent(\(currentLeaf.id))"
+            } else if let beforeLeaf = stateData.type.acceptBefore {
+                "State \(stateId)\nbefore(\(beforeLeaf.id))"
             } else {
                 "State \(stateId)"
             }
@@ -82,7 +82,7 @@ public extension Graph {
 
             let id = shapeIds[state.id]
             let label = shapeNames[state.id]
-            let color: GraphNodeColor = data.type.earlyOrAccept != nil ? .green : .black
+            let color: GraphNodeColor = data.type.currentOrBefore != nil ? .green : .black
 
             Fmt.writeNode(&output, id: id, label: label, color: color, shape: .rectangle)
 

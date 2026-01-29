@@ -13,9 +13,9 @@ en0n3{"c"}
 style en0n3 stroke:#000000
 n0-->en0n3
 en0n3-->n3
-n1["State 1<br>late(0)"]
+n1["State 1<br>current(0)"]
 style n1 stroke:#00C853
-n2["State 2<br>late(1)"]
+n2["State 2<br>current(1)"]
 style n2 stroke:#00C853
-n3["State 3<br>late(2)"]
+n3["State 3<br>current(2)"]
 style n3 stroke:#00C853

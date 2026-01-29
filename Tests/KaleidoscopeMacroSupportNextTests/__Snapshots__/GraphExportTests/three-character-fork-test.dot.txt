@@ -11,7 +11,7 @@ en0n2->n2;
 en0n3[label="c",color=black,shape=diamond];
 n0->en0n3;
 en0n3->n3;
-n1[label="State 1\nlate(0)",color=green,shape=box];
-n2[label="State 2\nlate(1)",color=green,shape=box];
-n3[label="State 3\nlate(2)",color=green,shape=box];
+n1[label="State 1\ncurrent(0)",color=green,shape=box];
+n2[label="State 2\ncurrent(1)",color=green,shape=box];
+n3[label="State 3\ncurrent(2)",color=green,shape=box];
 }

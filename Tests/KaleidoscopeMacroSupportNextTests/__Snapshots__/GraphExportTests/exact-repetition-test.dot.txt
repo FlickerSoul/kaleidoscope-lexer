@@ -13,5 +13,5 @@ n2[label="State 2",color=black,shape=box];
 en2n3[label="a",color=black,shape=diamond];
 n2->en2n3;
 en2n3->n3;
-n3[label="State 3\nlate(0)",color=green,shape=box];
+n3[label="State 3\ncurrent(0)",color=green,shape=box];
 }

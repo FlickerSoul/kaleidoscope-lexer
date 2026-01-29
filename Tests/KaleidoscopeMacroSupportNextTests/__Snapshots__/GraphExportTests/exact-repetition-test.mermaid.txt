@@ -17,5 +17,5 @@ en2n3{"a"}
 style en2n3 stroke:#000000
 n2-->en2n3
 en2n3-->n3
-n3["State 3<br>late(0)"]
+n3["State 3<br>current(0)"]
 style n3 stroke:#00C853

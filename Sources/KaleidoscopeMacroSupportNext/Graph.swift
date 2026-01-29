@@ -113,13 +113,13 @@ extension Graph {
                     data.normal
                         .map(\.state)
                         .map { state in
-                            self.getStateData(state).type.accept
+                            self.getStateData(state).type.acceptBefore
                         },
                 )
 
                 if childrenAcceptStates.count == 1,
-                   case let .some(earlyAccept) = childrenAcceptStates.first {
-                    statesData[state.id].type.early = earlyAccept
+                   case let .some(acceptCurrent) = childrenAcceptStates.first {
+                    statesData[state.id].type.acceptCurrent = acceptCurrent
                 }
             }
         }
@@ -128,14 +128,14 @@ extension Graph {
         for state: State in states() {
             let data = getStateData(state)
 
-            if let acceptLeaf = data.type.accept {
+            if let acceptLeaf = data.type.acceptBefore {
                 // note: ignoring starting states (backEdges.isEmpty) who also are accepting states
                 // since they have no back edges
                 if !data.backEdges.isEmpty,
                    data.backEdges.all({ state in
-                       self.getStateData(state).type.early == acceptLeaf
+                       self.getStateData(state).type.acceptCurrent == acceptLeaf
                    }) {
-                    statesData[state.id].type.accept = nil
+                    statesData[state.id].type.acceptBefore = nil
                 }
             }
         }
@@ -144,7 +144,7 @@ extension Graph {
     private mutating func pruneUnreachable() {
         // prune unreachable states
         var visitStack = states().filter { state in
-            self.getStateData(state).type.earlyOrAccept != nil
+            self.getStateData(state).type.currentOrBefore != nil
         }
         visitStack.append(root)
 

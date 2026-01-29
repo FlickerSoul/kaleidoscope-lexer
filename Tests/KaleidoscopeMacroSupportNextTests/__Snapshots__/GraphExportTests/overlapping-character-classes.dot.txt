@@ -8,6 +8,6 @@ en0n1->n1;
 en0n2[label="m..=z",color=black,shape=diamond];
 n0->en0n2;
 en0n2->n2;
-n1[label="State 1\nlate(0)",color=green,shape=box];
-n2[label="State 2\nlate(1)",color=green,shape=box];
+n1[label="State 1\ncurrent(0)",color=green,shape=box];
+n2[label="State 2\ncurrent(1)",color=green,shape=box];
 }

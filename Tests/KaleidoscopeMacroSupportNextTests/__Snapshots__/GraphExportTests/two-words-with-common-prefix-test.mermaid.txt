@@ -33,7 +33,7 @@ en4n6{"o"}
 style en4n6 stroke:#000000
 n4-->en4n6
 en4n6-->n6
-n5["State 5<br>late(1)"]
+n5["State 5<br>current(1)"]
 style n5 stroke:#00C853
-n6["State 6<br>late(0)"]
+n6["State 6<br>current(0)"]
 style n6 stroke:#00C853

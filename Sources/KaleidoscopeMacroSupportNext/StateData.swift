@@ -1,14 +1,16 @@
 public struct StateType: Hashable, Sendable {
-    var accept: LeafID?
-    var early: LeafID?
+    /// match extends from the start offset up to (but not including) the most recently read byte.
+    var acceptBefore: LeafID?
+    /// and the match extends from the start offset through the most recently read byte.
+    var acceptCurrent: LeafID?
 
-    init(accept: LeafID? = nil, early: LeafID? = nil) {
-        self.accept = accept
-        self.early = early
+    init(acceptBefore: LeafID? = nil, acceptCurrent: LeafID? = nil) {
+        self.acceptBefore = acceptBefore
+        self.acceptCurrent = acceptCurrent
     }
 
-    var earlyOrAccept: LeafID? {
-        early ?? accept
+    var currentOrBefore: LeafID? {
+        acceptCurrent ?? acceptBefore
     }
 }
 

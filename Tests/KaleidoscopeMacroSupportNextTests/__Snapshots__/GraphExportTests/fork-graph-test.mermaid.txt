@@ -9,7 +9,7 @@ en0n2{"z"}
 style en0n2 stroke:#000000
 n0-->en0n2
 en0n2-->n2
-n1["State 1<br>late(0)"]
+n1["State 1<br>current(0)"]
 style n1 stroke:#00C853
-n2["State 2<br>late(1)"]
+n2["State 2<br>current(1)"]
 style n2 stroke:#00C853

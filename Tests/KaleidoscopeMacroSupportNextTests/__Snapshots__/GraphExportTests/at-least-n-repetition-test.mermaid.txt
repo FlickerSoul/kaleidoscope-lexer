@@ -23,7 +23,7 @@ en3n4{"a"}
 style en3n4 stroke:#000000
 n3-->en3n4
 en3n4-->n4
-n4["State 4<br>late(0)"]
+n4["State 4<br>current(0)"]
 style n4 stroke:#00C853
 en4n4{"a"}
 style en4n4 stroke:#000000

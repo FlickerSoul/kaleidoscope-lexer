@@ -5,7 +5,7 @@ en0n1{"a"}
 style en0n1 stroke:#000000
 n0-->en0n1
 en0n1-->n1
-n1["State 1<br>late(0)"]
+n1["State 1<br>current(0)"]
 style n1 stroke:#00C853
 en1n1{"a"}
 style en1n1 stroke:#000000

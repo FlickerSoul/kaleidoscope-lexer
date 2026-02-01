@@ -40,6 +40,7 @@ public enum Constants {
         public static let skipResult = PackageEntity(name: "_SkipResult")
         public static let skipResultSource = PackageEntity(name: "SkipResultSource")
         public static let lexerError: TokenSyntax = .identifier("LexerError")
+        public static let lexerOutput: TokenSyntax = .identifier("LexerOutput")
     }
 
     public enum Helpers {

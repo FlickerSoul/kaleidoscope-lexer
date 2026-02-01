@@ -18,6 +18,7 @@ public struct KaleidoscopeBuilderNext: ExtensionMacro {
         try macroVisitor.walk(enumDecl: enumDecl)
 
         let graph = try Graph.build(from: macroVisitor.leaves)
+        let type = type.trimmed
 
         if !graph.errors.isEmpty {
             for error in graph.errors {
@@ -55,11 +56,11 @@ public struct KaleidoscopeBuilderNext: ExtensionMacro {
 
         return try [
             ExtensionDeclSyntax("extension \(type): \(raw: Constants.Types.lexerProtocol)") {
-                "typealias TokenType = Self"
                 "typealias Source = String" // TODO: allow this to be customizable
+                "typealias UserError = Never" // TODO: allow user to customize Error type
 
                 try FunctionDeclSyntax(
-                    "public static func lex(_ lexer: inout \(raw: Constants.Types.lexerMachine)<Self>) -> Result<Self, Self.\(raw: Constants.Types.lexerError)>?",
+                    "public static func lex(_ lexer: inout \(raw: Constants.Types.lexerMachine)<\(type)>) -> \(type).\(Constants.Types.lexerOutput)?",
                 ) {
                     try generator.generateLex()
                 }

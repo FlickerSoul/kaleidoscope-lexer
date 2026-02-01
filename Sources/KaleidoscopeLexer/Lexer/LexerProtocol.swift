@@ -1,14 +1,11 @@
 public protocol LexerProtocol {
-    associatedtype TokenType: LexerProtocol
     associatedtype Source: LexerSource
-    associatedtype UserError: Swift.Error = Never
+    associatedtype UserError: Swift.Error
 
-    typealias TokenStream = [TokenType]
-
-    // TODO: allow user to customize Error type
     typealias LexerError = KaleidoscopeError<UserError>
+    typealias LexerOutput = Result<Self, LexerError>
 
-    static func lex(_ lexer: inout LexerMachine<Self>) -> Result<Self, Self.LexerError>?
+    static func lex(_ lexer: inout LexerMachine<Self>) -> LexerOutput?
     static func lexer(source: Source) -> LexerMachine<Self>
 }
 

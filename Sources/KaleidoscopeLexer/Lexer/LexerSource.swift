@@ -123,7 +123,7 @@ extension String: LexerSource {
     }
 }
 
-extension String.UTF8View {
+private extension String.UTF8View {
     subscript(unchecked _: Void, integerRange range: Range<Int>) -> String.UTF8View.SubSequence {
         let left = index(startIndex, offsetBy: range.lowerBound)
         let right = index(startIndex, offsetBy: range.upperBound)

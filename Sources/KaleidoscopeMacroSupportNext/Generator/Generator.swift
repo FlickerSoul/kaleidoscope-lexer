@@ -1,4 +1,5 @@
 import SwiftSyntax
+import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
 
 public enum GeneratorError: Error {
@@ -25,8 +26,8 @@ public struct Generator {
 
         init(macroContext: any MacroExpansionContext) {
             lexerMachineIdent = .identifier("lexer")
-            keleidoscopeStates = macroContext.makeUniqueName("__KaleidoscopeStates")
-            keleidoscopeLeaves = macroContext.makeUniqueName("__KaleidoscopeLeaves")
+            keleidoscopeStates = .identifier("Swift.Int")
+            keleidoscopeLeaves = .identifier("Swift.Int")
             getAction = macroContext.makeUniqueName("__getAction")
             offset = macroContext.makeUniqueName("offset")
             context = macroContext.makeUniqueName("context")
@@ -69,7 +70,7 @@ public struct Generator {
 
         // Pre-compute leaf identifiers
         leafIdentifiers = (0 ..< graph.leaves.count).map { idx in
-            .identifier("leaf\(idx)")
+            context.makeUniqueName("leaf\(idx)")
         }
     }
 
@@ -109,34 +110,36 @@ public struct Generator {
 
     // MARK: - State Setup
 
+    @CodeBlockItemListBuilder
     func generateStateSetup(stateData: StateData) -> CodeBlockItemListSyntax {
         if let currentLeaf = stateData.type.acceptCurrent {
             let leafIdent = leafIdentifiers[currentLeaf.id]
-            return CodeBlockItemListSyntax {
-                "lexer.end(at: \(nameSpace.offset))"
-                "\(nameSpace.context) = .\(leafIdent)"
-            }
+            "lexer.end(at: \(nameSpace.offset))"
+            updateContext(with: leafIdent)
         } else if let beforeLeaf = stateData.type.acceptBefore {
             let leafIdent = leafIdentifiers[beforeLeaf.id]
-            return CodeBlockItemListSyntax {
-                "lexer.end(at: \(nameSpace.offset) - 1)"
-                "\(nameSpace.context) = .\(leafIdent)"
-            }
-        } else {
-            return CodeBlockItemListSyntax {}
+            "lexer.end(at: \(nameSpace.offset) - 1)"
+            updateContext(with: leafIdent)
         }
     }
 
+    // @CodeBlockItemListBuilder
+    // private func updateContext(with leafIdent: TokenSyntax) -> CodeBlockItemListSyntax {
+    //     "\(nameSpace.context) = .\(leafIdent)"
+    // }
+
+    @CodeBlockItemListBuilder
+    private func updateContext(with leafIdent: TokenSyntax) -> CodeBlockItemListSyntax {
+        "\(nameSpace.context) = \(leafIdent)"
+    }
+
+    @CodeBlockItemListBuilder
     func generateCallbackInvocation(callback: CallbackKind, caseName _: TokenSyntax) -> CodeBlockItemListSyntax {
         switch callback {
         case let .named(callbackName):
-            CodeBlockItemListSyntax {
-                "try lexer.setToken(\(callbackName)(&lexer))"
-            }
+            "try lexer.setToken(\(callbackName)(&lexer))"
         case let .lambda(closure):
-            CodeBlockItemListSyntax {
-                "try lexer.setToken(\(closure)(&lexer))"
-            }
+            "try lexer.setToken(\(closure)(&lexer))"
         }
     }
 
@@ -223,15 +226,26 @@ public struct Generator {
         )
     }
 
+    // TODO: use this when compiler crash is fixed
+    // private func generateLeavesDefinition() throws -> EnumDeclSyntax {
+    //     try EnumDeclSyntax("enum \(nameSpace.keleidoscopeLeaves)") {
+    //         for ident in leafIdentifiers {
+    //             EnumCaseDeclSyntax(elements: [.init(name: ident)])
+    //         }
+    //     }
+    // }
+
+    /// leaves enum replacement, to avoid compiler crash
+    @CodeBlockItemListBuilder
+    private func generateLeavesDefinition() throws -> CodeBlockItemListSyntax {
+        for (index, ident) in leafIdentifiers.enumerated() {
+            "let \(ident): \(nameSpace.keleidoscopeLeaves) = \(raw: index)"
+        }
+    }
+
     private func generateLexCommon() throws -> CodeBlockItemListSyntax {
         try CodeBlockItemListSyntax {
-            // compiler crahses :((
-            try EnumDeclSyntax("enum \(nameSpace.keleidoscopeLeaves)") {
-                for ident in leafIdentifiers {
-                    EnumCaseDeclSyntax(elements: [.init(name: ident)])
-                }
-            }
-
+            try generateLeavesDefinition()
             try tokenFunctions()
         }
     }
@@ -280,18 +294,44 @@ public struct Generator {
         return try FunctionDeclSyntax(
             "func \(nameSpace.getAction)(lexer: inout \(raw: Constants.Types.lexerMachine)<\(enumType)>, offset: Int, context: \(nameSpace.keleidoscopeLeaves)?) -> \(raw: Constants.Types.callbackResult)<\(enumType)>",
         ) {
-            try SwitchExprSyntax("switch context") {
-                SwitchCaseSyntax("case nil:") {
-                    "lexer.endToBoundary(offset: Swift.max(offset, lexer.offset() + 1))"
+            try GuardStmtSyntax("guard let context else ") {
+                "lexer.endToBoundary(offset: Swift.max(offset, lexer.offset() + 1))"
 
-                    "return \(raw: Constants.Types.callbackResult).defaultError"
-                }
-                for (leafIdent, leafBody) in zip(leafIdents, leafBodies) {
-                    SwitchCaseSyntax("case .\(leafIdent):") {
-                        leafBody
-                    }
-                }
+                "return \(raw: Constants.Types.callbackResult).defaultError"
             }
+
+            try SwitchExprSyntax("switch context") {
+                generateLeafBodies(leafIdents: leafIdents, leafBodies: leafBodies)
+            }
+        }
+    }
+
+    // To be used with Leaves enum, when compiler crash is fixed
+    // @SwitchCaseListBuilder
+    // private func generateLeafBodies(
+    //     leafIdents: some Sequence<TokenSyntax>,
+    //     leafBodies: some Sequence<CodeBlockItemListSyntax>,
+    // ) -> SwitchCaseListSyntax {
+    //     for (leafIdent, body) in zip(leafIdents, leafBodies) {
+    //         SwitchCaseSyntax("case .\(leafIdent):") {
+    //             body
+    //         }
+    //     }
+    // }
+
+    @SwitchCaseListBuilder
+    private func generateLeafBodies(
+        leafIdents: some Sequence<TokenSyntax>,
+        leafBodies: some Sequence<CodeBlockItemListSyntax>,
+    ) -> SwitchCaseListSyntax {
+        for (leafIdent, body) in zip(leafIdents, leafBodies) {
+            SwitchCaseSyntax("case \(leafIdent):") {
+                body
+            }
+        }
+
+        SwitchCaseSyntax("default:") {
+            #"fatalError("Invalid leaf identifier. Unknown leaf \(context)")"#
         }
     }
 

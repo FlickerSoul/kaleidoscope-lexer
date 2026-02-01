@@ -9,12 +9,23 @@ import KaleidoscopeLexer
 import Testing
 
 @Kaleidoscope
-enum Test {
+enum TestToken {
     @regex(/a/)
     case a
 
     @regex(/b/)
     case b
+}
+
+@Test(arguments: [
+    ("a", [.success(.a)]),
+    ("b", [.success(.b)]),
+    ("ab", [.success(.a), .success(.b)]),
+    ("ba", [.success(.b), .success(.a)]),
+] as [(String, [TestToken.LexerOutput])])
+func `simple tokenizer`(source: String, expected: [TestToken.LexerOutput]) {
+    let actual = Array(TestToken.lexer(source: source))
+    #expect(actual == expected)
 }
 
 // @kaleidoscope()

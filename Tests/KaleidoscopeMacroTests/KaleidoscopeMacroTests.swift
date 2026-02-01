@@ -22,160 +22,118 @@ extension KaleidoscopeMacroTests {
             }
             """#
         } expansion: {
-            """
+            #"""
             enum Test {
                 case a
                 case b
             }
-
-            extension Test: Kaleidoscope.LexerProtocol {
-                typealias TokenType = Self
-                typealias RawSource = String
-                public static func lex(_ lexer: inout Kaleidoscope.LexerMachine<Self>) throws {
-                    enum __KaleidoscopeLeaves: Int {
-                        case leaf0 = 0
-                        case leaf1 = 1
-                    }
-                    func __getAction(lexer: inout Kaleidoscope.LexerMachine<Test>, offset: Int, context: __KaleidoscopeLeaves?) -> Kaleidoscope._CallbackResult<Test> {
+            extension Test: KaleidoscopeLexer.LexerProtocol {
+                typealias Source = String
+                typealias UserError = Never
+                public static func lex(_ lexer: inout KaleidoscopeLexer.LexerMachine<Test>) -> Test.LexerOutput? {
+                    let __macro_local_5leaf0fMu_: Swift.Int = 0
+                    let __macro_local_5leaf1fMu_: Swift.Int = 1
+                    func __macro_local_11__getActionfMu_(lexer: inout KaleidoscopeLexer.LexerMachine<Test>, offset: Int, context: Swift.Int?) -> KaleidoscopeLexer._CallbackResult<Test> {
+                        guard let context else  {
+                            lexer.endToBoundary(offset: Swift.max(offset, lexer.offset() + 1))
+                            return KaleidoscopeLexer._CallbackResult.defaultError
+                        }
                         switch context {
-                        case nil:
-                            lexer.end_to_boundary(Swift.max(offset, lexer.offset() + 1))
-                            return Kaleidoscope._CallbackResult.defaultError
-                        case leaf0:
-                            return .Kaleidoscope._CallbackResult.emit(Test.a)
-                        case leaf1:
-                            return .Kaleidoscope._CallbackResult.emit(Test.b)
+                        case __macro_local_5leaf0fMu_:
+                            return KaleidoscopeLexer._CallbackResult.emit(Test.a)
+                        case __macro_local_5leaf1fMu_:
+                            return KaleidoscopeLexer._CallbackResult.emit(Test.b)
+                        default:
+                            fatalError("Invalid leaf identifier. Unknown leaf \(context)")
                         }
                     }
-                    func jumpTo_0(_ lexer: inout Kaleidoscope.LexerMachine<Test>, _ offset: Int, _ context: __KaleidoscopeLeaves?) throws {
-                        var offset = offset
-                        var context = context
-                        let other = try lexer.read(offset: offset)
-                        if let other {
-                            enum NextState {
-                                case jumpTo_1
-                                case jumpTo_2
-                                case __none
-                            }
-                            let nextState: NextState?
-                            offset += 1
+                    func jumpTo_0(_ lexer: inout KaleidoscopeLexer.LexerMachine<Test>, _ offset: Int, _ context: Swift.Int?) -> Result<Test, Test.LexerError>? {
+                        var __macro_local_6offsetfMu_ = offset
+                        var __macro_local_7contextfMu_ = context
+                        let byte = lexer.read(offset: __macro_local_6offsetfMu_)
+                        if let byte {
+                            __macro_local_6offsetfMu_ += 1
                             switch byte {
                             case 97:
-                                nextState = jumpTo_1
+                                return jumpTo_1(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             case 98:
-                                nextState = jumpTo_2
+                                return jumpTo_2(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             default:
-                                nextState = nil
-                            }
-                            switch nextState {
-                            case .jumpTo_1:
-                                return try jumpTo_1(&lexer, offset, context)
-                            case .jumpTo_2:
-                                return try jumpTo_2(&lexer, offset, context)
-                            case .__none
                                 break
                             }
-                            offset -= 1
+                            __macro_local_6offsetfMu_ -= 1
                         } else {
-                            if lexer.offset() == offset {
+                            if lexer.offset() == __macro_local_6offsetfMu_ {
                                 return nil
                             }
                         }
-                        let action = __getAction(lexer: &lexer, offset: offset, context: context)
+                        let action = __macro_local_11__getActionfMu_(lexer: &lexer, offset: __macro_local_6offsetfMu_, context: __macro_local_7contextfMu_)
                         switch action {
                         case .emit(let token):
                             return .success(token)
                         case .skip:
                             lexer.trivia()
-                            offset = lexer.offset()
-                            context = nil
-                            return jumpTo_0(lexer, offset, context)
+                            __macro_local_6offsetfMu_ = lexer.offset()
+                            __macro_local_7contextfMu_ = nil
+                            return jumpTo_0(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                         case .error(let error):
-                            return .failure(error)
+                            return .failure(.userError(error))
                         case .defaultError:
-                            return .failure(NSError(domain: "Kaleidoscope", code: -1, userInfo: nil))
+                            return .failure(.lexerError)
                         }
                     }
-                    func jumpTo_1(_ lexer: inout Kaleidoscope.LexerMachine<Test>, _ offset: Int, _ context: __KaleidoscopeLeaves?) throws {
-                        var offset = offset
-                        var context = context
-                        lexer.end(at: offset - 1)
-                        context = .leaf0
-                        let other = try lexer.read(offset: offset)
-                        if let other {
-                            enum NextState {
-                                case __none
-                            }
-                            let nextState: NextState?
-                            offset += 1
-                            switch byte {
-                            default:
-                                nextState = nil
-                            }
-                            switch nextState {
-                            case .__none
-                                break
-                            }
-                            offset -= 1
+                    func jumpTo_1(_ lexer: inout KaleidoscopeLexer.LexerMachine<Test>, _ offset: Int, _ context: Swift.Int?) -> Result<Test, Test.LexerError>? {
+                        var __macro_local_6offsetfMu_ = offset
+                        var __macro_local_7contextfMu_ = context
+                        lexer.end(at: __macro_local_6offsetfMu_)
+                        __macro_local_7contextfMu_ = __macro_local_5leaf0fMu_
+                        let byte = lexer.read(offset: __macro_local_6offsetfMu_)
+                        if let byte {
                         } else {
                         }
-                        let action = __getAction(lexer: &lexer, offset: offset, context: context)
+                        let action = __macro_local_11__getActionfMu_(lexer: &lexer, offset: __macro_local_6offsetfMu_, context: __macro_local_7contextfMu_)
                         switch action {
                         case .emit(let token):
                             return .success(token)
                         case .skip:
                             lexer.trivia()
-                            offset = lexer.offset()
-                            context = nil
-                            return jumpTo_0(lexer, offset, context)
+                            __macro_local_6offsetfMu_ = lexer.offset()
+                            __macro_local_7contextfMu_ = nil
+                            return jumpTo_0(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                         case .error(let error):
-                            return .failure(error)
+                            return .failure(.userError(error))
                         case .defaultError:
-                            return .failure(NSError(domain: "Kaleidoscope", code: -1, userInfo: nil))
+                            return .failure(.lexerError)
                         }
                     }
-                    func jumpTo_2(_ lexer: inout Kaleidoscope.LexerMachine<Test>, _ offset: Int, _ context: __KaleidoscopeLeaves?) throws {
-                        var offset = offset
-                        var context = context
-                        lexer.end(at: offset - 1)
-                        context = .leaf1
-                        let other = try lexer.read(offset: offset)
-                        if let other {
-                            enum NextState {
-                                case __none
-                            }
-                            let nextState: NextState?
-                            offset += 1
-                            switch byte {
-                            default:
-                                nextState = nil
-                            }
-                            switch nextState {
-                            case .__none
-                                break
-                            }
-                            offset -= 1
+                    func jumpTo_2(_ lexer: inout KaleidoscopeLexer.LexerMachine<Test>, _ offset: Int, _ context: Swift.Int?) -> Result<Test, Test.LexerError>? {
+                        var __macro_local_6offsetfMu_ = offset
+                        var __macro_local_7contextfMu_ = context
+                        lexer.end(at: __macro_local_6offsetfMu_)
+                        __macro_local_7contextfMu_ = __macro_local_5leaf1fMu_
+                        let byte = lexer.read(offset: __macro_local_6offsetfMu_)
+                        if let byte {
                         } else {
                         }
-                        let action = __getAction(lexer: &lexer, offset: offset, context: context)
+                        let action = __macro_local_11__getActionfMu_(lexer: &lexer, offset: __macro_local_6offsetfMu_, context: __macro_local_7contextfMu_)
                         switch action {
                         case .emit(let token):
                             return .success(token)
                         case .skip:
                             lexer.trivia()
-                            offset = lexer.offset()
-                            context = nil
-                            return jumpTo_0(lexer, offset, context)
+                            __macro_local_6offsetfMu_ = lexer.offset()
+                            __macro_local_7contextfMu_ = nil
+                            return jumpTo_0(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                         case .error(let error):
-                            return .failure(error)
+                            return .failure(.userError(error))
                         case .defaultError:
-                            return .failure(NSError(domain: "Kaleidoscope", code: -1, userInfo: nil))
+                            return .failure(.lexerError)
                         }
                     }
-                    try jumpTo_0(&lexer, lexer.offset(), nil)
+                    return jumpTo_0(&lexer, lexer.offset(), nil)
                 }
             }
-            """
+            """#
         }
     }
 }

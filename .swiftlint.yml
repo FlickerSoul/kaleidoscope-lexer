@@ -42,4 +42,4 @@ cyclomatic_complexity:
   warning: 20
   error: 25
 type_name:
-  allowed_symbols: [" "]
+  allowed_symbols: ["_", " "]

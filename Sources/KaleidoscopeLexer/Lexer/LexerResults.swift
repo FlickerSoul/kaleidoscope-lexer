@@ -1,4 +1,3 @@
-
 public enum _CallbackResult<Token: LexerProtocol> {
     case emit(Token)
     case error(Token.UserError)

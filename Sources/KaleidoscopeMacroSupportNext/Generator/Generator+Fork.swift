@@ -64,49 +64,29 @@ extension Generator {
             let stateSet = Set(table.compactMap(\.self))
             let states = stateSet.sorted()
 
-            let stateIdents = try states.map(getIdentifier(_:))
-            let actions = try states.map { state in
-                try stateAction(stateIdent: stateValue(state))
-            }
+            let actions = try Dictionary(
+                uniqueKeysWithValues: states.map { state in
+                    try (
+                        state,
+                        stateAction(stateIdent: stateValue(state)),
+                    )
+                },
+            )
 
             body = try CodeBlockItemListSyntax {
-                if !stateIdents.isEmpty {
-                    let noneState: TokenSyntax = .identifier("__none")
-                    let nextStateType = TokenSyntax.identifier("NextState")
-
-                    try EnumDeclSyntax("enum \(nextStateType)") {
-                        for stateIdent in stateIdents {
-                            EnumCaseDeclSyntax(elements: [.init(name: stateIdent)])
-                        }
-                        EnumCaseDeclSyntax(elements: [.init(name: noneState)])
-                    }
-
-                    "let \(nextState): \(nextStateType)?"
-
+                if !states.isEmpty {
                     "\(nameSpace.offset) += 1"
 
                     try SwitchExprSyntax("switch byte") {
-                        for (index, state) in table.enumerated() {
+                        for (byteToJump, state) in table.enumerated() {
                             if let state {
-                                try SwitchCaseSyntax("case \(raw: index):") {
-                                    try "\(nextState) = .\(stateValue(state))"
+                                SwitchCaseSyntax("case \(raw: byteToJump):") {
+                                    actions[state]!
                                 }
                             }
                         }
 
                         SwitchCaseSyntax("default:") {
-                            "nextState = nil"
-                        }
-                    }
-
-                    try SwitchExprSyntax("switch \(nextState)") {
-                        for (stateIdent, action) in zip(stateIdents, actions) {
-                            SwitchCaseSyntax("case .\(stateIdent):") {
-                                action
-                            }
-                        }
-
-                        SwitchCaseSyntax("case .\(noneState), nil:") {
                             "break"
                         }
                     }

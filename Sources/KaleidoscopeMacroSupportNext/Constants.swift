@@ -34,16 +34,16 @@ public enum Constants {
     }
 
     public enum Types {
-        public static let lexerProtocol = PackageEntity(name: "LexerProtocol")
+        public static let lexerTokenProtocol = PackageEntity(name: "LexerTokenProtocol")
         public static let lexerMachine = PackageEntity(name: "LexerMachine")
         public static let callbackResult = PackageEntity(name: "_CallbackResult")
         public static let skipResult = PackageEntity(name: "_SkipResult")
-        public static let skipResultSource = PackageEntity(name: "SkipResultSource")
+        public static let skipResultSource = PackageEntity(name: "_SkipResultSource")
         public static let lexerError: TokenSyntax = .identifier("LexerError")
         public static let lexerOutput: TokenSyntax = .identifier("LexerOutput")
     }
 
     public enum Helpers {
-        public static let __convertTupleToEnum = "__convertTupleToEnum"
+        public static let __convertTupleToEnum: TokenSyntax = .identifier("__convertTupleToEnum")
     }
 }

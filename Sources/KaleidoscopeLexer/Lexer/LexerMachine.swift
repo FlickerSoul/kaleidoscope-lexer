@@ -4,7 +4,7 @@
 ///
 ///  Created by Larry Zeng on 12/4/23.
 ///
-public struct LexerMachine<Token: LexerProtocol> {
+public struct LexerMachine<Token: LexerTokenProtocol> {
     @usableFromInline
     let source: Token.Source
     @usableFromInline

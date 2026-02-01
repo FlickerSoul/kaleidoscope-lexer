@@ -1,4 +1,4 @@
-public protocol LexerProtocol {
+public protocol LexerTokenProtocol {
     associatedtype Source: LexerSource
     associatedtype UserError: Swift.Error
 
@@ -9,7 +9,7 @@ public protocol LexerProtocol {
     static func lexer(source: Source) -> LexerMachine<Self>
 }
 
-public extension LexerProtocol {
+public extension LexerTokenProtocol {
     static func lexer(source: Source) -> LexerMachine<Self> {
         LexerMachine(source: source)
     }

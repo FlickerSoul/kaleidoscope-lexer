@@ -27,7 +27,7 @@ extension KaleidoscopeMacroTests {
                 case a
                 case b
             }
-            extension Test: KaleidoscopeLexer.LexerProtocol {
+            extension Test: KaleidoscopeLexer.LexerTokenProtocol {
                 typealias Source = String
                 typealias UserError = Never
                 public static func lex(_ lexer: inout KaleidoscopeLexer.LexerMachine<Test>) -> Test.LexerOutput? {

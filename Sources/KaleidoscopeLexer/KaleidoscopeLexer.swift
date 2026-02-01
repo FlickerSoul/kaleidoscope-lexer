@@ -3,16 +3,16 @@
 
 // MARK: - New macros
 
-@attached(extension, conformances: LexerProtocol, names: arbitrary)
+@attached(extension, conformances: LexerTokenProtocol, names: arbitrary)
 public macro Kaleidoscope() = #externalMacro(
     module: "KaleidoscopeMacros",
     type: "KaleidoscopeBuilderNext",
 )
 
-public typealias Callback<T: LexerProtocol, R> = @Sendable (inout LexerMachine<T>) -> R
+public typealias Callback<T: LexerTokenProtocol, R> = @Sendable (inout LexerMachine<T>) -> R
 
 @attached(peer)
-public macro regex<T: LexerProtocol, R>(
+public macro regex<T: LexerTokenProtocol, R>(
     _ value: Regex<Substring>,
     priority: UInt? = nil,
     callback: @escaping Callback<T, R>,
@@ -25,7 +25,7 @@ public macro regex(
 ) = #externalMacro(module: "KaleidoscopeMacros", type: "EnumCaseRegistry")
 
 @attached(peer)
-public macro token<T: LexerProtocol, R>(
+public macro token<T: LexerTokenProtocol, R>(
     _ value: String,
     priority: UInt? = nil,
     callback: @escaping Callback<T, R>,

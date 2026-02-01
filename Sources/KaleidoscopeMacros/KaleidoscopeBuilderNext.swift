@@ -55,7 +55,7 @@ public struct KaleidoscopeBuilderNext: ExtensionMacro {
         )
 
         return try [
-            ExtensionDeclSyntax("extension \(type): \(raw: Constants.Types.lexerProtocol)") {
+            ExtensionDeclSyntax("extension \(type): \(raw: Constants.Types.lexerTokenProtocol)") {
                 "typealias Source = String" // TODO: allow this to be customizable
                 "typealias UserError = Never" // TODO: allow user to customize Error type
 

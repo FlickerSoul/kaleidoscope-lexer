@@ -1,4 +1,4 @@
-public struct SpannedLexerIterator<Token: LexerProtocol>: Sequence, IteratorProtocol {
+public struct SpannedLexerIterator<Token: LexerTokenProtocol>: Sequence, IteratorProtocol {
     public typealias Span = Range<Int>
 
     @usableFromInline

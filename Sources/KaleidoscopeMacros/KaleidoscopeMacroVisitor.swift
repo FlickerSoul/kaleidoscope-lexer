@@ -14,6 +14,7 @@ enum MacroInfoError: Error, DiagnosticMessage {
     case noSkipInEnumCase
     case noMarkedCasesFound
     case processingIfConfigDecl
+    case unknownMacroConfiguration(String?)
 
     var message: String {
         switch self {
@@ -33,6 +34,8 @@ enum MacroInfoError: Error, DiagnosticMessage {
             "No enum cases marked with @regex or @token found."
         case .processingIfConfigDecl:
             "`#if` conditional compilation blocks are not supported for now."
+        case let .unknownMacroConfiguration(config):
+            "Unknown macro configuration option: \(config ?? "<no label>")"
         }
     }
 
@@ -51,10 +54,19 @@ private struct MacroArguments {
     let callbackKind: CallbackKind?
 }
 
+struct MacroConfiguration {
+    var useStateMachineCodegen: Bool?
+
+    init(useStateMachineCodegen: Bool? = nil) {
+        self.useStateMachineCodegen = useStateMachineCodegen
+    }
+}
+
 class KaleidoscopeMacroVisitor: SyntaxVisitor {
     let context: any MacroExpansionContext
     private(set) var errors: [Diagnostic] = []
 
+    private(set) var config: MacroConfiguration = .init()
     private(set) var leaves: [Leaf] = []
 
     init(context: any MacroExpansionContext) {
@@ -84,6 +96,11 @@ class KaleidoscopeMacroVisitor: SyntaxVisitor {
     }
 
     private func parseEnumDecl(_ node: EnumDeclSyntax) {
+        extractMacroConfiguration(node)
+        extractSkipLeaves(node)
+    }
+
+    private func extractMacroConfiguration(_ node: EnumDeclSyntax) {
         let kaleidoscopeAttributes = getMacroAttributes(from: node.attributes, of: [Constants.Macro.kaleidoscope])
         guard kaleidoscopeAttributes.count <= 1 else {
             for (attribute, attributeName) in kaleidoscopeAttributes {
@@ -95,6 +112,28 @@ class KaleidoscopeMacroVisitor: SyntaxVisitor {
             return
         }
 
+        let (attribute, _) = kaleidoscopeAttributes.first!
+
+        guard let arguments = attribute.arguments?.as(LabeledExprListSyntax.self) else {
+            return
+        }
+
+        for argument in arguments {
+            switch argument.label?.text {
+            case Constants.MacroConfiguration.useStateMachineCodegen:
+                if let boolLiteral = Expr(argument.expression).asBooleanLiteral?.value {
+                    config.useStateMachineCodegen = boolLiteral
+                }
+            default:
+                errors.append(.init(
+                    node: argument,
+                    message: MacroInfoError.unknownMacroConfiguration(argument.label?.text),
+                ))
+            }
+        }
+    }
+
+    private func extractSkipLeaves(_ node: EnumDeclSyntax) {
         for (attribute, _) in getMacroAttributes(
             from: node.attributes,
             of: [Constants.Macro.skip],

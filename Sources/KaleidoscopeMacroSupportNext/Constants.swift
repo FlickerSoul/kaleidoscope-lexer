@@ -46,4 +46,8 @@ public enum Constants {
     public enum Helpers {
         public static let __convertTupleToEnum: TokenSyntax = .identifier("__convertTupleToEnum")
     }
+
+    public enum MacroConfiguration {
+        public static let useStateMachineCodegen = "useStateMachineCodegen"
+    }
 }

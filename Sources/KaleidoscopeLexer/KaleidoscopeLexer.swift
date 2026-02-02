@@ -3,8 +3,14 @@
 
 // MARK: - New macros
 
+/// Kaleidoscope lexer definition macro
+///
+/// - Parameter: useStateMachineCodegen: Enable state machine based code generation if true, otherwise use the default
+/// backtracking based code generation.
+///
+/// - Note: use `StateMachineCodegen` trait to modify the default behavior.
 @attached(extension, conformances: LexerTokenProtocol, names: arbitrary)
-public macro Kaleidoscope() = #externalMacro(
+public macro Kaleidoscope(useStateMachineCodegen: Bool? = nil) = #externalMacro(
     module: "KaleidoscopeMacros",
     type: "KaleidoscopeBuilderNext",
 )

@@ -39,13 +39,13 @@ public struct KaleidoscopeBuilderNext: ExtensionMacro {
         }
 
         #if StateMachineCodegen
-            let useStateMachineCodeGen = true
+            let useStateMachineCodeGenDefault = true
         #else
-            let useStateMachineCodeGen = false
+            let useStateMachineCodeGenDefault = false
         #endif
 
         let config = KaleidoscopeMacroSupportNext.Generator.Config(
-            useStateMachineCodeGen: useStateMachineCodeGen,
+            useStateMachineCodeGen: macroVisitor.config.useStateMachineCodegen ?? useStateMachineCodeGenDefault,
         )
         var generator = KaleidoscopeMacroSupportNext.Generator(
             enumType: type,

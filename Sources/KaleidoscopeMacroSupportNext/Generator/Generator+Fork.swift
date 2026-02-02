@@ -78,11 +78,28 @@ extension Generator {
                     "\(nameSpace.offset) += 1"
 
                     try SwitchExprSyntax("switch byte") {
+                        var previousActionInfo: (byte: Int, action: CodeBlockItemListSyntax?) = (0, nil)
+
                         for (byteToJump, state) in table.enumerated() {
-                            if let state {
-                                SwitchCaseSyntax("case \(raw: byteToJump):") {
-                                    actions[state]!
+                            let action = state.map { actions[$0]! }
+
+                            if action != previousActionInfo.action {
+                                if let previousAction = previousActionInfo.action {
+                                    SwitchCaseSyntax(
+                                        "case \(previousActionInfo.byte.hexLiteral) ..< \(byteToJump.hexLiteral):",
+                                    ) {
+                                        previousAction
+                                    }
                                 }
+
+                                // swiftlint:disable:next redundant_discardable_let
+                                let _ = previousActionInfo = (byteToJump, action)
+                            }
+                        }
+
+                        if let previousAction = previousActionInfo.action {
+                            SwitchCaseSyntax("case \(previousActionInfo.byte.hexLiteral) ... 0xFF:") {
+                                previousAction
                             }
                         }
 

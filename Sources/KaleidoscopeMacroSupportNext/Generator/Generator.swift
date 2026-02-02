@@ -365,16 +365,13 @@ public struct Generator {
         })
     }
 
+    @CodeBlockItemListBuilder
     func stateAction(stateIdent: TokenSyntax) -> CodeBlockItemListSyntax {
         if config.useStateMachineCodeGen {
-            CodeBlockItemListSyntax {
-                "state = \(stateIdent)"
-                "continue"
-            }
+            "state = \(stateIdent)"
+            "continue"
         } else {
-            CodeBlockItemListSyntax {
-                "return \(stateIdent)(&\(nameSpace.lexerMachineIdent), \(nameSpace.offset), \(nameSpace.context))"
-            }
+            "return \(stateIdent)(&\(nameSpace.lexerMachineIdent), \(nameSpace.offset), \(nameSpace.context))"
         }
     }
 

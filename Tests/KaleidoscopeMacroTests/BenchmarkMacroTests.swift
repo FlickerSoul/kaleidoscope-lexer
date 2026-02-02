@@ -12,7 +12,7 @@ extension KaleidoscopeMacroTests {
                 @regex(/[a-zA-Z_$][a-zA-Z0-9_$]*?/)
                 case identifier
 
-                @regex(/"([^"\\]|\\t|\\n|\\n|\\")*?"/)
+                @regex(/"([^"\\]|\\t|\\u|\\n|\\")*?"/)
                 case string
 
                 @token(#"private"#)

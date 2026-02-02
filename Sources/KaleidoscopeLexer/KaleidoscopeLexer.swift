@@ -18,15 +18,15 @@ public macro Kaleidoscope(useStateMachineCodegen: Bool? = nil) = #externalMacro(
 public typealias Callback<T: LexerTokenProtocol, R> = @Sendable (inout LexerMachine<T>) -> R
 
 @attached(peer)
-public macro regex<T: LexerTokenProtocol, R>(
-    _ value: Regex<Substring>,
+public macro regex<T: LexerTokenProtocol, R, S>(
+    _ value: Regex<S>,
     priority: UInt? = nil,
     callback: @escaping Callback<T, R>,
 ) = #externalMacro(module: "KaleidoscopeMacros", type: "EnumCaseRegistry")
 
 @attached(peer)
-public macro regex(
-    _ value: Regex<Substring>,
+public macro regex<S>(
+    _ value: Regex<S>,
     priority: UInt? = nil,
 ) = #externalMacro(module: "KaleidoscopeMacros", type: "EnumCaseRegistry")
 

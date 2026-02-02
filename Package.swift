@@ -131,7 +131,7 @@ if enableBenchmark == "1" || enableBenchmark == "true" {
         .executableTarget(
             name: "ParsingBenchmark",
             dependencies: [
-                "Kaleidoscope",
+                "KaleidoscopeLexer",
                 .product(name: "Benchmark", package: "package-benchmark"),
                 .product(name: "BenchmarkPlugin", package: "package-benchmark"),
             ],

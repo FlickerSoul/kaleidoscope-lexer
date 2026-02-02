@@ -318,6 +318,6 @@ public extension HIRKind {
     }
 
     static func from(token: String) -> HIRKind {
-        .literal(.init(token))
+        .literal(token.map(\.self))
     }
 }

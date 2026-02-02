@@ -24,15 +24,13 @@ public struct KaleidoscopeBuilderNext: ExtensionMacro {
             for error in graph.errors {
                 switch error {
                 case .multipleLeavesWithSamePriority(let leaves, priority: _):
-                    context.diagnose(.init(
-                        node: enumDecl,
-                        message: error,
-                        highlights: leaves
-                            .sorted()
-                            .map { leafID in
-                                macroVisitor.leaves[leafID.id].pattern.source
-                            },
-                    ))
+                    for leafID in leaves {
+                        let leafSource = macroVisitor.leaves[leafID.id].pattern.source
+                        context.diagnose(.init(
+                            node: leafSource,
+                            message: error,
+                        ))
+                    }
                 }
             }
             throw KaleidoscopeError.graphCompositionError

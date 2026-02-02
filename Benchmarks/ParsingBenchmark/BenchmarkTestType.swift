@@ -6,12 +6,13 @@
 //
 import KaleidoscopeLexer
 
-@kaleidoscope(skip: "\t| |\n")
+@Kaleidoscope
+@skip(/\t| |\n/)
 enum BenchmarkTestType {
-    @regex(#"[a-zA-Z_$][a-zA-Z0-9_$]*?"#)
+    @regex(/[a-zA-Z_$][a-zA-Z0-9_$]*?/)
     case identifier
 
-    @regex(#""([^"\\]|\\t|\\n|\\n|\\")*?""#)
+    @regex(/"([^"\\]|\\t|\\n|\\n|\\")*?"/)
     case string
 
     @token(#"private"#)

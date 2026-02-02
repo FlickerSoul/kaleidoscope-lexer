@@ -145,7 +145,7 @@ public extension HIRKind {
         self = .literal(quote.literal.map(\.self))
     }
 
-    init(_ atom: AST.Atom) throws(RegexConversionError) {
+    init(_ atom: AST.Atom) throws(RegexConversionError) { // swiftlint:disable:this cyclomatic_complexity
         switch atom.kind {
         case let .char(char):
             self = .literal([char])
@@ -157,7 +157,12 @@ public extension HIRKind {
             // FIXME: needs to support properties
             throw .unavailable("Property not supported: \(property)").toError(with: atom.location)
         case let .escaped(escaped):
-            self = .literal([escaped.character])
+            if let escapedHIR = escaped.escapedCharacterHIR {
+                self = escapedHIR
+            } else {
+                throw .unavailable("Escaped character \\\(escaped.character) not supported")
+                    .toError(with: atom.location)
+            }
         case let .keyboardControl(keyboardControl):
             self = .literal([keyboardControl])
         case let .keyboardMeta(keyboardMeta):
@@ -319,5 +324,56 @@ public extension HIRKind {
 
     static func from(token: String) -> HIRKind {
         .literal(token.map(\.self))
+    }
+}
+
+extension AST.Atom.EscapedBuiltin {
+    var escapedCharacterHIR: HIRKind? {
+        switch self {
+        // Literal single characters
+        case .alarm: .literal("\u{0007}")
+        case .escape: .literal("\u{001B}")
+        case .formfeed: .literal("\u{000C}")
+        case .newline: .literal("\n")
+        case .carriageReturn: .literal("\r")
+        case .tab: .literal("\t")
+        case .backspace: .literal("\u{0008}")
+        // Character types
+        case .decimalDigit: .class(.decimalDigits)
+        case .notDecimalDigit: .class(.decimalDigits.inverting())
+        case .horizontalWhitespace: .class(.horizontalWhiteSpaces)
+        case .notHorizontalWhitespace: .class(.horizontalWhiteSpaces.inverting())
+        case .verticalTab: .class(.verticalWhiteSpaces)
+        case .notVerticalTab: .class(.verticalWhiteSpaces.inverting())
+        case .whitespace: .class(.whiteSpaces)
+        case .notWhitespace: .class(.whiteSpaces.inverting())
+        case .wordCharacter: .class(.wordCharacters)
+        case .notWordCharacter: .class(.wordCharacters.inverting())
+        case .notNewline: .class(.newLine.inverting())
+        case .newlineSequence: .alternation([
+                .literal("\n"),
+                .literal("\r\n".map(\.self)),
+                .literal("\r"),
+                .literal("\u{000B}"),
+                .literal("\u{000C}"),
+                .literal("\u{0085}"),
+                .literal("\u{2028}"),
+                .literal("\u{2029}"),
+            ])
+        case .trueAnychar: .class(.trueAny)
+        // Not representable in finite automata
+        case .singleDataUnit: nil
+        case .graphemeCluster: nil
+        // Assertions / anchors (not representable in HIR)
+        case .wordBoundary: nil
+        case .notWordBoundary: nil
+        case .startOfSubject: nil
+        case .endOfSubjectBeforeNewline: nil
+        case .endOfSubject: nil
+        case .firstMatchingPositionInSubject: nil
+        case .resetStartOfMatch: nil
+        case .textSegment: nil
+        case .notTextSegment: nil
+        }
     }
 }

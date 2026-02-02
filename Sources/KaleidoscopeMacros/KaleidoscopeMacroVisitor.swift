@@ -216,7 +216,7 @@ class KaleidoscopeMacroVisitor: SyntaxVisitor {
         return arguments.together(with: pattern) { arguments, pattern in
             Leaf(
                 pattern: pattern,
-                priority: arguments.priority ?? 0, // TODO: real HIR priority
+                priority: arguments.priority ?? pattern.hir.complexity(),
                 kind: .skip,
             )
         }
@@ -263,7 +263,7 @@ class KaleidoscopeMacroVisitor: SyntaxVisitor {
         return arguments.together(with: pattern, enumCaseKind) { arguments, pattern, enumCaseKind in
             Leaf(
                 pattern: pattern,
-                priority: arguments.priority ?? 0, // FIXME: real HIR priority
+                priority: arguments.priority ?? pattern.hir.complexity(),
                 kind: enumCaseKind,
                 callback: arguments.callbackKind,
             )

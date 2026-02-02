@@ -23,12 +23,15 @@ public struct KaleidoscopeBuilderNext: ExtensionMacro {
         if !graph.errors.isEmpty {
             for error in graph.errors {
                 switch error {
-                case .multipleLeavesWithSamePriority(let leaves, priority: _):
-                    for leafID in leaves {
+                case let .multipleLeavesWithSamePriority(leafIDs, priority: priority):
+                    let leaves = leafIDs.sorted().map { leafID in
+                        macroVisitor.leaves[leafID.id].pattern.kind.description
+                    }
+                    for leafID in leafIDs {
                         let leafSource = macroVisitor.leaves[leafID.id].pattern.source
                         context.diagnose(.init(
                             node: leafSource,
-                            message: error,
+                            message: GraphError.multipleLeavesWithSamePriority(leaves, priority: priority),
                         ))
                     }
                 }

@@ -1,9 +1,18 @@
 import RegexSupport
 import SwiftSyntax
 
-public enum PatternKind: Hashable, Sendable {
+public enum PatternKind: Hashable, Sendable, CustomStringConvertible {
     case regex(String)
     case token(String)
+
+    public var description: String {
+        switch self {
+        case let .regex(value):
+            "regex(\(value))"
+        case let .token(value):
+            "token(\(value))"
+        }
+    }
 }
 
 public struct Pattern: Hashable, Sendable {

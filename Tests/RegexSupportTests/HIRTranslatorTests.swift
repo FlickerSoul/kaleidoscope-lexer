@@ -31,14 +31,95 @@ struct HIRTranslatorTests {
     }
 
     @Test(arguments: [
+        ("\t| |\n", HIRKind.alternation([.literal("\t"), .literal(" "), .literal("\n")])),
+    ])
+    func `altertive literals`(pattern: String, expected: HIRKind) throws {
+        let result = try parseToHIR(pattern)
+        #expect(result == expected)
+    }
+
+    @Test(arguments: [
         ("\n", HIRKind.literal(["\n"])),
         ("\t", HIRKind.literal(["\t"])),
         ("\r", HIRKind.literal(["\r"])),
         (#"\\"#, HIRKind.literal([#"\"#])),
+        (#"\a"#, HIRKind.literal("\u{0007}")),
+        (#"\e"#, HIRKind.literal("\u{001B}")),
+        (#"\f"#, HIRKind.literal("\u{000C}")),
     ])
     func `escaped characters`(pattern: String, expected: HIRKind) throws {
         let result = try parseToHIR(pattern)
         #expect(result == expected)
+    }
+
+    // MARK: - Escaped Character Class Tests
+
+    @Test(arguments: [
+        (#"\d"#, HIRKind.class(.decimalDigits)),
+        (#"\D"#, HIRKind.class(.decimalDigits.inverting())),
+        (#"\w"#, HIRKind.class(.wordCharacters)),
+        (#"\W"#, HIRKind.class(.wordCharacters.inverting())),
+        (#"\s"#, HIRKind.class(.whiteSpaces)),
+        (#"\S"#, HIRKind.class(.whiteSpaces.inverting())),
+        (#"\h"#, HIRKind.class(.horizontalWhiteSpaces)),
+        (#"\H"#, HIRKind.class(.horizontalWhiteSpaces.inverting())),
+        (#"\v"#, HIRKind.class(.verticalWhiteSpaces)),
+        (#"\V"#, HIRKind.class(.verticalWhiteSpaces.inverting())),
+        // (#"\N"#, HIRKind.class(.newLine.inverting())), // Not supported by traditional syntax option
+    ])
+    func `escaped character classes`(pattern: String, expected: HIRKind) throws {
+        let result = try parseToHIR(pattern)
+        #expect(result == expected)
+    }
+
+    @Test
+    func `escaped newline sequence`() throws {
+        let result = try parseToHIR(#"\R"#)
+        let expected = HIRKind.alternation([
+            .literal("\n"),
+            .literal("\r\n".map(\.self)),
+            .literal("\r"),
+            .literal("\u{000B}"),
+            .literal("\u{000C}"),
+            .literal("\u{0085}"),
+            .literal("\u{2028}"),
+            .literal("\u{2029}"),
+        ])
+        #expect(result == expected)
+    }
+
+    @Test
+    func `escaped character class in concatenation`() throws {
+        let result = try parseToHIR(#"\d\w"#)
+        let expected = HIRKind.concat([
+            .class(.decimalDigits),
+            .class(.wordCharacters),
+        ])
+        #expect(result == expected)
+    }
+
+    @Test
+    func `escaped character class with quantifier`() throws {
+        let result = try parseToHIR(#"\d+"#)
+        let expected = HIRKind.quantification(
+            Quantification(
+                min: 1,
+                max: nil,
+                isEager: true,
+                child: .class(.decimalDigits),
+            ),
+        )
+        #expect(result == expected)
+    }
+
+    @Test(arguments: [
+        #"\b"#,
+        #"\B"#,
+    ])
+    func `unsupported escaped characters throw errors`(pattern: String) throws {
+        #expect(throws: RegexConversionError.self) {
+            try parseToHIR(pattern)
+        }
     }
 
     // MARK: - Quantification Tests

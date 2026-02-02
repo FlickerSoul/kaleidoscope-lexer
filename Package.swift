@@ -88,6 +88,8 @@ let package = Package(
             dependencies: [
                 .product(name: "MacroTesting", package: "swift-macro-testing"),
                 "KaleidoscopeMacros",
+                "KaleidoscopeMacroSupportNext",
+                "RegexSupport",
             ],
         ),
         .testTarget(

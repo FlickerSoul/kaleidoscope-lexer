@@ -31,7 +31,6 @@ let benchmarks = { @Sendable in
         Benchmark("Parsing \(name) Speed") { benchmark in
             benchmark.measurement(.bytesPerIteration, byteCount)
             for _ in benchmark.scaledIterations {
-                // swiftlint:disable:next force_try
                 blackHole(BenchmarkTestType.lexer(source: benchSource).map { try! $0.get() })
             }
         }

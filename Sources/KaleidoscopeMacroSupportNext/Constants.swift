@@ -22,7 +22,7 @@ public enum Constants {
     public static let packageName = "KaleidoscopeLexer"
 
     public enum Macro {
-        public static let kaleidoscope = PackageEntity(name: "kaleidoscope")
+        public static let kaleidoscope = PackageEntity(name: "Kaleidoscope")
         public static let regex = PackageEntity(name: "regex")
         public static let token = PackageEntity(name: "token")
         public static let skip = PackageEntity(name: "skip")

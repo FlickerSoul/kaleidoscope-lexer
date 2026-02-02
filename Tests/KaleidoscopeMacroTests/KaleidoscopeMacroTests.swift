@@ -13,6 +13,8 @@ extension KaleidoscopeMacroTests {
         assertMacro {
             #"""
             @Kaleidoscope
+            @skip(" ")
+            @skip(/[\\n\\t]/)
             enum Test {
                 @regex(/a/)
                 case a
@@ -27,6 +29,7 @@ extension KaleidoscopeMacroTests {
                 case a
                 case b
             }
+
             extension Test: KaleidoscopeLexer.LexerTokenProtocol {
                 typealias Source = String
                 typealias UserError = Never
@@ -87,10 +90,6 @@ extension KaleidoscopeMacroTests {
                         var __macro_local_7contextfMu_ = context
                         lexer.end(at: __macro_local_6offsetfMu_)
                         __macro_local_7contextfMu_ = __macro_local_5leaf0fMu_
-                        let byte = lexer.read(offset: __macro_local_6offsetfMu_)
-                        if let byte {
-                        } else {
-                        }
                         let action = __macro_local_11__getActionfMu_(lexer: &lexer, offset: __macro_local_6offsetfMu_, context: __macro_local_7contextfMu_)
                         switch action {
                         case .emit(let token):
@@ -111,10 +110,6 @@ extension KaleidoscopeMacroTests {
                         var __macro_local_7contextfMu_ = context
                         lexer.end(at: __macro_local_6offsetfMu_)
                         __macro_local_7contextfMu_ = __macro_local_5leaf1fMu_
-                        let byte = lexer.read(offset: __macro_local_6offsetfMu_)
-                        if let byte {
-                        } else {
-                        }
                         let action = __macro_local_11__getActionfMu_(lexer: &lexer, offset: __macro_local_6offsetfMu_, context: __macro_local_7contextfMu_)
                         switch action {
                         case .emit(let token):

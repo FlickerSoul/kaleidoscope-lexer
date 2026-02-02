@@ -99,12 +99,14 @@ extension Generator {
         let eoi = try forkEOI(state: state)
 
         return try CodeBlockItemListSyntax {
-            "let byte = lexer.read(offset: \(nameSpace.offset))"
+            if !body.isEmpty || !eoi.isEmpty {
+                "let byte = lexer.read(offset: \(nameSpace.offset))"
 
-            try IfExprSyntax("if let byte") {
-                body
-            } else: {
-                eoi
+                try IfExprSyntax("if let byte") {
+                    body
+                } else: {
+                    eoi
+                }
             }
 
             try takeAction(

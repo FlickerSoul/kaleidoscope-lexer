@@ -13,11 +13,12 @@ enum MacroInfoError: Error, DiagnosticMessage {
     case fatalError(reason: String)
     case noSkipInEnumCase
     case noMarkedCasesFound
+    case processingIfConfigDecl
 
     var message: String {
         switch self {
         case let .multipleMacroDeclaration(macro):
-            "Multiple @\(macro) declarations found on the same enum."
+            "Multiple @\(macro) declarations found."
         case let .invalidMacroArgument(reason):
             "Invalid arguments provided to the macro. This is likely a bug in the macro implementation. Reason: \(reason)"
         case let .regexParsingError(reason: reason):
@@ -30,6 +31,8 @@ enum MacroInfoError: Error, DiagnosticMessage {
             "`@skip` macro cannot be applied to enum cases."
         case .noMarkedCasesFound:
             "No enum cases marked with @regex or @token found."
+        case .processingIfConfigDecl:
+            "`#if` conditional compilation blocks are not supported for now."
         }
     }
 
@@ -53,7 +56,6 @@ class KaleidoscopeMacroVisitor: SyntaxVisitor {
     private(set) var errors: [Diagnostic] = []
 
     private(set) var leaves: [Leaf] = []
-    private var enumDecl: EnumDeclSyntax?
 
     init(context: any MacroExpansionContext) {
         self.context = context
@@ -61,7 +63,7 @@ class KaleidoscopeMacroVisitor: SyntaxVisitor {
     }
 
     func walk(enumDecl: EnumDeclSyntax) throws(KaleidoscopeError) {
-        self.enumDecl = enumDecl
+        parseEnumDecl(enumDecl)
 
         walk(enumDecl.memberBlock)
         try validate(node: enumDecl)
@@ -81,20 +83,52 @@ class KaleidoscopeMacroVisitor: SyntaxVisitor {
         }
     }
 
-    func parseEnumDecl(_ node: EnumDeclSyntax) {
-        checkMacroCount(node.attributes, of: [Constants.Macro.kaleidoscope])
+    private func parseEnumDecl(_ node: EnumDeclSyntax) {
+        let kaleidoscopeAttributes = getMacroAttributes(from: node.attributes, of: [Constants.Macro.kaleidoscope])
+        guard kaleidoscopeAttributes.count <= 1 else {
+            for (attribute, attributeName) in kaleidoscopeAttributes {
+                errors.append(.init(
+                    node: attribute,
+                    message: MacroInfoError.multipleMacroDeclaration(macro: attributeName.qualifiedName),
+                ))
+            }
+            return
+        }
+
+        for (attribute, _) in getMacroAttributes(
+            from: node.attributes,
+            of: [Constants.Macro.skip],
+        ) {
+            do {
+                let leaf = try synthesizeSkipLeaf(attribute: attribute).get()
+                leaves.append(leaf)
+            } catch {
+                errors.append(.init(node: attribute, message: error))
+            }
+        }
     }
 
     override func visit(_: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
-        print("Nested enum declarations found.")
+        print("Nested enum declarations found. skipping")
         return .skipChildren
     }
 
     override func visit(_ node: EnumCaseDeclSyntax) -> SyntaxVisitorContinueKind {
-        guard let (macroAttribute, macro) = checkMacroCount(
-            node.attributes,
+        let regexOrTokenMacros = getMacroAttributes(
+            from: node.attributes,
             of: [Constants.Macro.regex, Constants.Macro.token],
-        ) else {
+        )
+
+        guard regexOrTokenMacros.count <= 1 else {
+            for (attribute, attributeName) in regexOrTokenMacros {
+                errors.append(.init(
+                    node: attribute,
+                    message: MacroInfoError.multipleMacroDeclaration(macro: attributeName.qualifiedName),
+                ))
+            }
+            return .skipChildren
+        }
+        guard let (macroAttribute, macro) = regexOrTokenMacros.first else {
             return .skipChildren
         }
 
@@ -103,13 +137,50 @@ class KaleidoscopeMacroVisitor: SyntaxVisitor {
                 attribute: macroAttribute,
                 on: node,
                 macro: macro,
-            ).get()
+            )
+            .get()
             leaves.append(leaf)
         } catch {
             errors.append(.init(node: node, message: error))
         }
 
         return .skipChildren
+    }
+
+    private func synthesizeSkipLeaf(
+        attribute: AttributeSyntax,
+    ) -> Result<Leaf, MacroInfoError> {
+        let arguments = Result { () throws(MacroInfoError) in
+            try parseMacroArguments(from: attribute)
+        }
+        let pattern = arguments
+            .flatMap { arguments in
+                Result {
+                    let hir = switch arguments.patternKind {
+                    case let .regex(regex):
+                        try HIRKind.from(regex: regex)
+                    case let .token(token):
+                        HIRKind.from(token: token)
+                    }
+
+                    return Pattern(
+                        kind: arguments.patternKind,
+                        hir: hir,
+                        source: Syntax(attribute),
+                    )
+                }
+                .mapError { error in
+                    MacroInfoError.regexParsingError(reason: error.localizedDescription)
+                }
+            }
+
+        return arguments.together(with: pattern) { arguments, pattern in
+            Leaf(
+                pattern: pattern,
+                priority: arguments.priority ?? 0, // TODO: real HIR priority
+                kind: .skip,
+            )
+        }
     }
 
     private func synthesizeLeaf(
@@ -153,7 +224,7 @@ class KaleidoscopeMacroVisitor: SyntaxVisitor {
         return arguments.together(with: pattern, enumCaseKind) { arguments, pattern, enumCaseKind in
             Leaf(
                 pattern: pattern,
-                priority: arguments.priority ?? 0, // FIXME: real priority
+                priority: arguments.priority ?? 0, // FIXME: real HIR priority
                 kind: enumCaseKind,
                 callback: arguments.callbackKind,
             )
@@ -234,10 +305,10 @@ class KaleidoscopeMacroVisitor: SyntaxVisitor {
     }
 
     @discardableResult
-    private func checkMacroCount(
-        _ attributes: AttributeListSyntax,
+    private func getMacroAttributes(
+        from attributes: AttributeListSyntax,
         of macro: [PackageEntity],
-    ) -> (attribute: AttributeSyntax, macro: PackageEntity)? {
+    ) -> [(attribute: AttributeSyntax, macro: PackageEntity)] {
         let allowedNames = Set([macro.map(\.name), macro.map(\.qualifiedName)].joined())
         let kaleidoscopeAttributes = attributes
             .compactMap { attribute in
@@ -247,21 +318,18 @@ class KaleidoscopeMacroVisitor: SyntaxVisitor {
                     if allowedNames.contains(attributeName) {
                         return (attribute, attributeName)
                     }
-                case .ifConfigDecl: break
+                case .ifConfigDecl:
+                    errors.append(.init(
+                        node: attribute,
+                        message: MacroInfoError.processingIfConfigDecl,
+                    ))
                 }
 
                 return nil
             }
 
-        if kaleidoscopeAttributes.count > 1 {
-            for (attribute, attributeName) in kaleidoscopeAttributes {
-                errors.append(.init(
-                    node: attribute,
-                    message: MacroInfoError.multipleMacroDeclaration(macro: attributeName),
-                ))
-            }
-        } else if let (attribute, attributeName) = kaleidoscopeAttributes.first {
-            return macro
+        return kaleidoscopeAttributes.compactMap { attribute, attributeName in
+            macro
                 .first { macro in
                     macro.name == attributeName || macro.qualifiedName == attributeName
                 }
@@ -269,7 +337,5 @@ class KaleidoscopeMacroVisitor: SyntaxVisitor {
                     (attribute, macro)
                 }
         }
-
-        return nil
     }
 }

@@ -14,6 +14,7 @@ let macros: [String: Macro.Type] = [
     "Kaleidoscope": KaleidoscopeBuilderNext.self,
     "token": EnumCaseRegistry.self,
     "regex": EnumCaseRegistry.self,
+    "skip": EnumCaseRegistry.self,
 ]
 
 @Suite(.macros(macros, record: .failed))

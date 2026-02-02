@@ -5,6 +5,7 @@
 //  Created by Larry Zeng on 1/13/26.
 //
 import Benchmark
+import BenchmarkCommons
 
 /// Custom metric to track bytes per iteration (multiply by throughput for bytes/sec)
 extension BenchmarkMetric {

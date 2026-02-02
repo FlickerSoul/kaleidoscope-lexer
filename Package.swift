@@ -34,6 +34,7 @@ let package = Package(
         .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.12.0"),
         .package(url: "https://github.com/pointfreeco/swift-case-paths.git", from: "1.7.2"),
         .package(url: "https://github.com/pointfreeco/swift-custom-dump.git", from: "1.3.4"),
+        .package(url: "https://github.com/ordo-one/package-benchmark", from: "1.29.10"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -126,18 +127,33 @@ let package = Package(
 // benchmarks
 
 if enableBenchmark == "1" || enableBenchmark == "true" {
-    package.dependencies.append(
-        .package(url: "https://github.com/ordo-one/package-benchmark", from: "1.29.7"),
-    )
     package.targets.append(
-        .executableTarget(
-            name: "ParsingBenchmark",
-            dependencies: [
-                "KaleidoscopeLexer",
-                .product(name: "Benchmark", package: "package-benchmark"),
-                .product(name: "BenchmarkPlugin", package: "package-benchmark"),
-            ],
-            path: "Benchmarks/ParsingBenchmark",
-        ),
+        contentsOf: [
+            .target(
+                name: "BenchmarkCommons",
+                dependencies: [
+                    "KaleidoscopeLexer",
+                ],
+                path: "Benchmarks/BenchmarkCommons",
+            ),
+            .testTarget(
+                name: "BenchmarkTests",
+                dependencies: [
+                    "BenchmarkCommons",
+                    "RegexSupport",
+                    "KaleidoscopeMacroSupportNext",
+                ],
+                path: "Benchmarks/BenchmarkTests",
+            ),
+            .executableTarget(
+                name: "ParsingBenchmark",
+                dependencies: [
+                    "BenchmarkCommons",
+                    .product(name: "Benchmark", package: "package-benchmark"),
+                    .product(name: "BenchmarkPlugin", package: "package-benchmark"),
+                ],
+                path: "Benchmarks/ParsingBenchmark",
+            ),
+        ],
     )
 }

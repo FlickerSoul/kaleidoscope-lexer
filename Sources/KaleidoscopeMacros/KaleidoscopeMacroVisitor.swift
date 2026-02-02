@@ -333,14 +333,14 @@ class KaleidoscopeMacroVisitor: SyntaxVisitor {
         }
 
         guard let caseParameters = caseElement.parameterClause?.parameters else {
-            return .caseOnly(caseName: caseElement.name)
+            return .caseOnly(caseName: caseElement.name.trimmed)
         }
 
         guard !caseParameters.isEmpty else {
             throw .fatalError(reason: "Empty enum case parameters. This should have been rejected by compiler.")
         }
 
-        return .associatedValues(caseName: caseElement.name, parameters: caseParameters)
+        return .associatedValues(caseName: caseElement.name.trimmed, parameters: caseParameters.trimmed)
     }
 
     @discardableResult

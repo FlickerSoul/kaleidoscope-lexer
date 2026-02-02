@@ -134,7 +134,7 @@ extension KaleidoscopeMacroTests {
                         case __macro_local_5leaf5fMu_:
                             return KaleidoscopeLexer._CallbackResult.emit(BenchmarkTestType.protected)
                         case __macro_local_5leaf6fMu_:
-                            return KaleidoscopeLexer._CallbackResult.emit(BenchmarkTestType.`in` // swiftlint:disable:this identifier_name)
+                            return KaleidoscopeLexer._CallbackResult.emit(BenchmarkTestType.`in`)
                         case __macro_local_5leaf7fMu_:
                             return KaleidoscopeLexer._CallbackResult.emit(BenchmarkTestType.instanceOf)
                         case __macro_local_5leaf8fMu_:
@@ -165,6 +165,7 @@ extension KaleidoscopeMacroTests {
                             fatalError("Invalid leaf identifier. Unknown leaf \(context)")
                         }
                     }
+                    let _TABLE_0: [UInt8] = [0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b0, 0b1, 0b11, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b1, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b1, 0b0, 0b1, 0b1, 0b11, 0b1, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b11, 0b1, 0b1, 0b1, 0b1, 0b1, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0, 0b0]
                     func jumpTo_0(_ lexer: inout KaleidoscopeLexer.LexerMachine<BenchmarkTestType>, _ offset: Int, _ context: Swift.Int?) -> Result<BenchmarkTestType, BenchmarkTestType.LexerError>? {
                         var __macro_local_6offsetfMu_ = offset
                         var __macro_local_7contextfMu_ = context
@@ -255,8 +256,8 @@ extension KaleidoscopeMacroTests {
                     func jumpTo_2(_ lexer: inout KaleidoscopeLexer.LexerMachine<BenchmarkTestType>, _ offset: Int, _ context: Swift.Int?) -> Result<BenchmarkTestType, BenchmarkTestType.LexerError>? {
                         var __macro_local_6offsetfMu_ = offset
                         var __macro_local_7contextfMu_ = context
-                        func loopTest(byte: UInt8) -> Bool {
-                            return (_TABLE_0[Int(byte)] & 1) == 0
+                        func loopTest(_ byte: UInt8) -> Bool {
+                            return (_TABLE_0[Int(byte)] & 0b1) == 0
                         }
                         outer: do {
                             while let buffer = lexer.read(offset: __macro_local_6offsetfMu_, length: 8) {
@@ -298,7 +299,7 @@ extension KaleidoscopeMacroTests {
                                 if loopTest(byte) {
                                     break outer
                                 }
-            __macro_local_6offsetfMu_ += 1
+                                __macro_local_6offsetfMu_ += 1
                             }
                         }
                         let byte = lexer.read(offset: __macro_local_6offsetfMu_)
@@ -349,8 +350,8 @@ extension KaleidoscopeMacroTests {
                     func jumpTo_3(_ lexer: inout KaleidoscopeLexer.LexerMachine<BenchmarkTestType>, _ offset: Int, _ context: Swift.Int?) -> Result<BenchmarkTestType, BenchmarkTestType.LexerError>? {
                         var __macro_local_6offsetfMu_ = offset
                         var __macro_local_7contextfMu_ = context
-                        func loopTest(byte: UInt8) -> Bool {
-                            return (_TABLE_0[Int(byte)] & 2) == 0
+                        func loopTest(_ byte: UInt8) -> Bool {
+                            return (_TABLE_0[Int(byte)] & 0b10) == 0
                         }
                         outer: do {
                             while let buffer = lexer.read(offset: __macro_local_6offsetfMu_, length: 8) {
@@ -392,7 +393,7 @@ extension KaleidoscopeMacroTests {
                                 if loopTest(byte) {
                                     break outer
                                 }
-            __macro_local_6offsetfMu_ += 1
+                                __macro_local_6offsetfMu_ += 1
                             }
                         }
                         lexer.end(at: __macro_local_6offsetfMu_)

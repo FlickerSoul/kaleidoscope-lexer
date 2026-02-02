@@ -187,12 +187,13 @@ public struct Generator {
     ) throws -> CodeBlockItemListSyntax {
         let selfEdge = stateData.normal.filter { $0.state == state }
         assert(selfEdge.count <= 1, "Multiple self-loops detected")
+
         if let selfEdge = selfEdge.first {
             let (lut, loopMask) = addTestToLUT(byteClass: selfEdge.byteClass)
             return try CodeBlockItemListSyntax {
                 let loopTest: TokenSyntax = .identifier("loopTest")
-                try FunctionDeclSyntax("func \(loopTest)(byte: UInt8) -> Bool") {
-                    "return (\(lut)[Int(byte)] & \(raw: loopMask)) == 0"
+                try FunctionDeclSyntax("func \(loopTest)(_ byte: UInt8) -> Bool") {
+                    "return (\(lut)[Int(byte)] & \(loopMask.binaryLiteral)) == 0"
                 }
                 try fastLoop(
                     unrollFactor: 8,
@@ -221,9 +222,41 @@ public struct Generator {
         let bitPosition = loopId % 8
 
         return (
-            tableIdent: .identifier("_TABLE_\(tableIndex)"),
+            tableIdent: tableIdentifier(for: tableIndex),
             mask: 1 << bitPosition,
         )
+    }
+
+    private func tableIdentifier(for index: Int) -> TokenSyntax {
+        .identifier("_TABLE_\(index)")
+    }
+
+    private func renderLUT() -> CodeBlockItemListSyntax {
+        let sortedLUTs = loopMasks.sorted { lhs, rhs in
+            lhs.value < rhs.value
+        }
+        var result = CodeBlockItemListSyntax {}
+        for (lutIndex, bitArrays) in sortedLUTs.chunk(size: 8).enumerated() {
+            var bitValues = [UInt8](repeating: 0, count: 256)
+            for (bitIndex, (bits, _)) in bitArrays.enumerated() {
+                for (arrayIndex, bit) in bits.enumerated() where bit {
+                    bitValues[arrayIndex] |= (1 as UInt8) << bitIndex
+                }
+            }
+
+            let ident = tableIdentifier(for: lutIndex)
+            result.append(contentsOf: CodeBlockItemListSyntax {
+                let elements = ArrayElementListSyntax(expressions: bitValues.map { bits in
+                    let integer = bits.binaryLiteral
+
+                    return ExprSyntax(IntegerLiteralExprSyntax(literal: integer))
+                })
+
+                "let \(ident): [UInt8] = [\(elements)]"
+            })
+        }
+
+        return result
     }
 
     // TODO: use this when compiler crash is fixed
@@ -247,6 +280,7 @@ public struct Generator {
         try CodeBlockItemListSyntax {
             try generateLeavesDefinition()
             try tokenFunctions()
+            try renderLUT()
         }
     }
 
@@ -359,8 +393,9 @@ public struct Generator {
                 if \(test)(byte) {
                     break outer
                 }
-                \(offset) += 1
                 """
+
+                "\(offset) += 1"
             }
         })
     }
@@ -420,11 +455,13 @@ public struct Generator {
         let states = graph.states()
 
         let initStateIdent = try getIdentifier(graph.root)
-        let commons = try generateLexCommon()
 
         if config.useStateMachineCodeGen {
             return try CodeBlockItemListSyntax {
-                commons
+                let switchCases: [SwitchCaseSyntax] = try states.map { state in
+                    try generateState(state: state)
+                }
+                try generateLexCommon()
 
                 try EnumDeclSyntax("enum \(nameSpace.keleidoscopeStates)") {
                     for state in states {
@@ -438,22 +475,39 @@ public struct Generator {
 
                 try WhileStmtSyntax("while true") {
                     try SwitchExprSyntax("switch \(nameSpace.state)") {
-                        for state in states {
-                            try generateState(state: state)
+                        for switchCase in switchCases {
+                            switchCase
                         }
                     }
                 }
             }
         } else {
             return try CodeBlockItemListSyntax {
-                commons
-
-                for state in states {
+                let stateFunctions: [FunctionDeclSyntax] = try states.map { state in
                     try generateState(state: state)
+                }
+
+                try generateLexCommon()
+
+                for stateFunction in stateFunctions {
+                    stateFunction
                 }
 
                 "return \(initStateIdent)(&\(nameSpace.lexerMachineIdent), \(nameSpace.lexerMachineIdent).offset(), nil)"
             }
         }
+    }
+}
+
+extension Collection {
+    func chunk(size: Int) -> [SubSequence] {
+        var result: [SubSequence] = []
+        var index = startIndex
+        while index < endIndex {
+            let end = self.index(index, offsetBy: size, limitedBy: endIndex) ?? endIndex
+            result.append(self[index ..< end])
+            index = end
+        }
+        return result
     }
 }

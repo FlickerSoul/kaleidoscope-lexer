@@ -1,15 +1,20 @@
 public protocol LexerSource {
     associatedtype Slice
-    typealias Chunk = ArraySlice<UInt8>
 
     var byteCount: Int { get }
 
-    func read(offset: Int, length: Int) -> Chunk?
+    @inlinable // swiftformat:disable:next spaceAroundOperators
+    func read<let length: Int>(offset: Int) -> InlineArray<length, UInt8>?
+    @inlinable
     func read(offset: Int) -> UInt8?
+    @inlinable
     func slice(range: Range<Int>) -> Slice?
+    @inlinable
     func slice(unchecked: Void, range: Range<Int>) -> Slice
 
+    @inlinable
     func findBoundary(index: Int) -> Int
+    @inlinable
     func isBoundary(index: Int) -> Bool
 }
 
@@ -20,11 +25,17 @@ extension [UInt8]: LexerSource {
         count
     }
 
-    public func read(offset: Int, length: Int) -> Chunk? {
+    // swiftformat:disable:next spaceAroundOperators
+    public func read<let length: Int>(offset: Int) -> InlineArray<length, UInt8>? {
         guard offset >= 0, length >= 0, offset + length <= count else {
             return nil
         }
-        return self[offset ..< offset + length]
+
+        return InlineArray { span in
+            for i in 0 ..< length {
+                span.append(self[offset + i])
+            }
+        }
     }
 
     public func read(offset: Int) -> UInt8? {
@@ -82,8 +93,17 @@ extension String: LexerSource {
         return Slice(slice)
     }
 
-    public func read(offset: Int, length: Int) -> Chunk? {
-        utf8[integerRange: offset ..< offset + length]?.map(\.self)[0 ..< length]
+    // swiftformat:disable:next spaceAroundOperators
+    public func read<let length: Int>(offset: Int) -> InlineArray<length, UInt8>? {
+        guard let utf8View = utf8[integerRange: offset ..< offset + length] else {
+            return nil
+        }
+
+        return InlineArray { span in
+            for value in utf8View {
+                span.append(value)
+            }
+        }
     }
 
     public func read(offset: Int) -> UInt8? {

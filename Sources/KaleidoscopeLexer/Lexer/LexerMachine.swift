@@ -4,7 +4,10 @@
 ///
 ///  Created by Larry Zeng on 12/4/23.
 ///
-public struct LexerMachine<Token: LexerTokenProtocol> {
+public struct LexerMachine<Token: LexerTokenProtocol>: ~Copyable {
+    public typealias Output = Result<Token, Token.LexerError>
+    public typealias Span = Range<Int>
+
     @usableFromInline
     let source: Token.Source
     @usableFromInline
@@ -25,7 +28,7 @@ public struct LexerMachine<Token: LexerTokenProtocol> {
     }
 
     @inlinable
-    public var span: Range<Int> {
+    public var span: Span {
         tokenStart ..< tokenEnd
     }
 
@@ -49,8 +52,8 @@ public struct LexerMachine<Token: LexerTokenProtocol> {
     }
 }
 
-extension LexerMachine: Sequence, IteratorProtocol {
-    public mutating func next() -> Result<Token, Token.LexerError>? {
+public extension LexerMachine {
+    mutating func next() -> Output? {
         tokenStart = tokenEnd
         return Token.lex(&self)
     }
@@ -58,8 +61,10 @@ extension LexerMachine: Sequence, IteratorProtocol {
 
 public extension LexerMachine {
     @inlinable
-    func read(offset: Int, length: Int) -> ArraySlice<UInt8>? {
-        source.read(offset: offset, length: length)
+    func read<let length: Int>( // swiftformat:disable:this spaceAroundOperators
+        offset: Int,
+    ) -> InlineArray<length, UInt8>? {
+        source.read(offset: offset)
     }
 
     @inlinable

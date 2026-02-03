@@ -252,7 +252,7 @@ public struct Generator {
                     return ExprSyntax(IntegerLiteralExprSyntax(literal: integer))
                 })
 
-                "let \(ident): [UInt8] = [\(elements)]"
+                "let \(ident): InlineArray<256, UInt8> = [\(elements)]"
             })
         }
 
@@ -377,7 +377,7 @@ public struct Generator {
     ) throws -> LabeledStmtSyntax {
         try LabeledStmtSyntax(label: "outer", statement: DoStmtSyntax {
             try WhileStmtSyntax(
-                "while let buffer = \(lexer).read(offset: \(offset), length: \(raw: unrollFactor))",
+                "while let buffer: InlineArray<\(raw: unrollFactor), UInt8> = \(lexer).read(offset: \(offset))",
             ) {
                 for i in 0 ..< unrollFactor {
                     try IfExprSyntax("if \(test)(buffer[\(raw: i)])") {

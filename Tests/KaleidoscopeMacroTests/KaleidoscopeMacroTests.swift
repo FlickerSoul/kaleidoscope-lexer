@@ -31,8 +31,8 @@ extension KaleidoscopeMacroTests {
             }
 
             extension Test: KaleidoscopeLexer.LexerTokenProtocol {
-                typealias Source = String
-                typealias UserError = Never
+                public typealias Source = String
+                public typealias UserError = Never
                 public static func lex(_ lexer: inout KaleidoscopeLexer.LexerMachine<Test>) -> Test.LexerOutput? {
                     let __macro_local_5leaf0fMu_: Swift.Int = 0
                     let __macro_local_5leaf1fMu_: Swift.Int = 1
@@ -63,17 +63,17 @@ extension KaleidoscopeMacroTests {
                         if let byte {
                             __macro_local_6offsetfMu_ += 1
                             switch byte {
-                            case 32:
+                            case 0x20 ..< 0x21:
                                 return jumpTo_1(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
-                            case 92:
+                            case 0x5C ..< 0x5D:
                                 return jumpTo_2(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
-                            case 97:
+                            case 0x61 ..< 0x62:
                                 return jumpTo_3(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
-                            case 98:
+                            case 0x62 ..< 0x63:
                                 return jumpTo_4(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
-                            case 110:
+                            case 0x6E ..< 0x6F:
                                 return jumpTo_2(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
-                            case 116:
+                            case 0x74 ..< 0x75:
                                 return jumpTo_2(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             default:
                                 break

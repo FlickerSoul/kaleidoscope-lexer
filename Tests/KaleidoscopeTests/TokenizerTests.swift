@@ -24,7 +24,7 @@ enum TestToken {
     ("ba", [.success(.b), .success(.a)]),
 ] as [(String, [TestToken.LexerOutput])])
 func `simple tokenizer`(source: String, expected: [TestToken.LexerOutput]) {
-    let actual = Array(TestToken.lexer(source: source))
+    let actual = Array(TestToken.lexer(source: source).asIterator())
     #expect(actual == expected)
 }
 

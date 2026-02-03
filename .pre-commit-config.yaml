@@ -11,13 +11,13 @@ repos:
     hooks:
       - id: swiftformat
         name: SwiftFormat
-        entry: swiftformat --config .swiftformat.conf .
+        entry: swiftformat --base-config .swiftformat.conf
         language: system
         types: [swift]
         stages: [pre-commit]
       - id: swiftlint check
         name: SwiftLintCheck
-        entry: swiftlint . --strict
+        entry: swiftlint --strict
         language: system
         types: [swift]
         stages: [pre-commit]

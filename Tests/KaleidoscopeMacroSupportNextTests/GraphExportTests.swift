@@ -7,7 +7,7 @@ import Testing
 import TestUtils
 
 extension Syntax {
-    static let dummy = Syntax(ExprSyntax(""))
+    static let dummy = Syntax(ExprSyntax("0"))
 }
 
 extension Leaf {

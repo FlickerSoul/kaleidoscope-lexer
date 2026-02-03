@@ -131,9 +131,10 @@ private extension String.UTF8View {
     }
 
     subscript(integerRange range: Range<Int>) -> String.UTF8View.SubSequence? {
-        let left = index(startIndex, offsetBy: range.lowerBound)
-        let right = index(startIndex, offsetBy: range.upperBound)
-        guard left <= right, right <= endIndex else {
+        let left = index(startIndex, offsetBy: range.lowerBound, limitedBy: endIndex)
+        let right = index(startIndex, offsetBy: range.upperBound, limitedBy: endIndex)
+
+        guard let left, let right else {
             return nil
         }
 

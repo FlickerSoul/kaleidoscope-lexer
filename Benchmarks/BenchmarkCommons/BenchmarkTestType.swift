@@ -8,7 +8,7 @@ import KaleidoscopeLexer
 
 @Kaleidoscope
 @skip(/\t| |\n/)
-public enum BenchmarkTestType {
+public enum BenchmarkTestType: Sendable {
     @regex(/[a-zA-Z_$][a-zA-Z0-9_$]*?/)
     case identifier
 

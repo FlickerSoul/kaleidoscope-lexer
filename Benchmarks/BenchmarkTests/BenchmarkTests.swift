@@ -5,7 +5,8 @@ import Testing
 func `successful parsing benchmark strings`(name: String) throws {
     let testString = try #require(benchmarkStrings[name])
     let lexer = BenchmarkTestType.lexer(source: testString)
-    for token in lexer {
-        _ = try token.get()
-    }
+    let tokens = try lexer.map { try $0.get() }
+    let expected = try #require(benchmarkTokens[name])
+
+    #expect(tokens == expected)
 }

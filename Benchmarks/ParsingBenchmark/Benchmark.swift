@@ -32,8 +32,8 @@ let benchmarks = { @Sendable in
         Benchmark("Parsing \(name) Speed") { benchmark in
             benchmark.measurement(.bytesPerIteration, byteCount)
             for _ in benchmark.scaledIterations {
-                for token in BenchmarkTestType.lexer(source: benchSource).asIterator() {
-                    blackHole(token)
+                for token in BenchmarkTestType.lexer(source: benchSource) {
+                    try blackHole(token.get())
                 }
             }
         }

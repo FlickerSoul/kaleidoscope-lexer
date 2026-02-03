@@ -119,6 +119,23 @@ let package = Package(
         ),
         // example
         .executableTarget(name: "KaleidoscopeClient", dependencies: ["KaleidoscopeLexer"]),
+        // benchmark support
+        .target(
+            name: "BenchmarkCommons",
+            dependencies: [
+                "KaleidoscopeLexer",
+            ],
+            path: "Benchmarks/BenchmarkCommons",
+        ),
+        .testTarget(
+            name: "BenchmarkTests",
+            dependencies: [
+                "BenchmarkCommons",
+                "RegexSupport",
+                "KaleidoscopeMacroSupportNext",
+            ],
+            path: "Benchmarks/BenchmarkTests",
+        ),
     ],
     swiftLanguageModes: [.v6],
 )
@@ -131,22 +148,6 @@ if enableBenchmark == "1" || enableBenchmark == "true" {
     )
     package.targets.append(
         contentsOf: [
-            .target(
-                name: "BenchmarkCommons",
-                dependencies: [
-                    "KaleidoscopeLexer",
-                ],
-                path: "Benchmarks/BenchmarkCommons",
-            ),
-            .testTarget(
-                name: "BenchmarkTests",
-                dependencies: [
-                    "BenchmarkCommons",
-                    "RegexSupport",
-                    "KaleidoscopeMacroSupportNext",
-                ],
-                path: "Benchmarks/BenchmarkTests",
-            ),
             .executableTarget(
                 name: "ParsingBenchmark",
                 dependencies: [

@@ -4,16 +4,16 @@
 ///
 ///  Created by Larry Zeng on 12/4/23.
 ///
-public struct LexerMachine<Token: LexerTokenProtocol>: ~Copyable {
+public struct LexerMachine<Token: LexerTokenProtocol> {
     public typealias Output = Result<Token, Token.LexerError>
     public typealias Span = Range<Int>
 
     @usableFromInline
     let source: Token.Source
     @usableFromInline
-    private(set) var tokenStart: Int
+    var tokenStart: Int
     @usableFromInline
-    private(set) var tokenEnd: Int
+    var tokenEnd: Int
 
     @inlinable
     public init(source: Token.Source, tokenStart: Int = 0, tokenEnd: Int = 0) {
@@ -49,13 +49,6 @@ public struct LexerMachine<Token: LexerTokenProtocol>: ~Copyable {
         tokenEnd += count
 
         assert(source.isBoundary(index: tokenEnd), "bump to non-boundary index")
-    }
-}
-
-public extension LexerMachine {
-    mutating func next() -> Output? {
-        tokenStart = tokenEnd
-        return Token.lex(&self)
     }
 }
 

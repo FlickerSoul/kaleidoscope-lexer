@@ -1,4 +1,4 @@
-public class SpannedLexerIterator<Token: LexerTokenProtocol>: Sequence, IteratorProtocol {
+public struct SpannedLexerIterator<Token: LexerTokenProtocol>: Sequence, IteratorProtocol {
     public typealias Lexer = LexerMachine<Token>
 
     @usableFromInline
@@ -9,7 +9,7 @@ public class SpannedLexerIterator<Token: LexerTokenProtocol>: Sequence, Iterator
         _lexer = consume lexer
     }
 
-    public func next() -> (Lexer.Output, Lexer.Span)? {
+    public mutating func next() -> (Lexer.Output, Lexer.Span)? {
         _lexer.next().map { token in
             (token, _lexer.span)
         }
@@ -18,7 +18,7 @@ public class SpannedLexerIterator<Token: LexerTokenProtocol>: Sequence, Iterator
 
 public extension LexerMachine {
     @inlinable
-    consuming func asSpannedIterator() -> SpannedLexerIterator<Token> {
+    func makeSpannedIterator() -> SpannedLexerIterator<Token> {
         .init(lexer: self)
     }
 }

@@ -1,8 +1,8 @@
 import KaleidoscopeLexer
 import Testing
 
-@Kaleidoscope
-private enum SimpleTest: Equatable {
+@Kaleidoscope(useStateMachineCodegen: true)
+private enum StateSimpleTest: Equatable {
     @regex(/a/)
     case a
 
@@ -10,7 +10,7 @@ private enum SimpleTest: Equatable {
     case b
 }
 
-extension `Tokenizer Tests` {
+extension `State Based Tokenizer Tests` {
     @Test(arguments: [
         ("a", [.success(.a)]),
         ("b", [.success(.b)]),
@@ -18,9 +18,9 @@ extension `Tokenizer Tests` {
         ("ba", [.success(.b), .success(.a)]),
         ("c", [.failure(.lexerError)]),
         ("acb", [.success(.a), .failure(.lexerError), .success(.b)]),
-    ] as [(String, [SimpleTest.LexerOutput])])
-    private func `simple tokenizer`(source: String, expected: [SimpleTest.LexerOutput]) {
-        let actual = Array(SimpleTest.lexer(source: source))
+    ] as [(String, [StateSimpleTest.LexerOutput])])
+    private func `simple tokenizer`(source: String, expected: [StateSimpleTest.LexerOutput]) {
+        let actual = Array(StateSimpleTest.lexer(source: source))
         #expect(actual == expected)
     }
 }

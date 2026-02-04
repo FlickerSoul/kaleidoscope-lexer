@@ -18,4 +18,7 @@ let macros: [String: Macro.Type] = [
 ]
 
 @Suite(.macros(macros, record: .failed))
-struct KaleidoscopeMacroTests {}
+struct `Function Based Macro Tests` {}
+
+@Suite(.macros(macros, record: .failed))
+struct `State Based Macro Tests` {}

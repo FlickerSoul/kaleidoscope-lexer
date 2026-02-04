@@ -2,7 +2,7 @@ import KaleidoscopeLexer
 import Testing
 
 @Kaleidoscope
-private enum PriorityTest: Equatable {
+private enum FuncPriorityTest: Equatable {
     @token("fast")
     case fast
 
@@ -10,10 +10,10 @@ private enum PriorityTest: Equatable {
     case faaaast
 }
 
-extension `Tokenizer Tests` {
+extension `Function Based Tokenizer Tests` {
     @Test
     func `priority test`() {
-        let actual = Array(PriorityTest.lexer(source: "fast"))
+        let actual = Array(FuncPriorityTest.lexer(source: "fast"))
         #expect(actual == [.success(.faaaast)])
     }
 }

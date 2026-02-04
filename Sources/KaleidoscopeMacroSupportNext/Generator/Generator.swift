@@ -39,15 +39,16 @@ public struct Generator {
     public let config: Config
     public let graph: Graph
     public let context: any MacroExpansionContext
+
     let nameSpace: NameSpace
 
     // State and leaf identifiers (cached for performance)
-    private var stateIdentifiers: [State: TokenSyntax] = [:]
-    private var leafIdentifiers: [TokenSyntax] = []
+    var stateIdentifiers: [State: TokenSyntax] = [:]
+    var leafIdentifiers: [TokenSyntax] = []
 
     /// LUT optimization - maps bit tables to indices
     /// BitTable is a 256-element array where each element indicates if that byte matches
-    private var loopMasks: [[Bool]: Int] = [:]
+    var loopMasks: [[Bool]: Int] = [:]
 
     public init(
         enumType: any TypeSyntaxProtocol,
@@ -88,13 +89,18 @@ public struct Generator {
         return stateIdentifier
     }
 
+    // use when compiler crash is fixed
+    // func stateValue(_ state: State) throws(GeneratorError) -> TokenSyntax {
+    //     let ident = try getIdentifier(state)
+    //     if config.useStateMachineCodeGen {
+    //         return "\(nameSpace.keleidoscopeStates).\(ident)"
+    //     } else {
+    //         return "\(ident)"
+    //     }
+    // }
+
     func stateValue(_ state: State) throws(GeneratorError) -> TokenSyntax {
-        let ident = try getIdentifier(state)
-        if config.useStateMachineCodeGen {
-            return "\(nameSpace.keleidoscopeStates).\(ident)"
-        } else {
-            return "\(ident)"
-        }
+        try getIdentifier(state)
     }
 
     /// Convert ByteClass to 256-element bit array
@@ -145,10 +151,19 @@ public struct Generator {
 
     // MARK: - State Generation
 
+    // use this when compiler crash is fixed
+    // private mutating func generateState(state: State) throws -> SwitchCaseSyntax {
+    //     let thisIdent = try getIdentifier(state)
+    //
+    //     return try SwitchCaseSyntax("case .\(thisIdent):") {
+    //         try generateStateImpl(state: state)
+    //     }
+    // }
+
     private mutating func generateState(state: State) throws -> SwitchCaseSyntax {
         let thisIdent = try getIdentifier(state)
 
-        return try SwitchCaseSyntax("case .\(thisIdent)") {
+        return try SwitchCaseSyntax("case \(thisIdent):") {
             try generateStateImpl(state: state)
         }
     }
@@ -205,58 +220,6 @@ public struct Generator {
         } else {
             return CodeBlockItemListSyntax {}
         }
-    }
-
-    private mutating func addTestToLUT(byteClass: ByteClass) -> (tableIdent: TokenSyntax, mask: UInt8) {
-        let tableBits = byteClassToTableBits(byteClass)
-
-        let loopId: Int
-        if let existing = loopMasks[tableBits] {
-            loopId = existing
-        } else {
-            loopId = loopMasks.count
-            loopMasks[tableBits] = loopId
-        }
-
-        let tableIndex = loopId / 8
-        let bitPosition = loopId % 8
-
-        return (
-            tableIdent: tableIdentifier(for: tableIndex),
-            mask: 1 << bitPosition,
-        )
-    }
-
-    private func tableIdentifier(for index: Int) -> TokenSyntax {
-        .identifier("_TABLE_\(index)")
-    }
-
-    private func renderLUT() -> CodeBlockItemListSyntax {
-        let sortedLUTs = loopMasks.sorted { lhs, rhs in
-            lhs.value < rhs.value
-        }
-        var result = CodeBlockItemListSyntax {}
-        for (lutIndex, bitArrays) in sortedLUTs.chunk(size: 8).enumerated() {
-            var bitValues = [UInt8](repeating: 0, count: 256)
-            for (bitIndex, (bits, _)) in bitArrays.enumerated() {
-                for (arrayIndex, bit) in bits.enumerated() where bit {
-                    bitValues[arrayIndex] |= (1 as UInt8) << bitIndex
-                }
-            }
-
-            let ident = tableIdentifier(for: lutIndex)
-            result.append(contentsOf: CodeBlockItemListSyntax {
-                let elements = ArrayElementListSyntax(expressions: bitValues.map { bits in
-                    let integer = bits.binaryLiteral
-
-                    return ExprSyntax(IntegerLiteralExprSyntax(literal: integer))
-                })
-
-                "let \(ident): InlineArray<256, UInt8> = [\(elements)]"
-            })
-        }
-
-        return result
     }
 
     // TODO: use this when compiler crash is fixed
@@ -365,7 +328,7 @@ public struct Generator {
         }
 
         SwitchCaseSyntax("default:") {
-            #"fatalError("Invalid leaf identifier. Unknown leaf \(context)")"#
+            #"fatalError("Invalid leaf identifier. Unknown leaf \(context). This is a bug in Kaleidoscope.")"#
         }
     }
 
@@ -403,7 +366,7 @@ public struct Generator {
     @CodeBlockItemListBuilder
     func stateAction(stateIdent: TokenSyntax) -> CodeBlockItemListSyntax {
         if config.useStateMachineCodeGen {
-            "state = \(stateIdent)"
+            "\(nameSpace.state) = \(stateIdent)"
             "continue"
         } else {
             "return \(stateIdent)(&\(nameSpace.lexerMachineIdent), \(nameSpace.offset), \(nameSpace.context))"
@@ -458,25 +421,31 @@ public struct Generator {
 
         if config.useStateMachineCodeGen {
             return try CodeBlockItemListSyntax {
-                let switchCases: [SwitchCaseSyntax] = try states.map { state in
-                    try generateState(state: state)
-                }
-                try generateLexCommon()
-
-                try EnumDeclSyntax("enum \(nameSpace.keleidoscopeStates)") {
+                let switchCases = try SwitchCaseListSyntax {
                     for state in states {
-                        try EnumCaseDeclSyntax(elements: [.init(name: getIdentifier(state))])
+                        try generateState(state: state)
                     }
                 }
 
-                "var \(nameSpace.state) = \(nameSpace.keleidoscopeStates).\(initStateIdent)"
+                try generateLexCommon()
+
+                for state in states {
+                    let stateIdent = try getIdentifier(state)
+                    "let \(stateIdent): \(nameSpace.keleidoscopeLeaves) = \(raw: state.id)"
+                }
+
+                // use this when compiler crash is fixed
+                // "var \(nameSpace.state) = \(nameSpace.keleidoscopeStates).\(initStateIdent)"
+                "var \(nameSpace.state) = \(initStateIdent)"
                 "var \(nameSpace.offset) = lexer.offset()"
                 "var \(nameSpace.context): \(nameSpace.keleidoscopeLeaves)? = nil"
 
                 try WhileStmtSyntax("while true") {
                     try SwitchExprSyntax("switch \(nameSpace.state)") {
-                        for switchCase in switchCases {
-                            switchCase
+                        switchCases
+
+                        SwitchCaseSyntax("default:") {
+                            #"fatalError("Invalid state \(\#(nameSpace.state)) encountered. This is a bug in Keleidoscope.")"#
                         }
                     }
                 }

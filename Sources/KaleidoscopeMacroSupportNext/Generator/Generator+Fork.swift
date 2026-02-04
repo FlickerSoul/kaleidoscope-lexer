@@ -20,6 +20,7 @@ extension Generator {
         ignoreSelf: Bool,
     ) throws -> CodeBlockItemListSyntax {
         var table = [State?](repeating: nil, count: 256)
+
         for normal in stateData.normal {
             if ignoreSelf, normal.state == state {
                 continue
@@ -27,7 +28,9 @@ extension Generator {
 
             for range in normal.byteClass.ranges {
                 for byte in range {
-                    table[Int(byte)] = normal.state
+                    let byte = Int(byte)
+                    assert(table[byte] == nil)
+                    table[byte] = normal.state
                 }
             }
         }
@@ -39,25 +42,27 @@ extension Generator {
             let action = stateAction(stateIdent: nextState)
 
             body = try CodeBlockItemListSyntax {
-                "let \(nextState): \(nameSpace.keleidoscopeStates)?"
+                if table.any({ $0 != nil }) {
+                    "let \(nextState): \(nameSpace.keleidoscopeStates)?"
 
-                try SwitchExprSyntax("switch byte") {
-                    for (index, state) in table.enumerated() {
-                        if let state {
-                            try SwitchCaseSyntax("case \(raw: index):") {
-                                try "\(nextState) = .\(stateValue(state))"
+                    try SwitchExprSyntax("switch byte") {
+                        for (byteToJump, state) in table.enumerated() {
+                            if let state {
+                                try SwitchCaseSyntax("case \(raw: byteToJump):") {
+                                    try "\(nextState) = \(stateValue(state))"
+                                }
                             }
+                        }
+
+                        SwitchCaseSyntax("default:") {
+                            "\(nextState) = nil"
                         }
                     }
 
-                    SwitchCaseSyntax("default:") {
-                        "nextState = nil"
+                    try IfExprSyntax("if let \(nextState)") {
+                        "\(nameSpace.offset) += 1"
+                        action
                     }
-                }
-
-                try IfExprSyntax("if let \(nextState)") {
-                    "\(nameSpace.offset) += 1"
-                    action
                 }
             }
         } else {

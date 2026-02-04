@@ -5,12 +5,6 @@
 //  Created by Larry Zeng on 12/7/23.
 //
 
-import KaleidoscopeLexer
-import Testing
-
-@Suite
-struct `Tokenizer Tests` {}
-
 // let convertInt: FillCallback<CallbackTest, Int> = { lexer in Int(lexer.rawSlice)! }
 
 // let convertDouble: FillCallback<CallbackTest, Double> = { lexer in Double(lexer.rawSlice)! }

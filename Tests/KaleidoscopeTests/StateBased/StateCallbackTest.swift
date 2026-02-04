@@ -1,23 +1,24 @@
 import KaleidoscopeLexer
 import Testing
 
-private let intCallback = { @Sendable (machine: inout LexerMachine<CallbackTest>) -> Int in
+private let intCallback = { @Sendable (machine: inout LexerMachine<FuncCallbackTest>) -> Int in
     Int(machine.slice())!
 }
 
-private let printCallback = { @Sendable (machine: inout LexerMachine<CallbackTest>) in
+private let printCallback = { @Sendable (machine: inout LexerMachine<FuncCallbackTest>) in
     print(machine.slice())
 }
 
-private let skipPrintCallback = { @Sendable (machine: inout LexerMachine<CallbackTest>) -> _SkipResult<CallbackTest> in
-    print("skipping \(machine.slice())")
-    return .skip
-}
+private let skipPrintCallback =
+    { @Sendable (machine: inout LexerMachine<FuncCallbackTest>) -> _SkipResult<FuncCallbackTest> in
+        print("skipping \(machine.slice())")
+        return .skip
+    }
 
 // TODO: @skip(/aaa/, callback: skipPrintCallback) // This doesn't work because circular reference in swift
-@Kaleidoscope
+@Kaleidoscope(useStateMachineCodegen: true)
 @skip(/[ ]/)
-private enum CallbackTest: Equatable {
+private enum FuncCallbackTest: Equatable {
     @regex(/[0-9]+?/, callback: intCallback)
     case number(Int)
 
@@ -31,7 +32,7 @@ private enum CallbackTest: Equatable {
     case regularSkip
 }
 
-extension `Tokenizer Tests` {
+extension `State Based Tokenizer Tests` {
     @Test(arguments: [
         ("123", [.success(.number(123))]),
         ("456", [.success(.number(456))]),
@@ -40,9 +41,9 @@ extension `Tokenizer Tests` {
         ("ident 123", [.success(.ident), .success(.number(123))]),
         ("skip ident 42 skip 99", [.success(.ident), .success(.number(42)), .success(.number(99))]),
         ("regular skip 99", [.success(.number(99))]),
-    ] as [(String, [CallbackTest.LexerOutput])])
-    private func `callback tokenizer`(source: String, expected: [CallbackTest.LexerOutput]) {
-        let actual = Array(CallbackTest.lexer(source: source))
+    ] as [(String, [FuncCallbackTest.LexerOutput])])
+    private func `callback tokenizer`(source: String, expected: [FuncCallbackTest.LexerOutput]) {
+        let actual = Array(FuncCallbackTest.lexer(source: source))
         #expect(actual == expected)
     }
 }

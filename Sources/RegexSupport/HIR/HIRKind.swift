@@ -144,6 +144,108 @@ extension CharacterClass {
             "\u{2029}" ... "\u{2029}", // PARAGRAPH SEPARATOR
         ])
     }
+
+    // MARK: - POSIX Character Classes
+
+    /// POSIX [:alnum:] - [a-zA-Z0-9]
+    static var posixAlnum: CharacterClass {
+        .init(ranges: [
+            "0" ... "9",
+            "A" ... "Z",
+            "a" ... "z",
+        ])
+    }
+
+    /// POSIX [:alpha:] - [a-zA-Z]
+    static var posixAlpha: CharacterClass {
+        .init(ranges: [
+            "A" ... "Z",
+            "a" ... "z",
+        ])
+    }
+
+    /// POSIX [:ascii:] - [\x00-\x7F]
+    static var posixAscii: CharacterClass {
+        .init(ranges: [Character.min ... "\u{7F}"])
+    }
+
+    /// POSIX [:blank:] - [ \t]
+    static var posixBlank: CharacterClass {
+        .init(ranges: [
+            "\t" ... "\t",
+            " " ... " ",
+        ])
+    }
+
+    /// POSIX [:cntrl:] - [\x00-\x1f\x7f]
+    static var posixCntrl: CharacterClass {
+        .init(ranges: [
+            Character.min ... "\u{1F}",
+            "\u{7F}" ... "\u{7F}",
+        ])
+    }
+
+    /// POSIX [:digit:] - [0-9]
+    static var posixDigit: CharacterClass {
+        .init(ranges: ["0" ... "9"])
+    }
+
+    /// POSIX [:graph:] - [\x21-\x7e] visible characters
+    static var posixGraph: CharacterClass {
+        .init(ranges: ["\u{21}" ... "\u{7E}"])
+    }
+
+    /// POSIX [:lower:] - [a-z]
+    static var posixLower: CharacterClass {
+        .init(ranges: ["a" ... "z"])
+    }
+
+    /// POSIX [:print:] - [\x20-\x7e] printable characters
+    static var posixPrint: CharacterClass {
+        .init(ranges: [" " ... "\u{7E}"])
+    }
+
+    /// POSIX [:punct:] - Punctuation characters
+    static var posixPunct: CharacterClass {
+        .init(ranges: [
+            "!" ... "/",
+            ":" ... "@",
+            "[" ... "`",
+            "{" ... "~",
+        ])
+    }
+
+    /// POSIX [:space:] - [ \t\n\v\f\r]
+    static var posixSpace: CharacterClass {
+        .init(ranges: [
+            "\t" ... "\r",
+            " " ... " ",
+        ])
+    }
+
+    /// POSIX [:upper:] - [A-Z]
+    static var posixUpper: CharacterClass {
+        .init(ranges: ["A" ... "Z"])
+    }
+
+    /// POSIX [:word:] - [a-zA-Z0-9_]
+    static var posixWord: CharacterClass {
+        .init(ranges: [
+            "0" ... "9",
+            "A" ... "Z",
+            "_" ... "_",
+            "a" ... "z",
+        ])
+    }
+
+    /// POSIX [:xdigit:] - [a-fA-F0-9]
+    static var posixXdigit: CharacterClass {
+        .init(ranges: [
+            "0" ... "9",
+            "A" ... "F",
+            "a" ... "f",
+        ])
+    }
 }
 
 // MARK: Group

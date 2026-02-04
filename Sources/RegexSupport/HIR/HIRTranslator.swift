@@ -154,8 +154,7 @@ public extension HIRKind {
         case .scalarSequence:
             throw .unavailable("Scalar sequence not supported in atom").toError(with: atom.location)
         case let .property(property):
-            // FIXME: needs to support properties
-            throw .unavailable("Property not supported: \(property)").toError(with: atom.location)
+            self = try .init(property, location: atom.location)
         case let .escaped(escaped):
             if let escapedHIR = escaped.escapedCharacterHIR {
                 self = escapedHIR
@@ -223,6 +222,156 @@ public extension HIRKind {
 
     init(_: AST.Trivia) throws(RegexConversionError) {
         self = .empty
+    }
+
+    // swiftlint:disable:next cyclomatic_complexity
+    init(
+        _ property: AST.Atom.CharacterProperty,
+        location: SourceLocation,
+    ) throws(RegexConversionError) {
+        var characterClass: CharacterClass
+
+        switch property.kind {
+        case .any:
+            characterClass = .trueAny
+        case .assigned:
+            // Assigned is the inverse of Unassigned general category
+            if let ranges = GeneralCategory.BY_NAME["Unassigned"] {
+                characterClass = CharacterClass(ranges: ranges.map { $0.0 ... $0.1 })
+                characterClass.invert()
+            } else {
+                throw .unavailable("Assigned property table not found").toError(with: location)
+            }
+        case .ascii:
+            characterClass = .posixAscii
+        case let .generalCategory(category):
+            let categoryName = category.rawValue
+            // First try to find the category directly
+            if let ranges = GeneralCategory.BY_NAME[categoryName] {
+                characterClass = CharacterClass(ranges: ranges.map { $0.0 ... $0.1 })
+            } else {
+                // Try to look up via PROPERTY_VALUES for aliases
+                let normalizedName = categoryName.lowercased().replacingOccurrences(of: "_", with: "")
+                if let canonicalName = PROPERTY_VALUES["General_Category"]?[normalizedName],
+                   let ranges = GeneralCategory.BY_NAME[canonicalName] {
+                    characterClass = CharacterClass(ranges: ranges.map { $0.0 ... $0.1 })
+                } else {
+                    throw .unavailable("General category '\(categoryName)' not found").toError(
+                        with: location,
+                    )
+                }
+            }
+        case let .binary(binaryProp, value):
+            let propName = binaryProp.rawValue
+            // Look up the canonical name first
+            let normalizedName = propName.lowercased().replacingOccurrences(of: "_", with: "")
+            let canonicalName = PROPERTY_NAMES
+                .first { $0.0 == normalizedName }?.1 ?? propName
+            if let ranges = PropertyBool.BY_NAME[canonicalName] {
+                characterClass = CharacterClass(ranges: ranges.map { $0.0 ... $0.1 })
+                // If value is false, invert the class
+                if !value {
+                    characterClass.invert()
+                }
+            } else {
+                throw .unavailable("Binary property '\(propName)' not found").toError(with: location)
+            }
+        case let .script(script):
+            let scriptName = script.rawValue
+            if let ranges = ScriptExtension.BY_NAME[scriptName] {
+                characterClass = CharacterClass(ranges: ranges.map { $0.0 ... $0.1 })
+            } else {
+                // Try to look up via PROPERTY_VALUES for aliases
+                let normalizedName = scriptName.lowercased().replacingOccurrences(of: "_", with: "")
+                if let canonicalName = PROPERTY_VALUES["Script"]?[normalizedName],
+                   let ranges = ScriptExtension.BY_NAME[canonicalName] {
+                    characterClass = CharacterClass(ranges: ranges.map { $0.0 ... $0.1 })
+                } else {
+                    throw .unavailable("Script '\(scriptName)' not found").toError(with: location)
+                }
+            }
+        case let .scriptExtension(script):
+            let scriptName = script.rawValue
+            if let ranges = ScriptExtension.BY_NAME[scriptName] {
+                characterClass = CharacterClass(ranges: ranges.map { $0.0 ... $0.1 })
+            } else {
+                // Try to look up via PROPERTY_VALUES for aliases
+                let normalizedName = scriptName.lowercased().replacingOccurrences(of: "_", with: "")
+                if let canonicalName = PROPERTY_VALUES["Script"]?[normalizedName],
+                   let ranges = ScriptExtension.BY_NAME[canonicalName] {
+                    characterClass = CharacterClass(ranges: ranges.map { $0.0 ... $0.1 })
+                } else {
+                    throw .unavailable("Script extension '\(scriptName)' not found").toError(
+                        with: location,
+                    )
+                }
+            }
+        case let .posix(posixProp):
+            characterClass = CharacterClass.fromPOSIX(posixProp)
+        case let .age(major, minor):
+            let versionString = "V\(major)_\(minor)"
+            if let ranges = Age.BY_NAME[versionString] {
+                characterClass = CharacterClass(ranges: ranges.map { $0.0 ... $0.1 })
+            } else {
+                throw .unavailable("Age '\(major).\(minor)' not found").toError(with: location)
+            }
+        case .named:
+            throw .unsupportedConstruct("Named character property is not supported").toError(
+                with: location,
+            )
+        case .numericType:
+            throw .unsupportedConstruct("Numeric type property is not supported").toError(
+                with: location,
+            )
+        case .numericValue:
+            throw .unsupportedConstruct("Numeric value property is not supported").toError(
+                with: location,
+            )
+        case .mapping:
+            throw .unsupportedConstruct("Mapping property is not supported").toError(with: location)
+        case .ccc:
+            throw .unsupportedConstruct("Canonical combining class property is not supported")
+                .toError(with: location)
+        case .block:
+            throw .unsupportedConstruct("Block property is not supported").toError(with: location)
+        case .pcreSpecial:
+            throw .unsupportedConstruct("PCRE special category is not supported").toError(
+                with: location,
+            )
+        case .javaSpecial:
+            throw .unsupportedConstruct("Java special property is not supported").toError(
+                with: location,
+            )
+        case .invalid:
+            throw .invalid("Invalid character property").toError(with: location)
+        }
+
+        if property.isInverted {
+            characterClass.invert()
+        }
+
+        self = .class(characterClass)
+    }
+}
+
+// MARK: - POSIX Character Class Support
+
+extension CharacterClass {
+    static func fromPOSIX(_ posixProp: Unicode.POSIXProperty) -> CharacterClass {
+        switch posixProp {
+        case .alnum:
+            .posixAlnum
+        case .blank:
+            .posixBlank
+        case .graph:
+            .posixGraph
+        case .print:
+            .posixPrint
+        case .word:
+            .posixWord
+        case .xdigit:
+            .posixXdigit
+        }
     }
 }
 

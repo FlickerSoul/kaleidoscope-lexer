@@ -46,10 +46,41 @@ extension Generator {
                     "let \(nextState): \(nameSpace.keleidoscopeStates)?"
 
                     try SwitchExprSyntax("switch byte") {
-                        for (byteToJump, state) in table.enumerated() {
-                            if let state {
-                                try SwitchCaseSyntax("case \(raw: byteToJump):") {
-                                    try "\(nextState) = \(stateValue(state))"
+                        var previousStateInfo: (byte: Int, state: State?) = (0, nil)
+
+                        for (byteToJump, state) in table.enumerated() where state != previousStateInfo.state {
+                            if let previousState = previousStateInfo.state {
+                                if previousStateInfo.byte + 1 == byteToJump {
+                                    try SwitchCaseSyntax(
+                                        "case \(raw: previousStateInfo.byte):",
+                                    ) {
+                                        try "\(nextState) = \(stateValue(previousState))"
+                                    }
+                                } else {
+                                    try SwitchCaseSyntax(
+                                        "case \(raw: previousStateInfo.byte) ..< \(raw: byteToJump):",
+                                    ) {
+                                        try "\(nextState) = \(stateValue(previousState))"
+                                    }
+                                }
+                            }
+
+                            // swiftlint:disable:next redundant_discardable_let
+                            let _ = previousStateInfo = (byteToJump, state)
+                        }
+
+                        if let previousState = previousStateInfo.state {
+                            if previousStateInfo.byte < 0xFF {
+                                try SwitchCaseSyntax(
+                                    "case \(raw: previousStateInfo.byte) ... 0xFF:",
+                                ) {
+                                    try "\(nextState) = \(stateValue(previousState))"
+                                }
+                            } else {
+                                try SwitchCaseSyntax(
+                                    "case \(raw: previousStateInfo.byte):",
+                                ) {
+                                    try "\(nextState) = \(stateValue(previousState))"
                                 }
                             }
                         }
@@ -90,10 +121,18 @@ extension Generator {
 
                             if action != previousActionInfo.action {
                                 if let previousAction = previousActionInfo.action {
-                                    SwitchCaseSyntax(
-                                        "case \(previousActionInfo.byte.hexLiteral) ..< \(byteToJump.hexLiteral):",
-                                    ) {
-                                        previousAction
+                                    if previousActionInfo.byte + 1 == byteToJump {
+                                        SwitchCaseSyntax(
+                                            "case \(previousActionInfo.byte.hexLiteral):",
+                                        ) {
+                                            previousAction
+                                        }
+                                    } else {
+                                        SwitchCaseSyntax(
+                                            "case \(previousActionInfo.byte.hexLiteral) ..< \(byteToJump.hexLiteral):",
+                                        ) {
+                                            previousAction
+                                        }
                                     }
                                 }
 
@@ -103,8 +142,14 @@ extension Generator {
                         }
 
                         if let previousAction = previousActionInfo.action {
-                            SwitchCaseSyntax("case \(previousActionInfo.byte.hexLiteral) ... 0xFF:") {
-                                previousAction
+                            if previousActionInfo.byte < 0xFF {
+                                SwitchCaseSyntax("case \(previousActionInfo.byte.hexLiteral) ... 0xFF:") {
+                                    previousAction
+                                }
+                            } else {
+                                SwitchCaseSyntax("case \(previousActionInfo.byte.hexLiteral):") {
+                                    previousAction
+                                }
                             }
                         }
 

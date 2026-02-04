@@ -63,17 +63,17 @@ extension `Function Based Macro Tests` {
                         if let byte {
                             __macro_local_6offsetfMu_ += 1
                             switch byte {
-                            case 0x20 ..< 0x21:
+                            case 0x20:
                                 return jumpTo_1(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
-                            case 0x5C ..< 0x5D:
+                            case 0x5C:
                                 return jumpTo_2(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
-                            case 0x61 ..< 0x62:
+                            case 0x61:
                                 return jumpTo_3(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
-                            case 0x62 ..< 0x63:
+                            case 0x62:
                                 return jumpTo_4(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
-                            case 0x6E ..< 0x6F:
+                            case 0x6E:
                                 return jumpTo_2(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
-                            case 0x74 ..< 0x75:
+                            case 0x74:
                                 return jumpTo_2(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             default:
                                 break
@@ -260,17 +260,17 @@ extension `Function Based Macro Tests` {
                         if let byte {
                             __macro_local_6offsetfMu_ += 1
                             switch byte {
-                            case 0x20 ..< 0x21:
+                            case 0x20:
                                 return jumpTo_1(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             case 0x30 ..< 0x3A:
                                 return jumpTo_2(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
-                            case 0x61 ..< 0x62:
+                            case 0x61:
                                 return jumpTo_3(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
-                            case 0x69 ..< 0x6A:
+                            case 0x69:
                                 return jumpTo_4(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
-                            case 0x72 ..< 0x73:
+                            case 0x72:
                                 return jumpTo_5(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
-                            case 0x73 ..< 0x74:
+                            case 0x73:
                                 return jumpTo_6(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             default:
                                 break
@@ -389,7 +389,7 @@ extension `Function Based Macro Tests` {
                         if let byte {
                             __macro_local_6offsetfMu_ += 1
                             switch byte {
-                            case 0x61 ..< 0x62:
+                            case 0x61:
                                 return jumpTo_7(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             default:
                                 break
@@ -419,7 +419,7 @@ extension `Function Based Macro Tests` {
                         if let byte {
                             __macro_local_6offsetfMu_ += 1
                             switch byte {
-                            case 0x64 ..< 0x65:
+                            case 0x64:
                                 return jumpTo_8(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             default:
                                 break
@@ -449,7 +449,7 @@ extension `Function Based Macro Tests` {
                         if let byte {
                             __macro_local_6offsetfMu_ += 1
                             switch byte {
-                            case 0x65 ..< 0x66:
+                            case 0x65:
                                 return jumpTo_9(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             default:
                                 break
@@ -479,7 +479,7 @@ extension `Function Based Macro Tests` {
                         if let byte {
                             __macro_local_6offsetfMu_ += 1
                             switch byte {
-                            case 0x6B ..< 0x6C:
+                            case 0x6B:
                                 return jumpTo_10(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             default:
                                 break
@@ -509,7 +509,7 @@ extension `Function Based Macro Tests` {
                         if let byte {
                             __macro_local_6offsetfMu_ += 1
                             switch byte {
-                            case 0x61 ..< 0x62:
+                            case 0x61:
                                 return jumpTo_11(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             default:
                                 break
@@ -539,7 +539,7 @@ extension `Function Based Macro Tests` {
                         if let byte {
                             __macro_local_6offsetfMu_ += 1
                             switch byte {
-                            case 0x65 ..< 0x66:
+                            case 0x65:
                                 return jumpTo_12(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             default:
                                 break
@@ -569,7 +569,7 @@ extension `Function Based Macro Tests` {
                         if let byte {
                             __macro_local_6offsetfMu_ += 1
                             switch byte {
-                            case 0x67 ..< 0x68:
+                            case 0x67:
                                 return jumpTo_13(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             default:
                                 break
@@ -599,7 +599,7 @@ extension `Function Based Macro Tests` {
                         if let byte {
                             __macro_local_6offsetfMu_ += 1
                             switch byte {
-                            case 0x69 ..< 0x6A:
+                            case 0x69:
                                 return jumpTo_14(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             default:
                                 break
@@ -649,7 +649,7 @@ extension `Function Based Macro Tests` {
                         if let byte {
                             __macro_local_6offsetfMu_ += 1
                             switch byte {
-                            case 0x6E ..< 0x6F:
+                            case 0x6E:
                                 return jumpTo_15(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             default:
                                 break
@@ -679,7 +679,7 @@ extension `Function Based Macro Tests` {
                         if let byte {
                             __macro_local_6offsetfMu_ += 1
                             switch byte {
-                            case 0x75 ..< 0x76:
+                            case 0x75:
                                 return jumpTo_16(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             default:
                                 break
@@ -709,7 +709,7 @@ extension `Function Based Macro Tests` {
                         if let byte {
                             __macro_local_6offsetfMu_ += 1
                             switch byte {
-                            case 0x70 ..< 0x71:
+                            case 0x70:
                                 return jumpTo_17(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             default:
                                 break
@@ -739,7 +739,7 @@ extension `Function Based Macro Tests` {
                         if let byte {
                             __macro_local_6offsetfMu_ += 1
                             switch byte {
-                            case 0x74 ..< 0x75:
+                            case 0x74:
                                 return jumpTo_18(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             default:
                                 break
@@ -769,7 +769,7 @@ extension `Function Based Macro Tests` {
                         if let byte {
                             __macro_local_6offsetfMu_ += 1
                             switch byte {
-                            case 0x6C ..< 0x6D:
+                            case 0x6C:
                                 return jumpTo_19(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             default:
                                 break
@@ -839,7 +839,7 @@ extension `Function Based Macro Tests` {
                         if let byte {
                             __macro_local_6offsetfMu_ += 1
                             switch byte {
-                            case 0x61 ..< 0x62:
+                            case 0x61:
                                 return jumpTo_20(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             default:
                                 break
@@ -869,7 +869,7 @@ extension `Function Based Macro Tests` {
                         if let byte {
                             __macro_local_6offsetfMu_ += 1
                             switch byte {
-                            case 0x72 ..< 0x73:
+                            case 0x72:
                                 return jumpTo_21(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             default:
                                 break
@@ -899,7 +899,7 @@ extension `Function Based Macro Tests` {
                         if let byte {
                             __macro_local_6offsetfMu_ += 1
                             switch byte {
-                            case 0x20 ..< 0x21:
+                            case 0x20:
                                 return jumpTo_22(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             default:
                                 break
@@ -929,7 +929,7 @@ extension `Function Based Macro Tests` {
                         if let byte {
                             __macro_local_6offsetfMu_ += 1
                             switch byte {
-                            case 0x73 ..< 0x74:
+                            case 0x73:
                                 return jumpTo_23(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             default:
                                 break
@@ -959,7 +959,7 @@ extension `Function Based Macro Tests` {
                         if let byte {
                             __macro_local_6offsetfMu_ += 1
                             switch byte {
-                            case 0x6B ..< 0x6C:
+                            case 0x6B:
                                 return jumpTo_24(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             default:
                                 break
@@ -989,7 +989,7 @@ extension `Function Based Macro Tests` {
                         if let byte {
                             __macro_local_6offsetfMu_ += 1
                             switch byte {
-                            case 0x69 ..< 0x6A:
+                            case 0x69:
                                 return jumpTo_25(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             default:
                                 break
@@ -1019,7 +1019,7 @@ extension `Function Based Macro Tests` {
                         if let byte {
                             __macro_local_6offsetfMu_ += 1
                             switch byte {
-                            case 0x70 ..< 0x71:
+                            case 0x70:
                                 return jumpTo_26(&lexer, __macro_local_6offsetfMu_, __macro_local_7contextfMu_)
                             default:
                                 break

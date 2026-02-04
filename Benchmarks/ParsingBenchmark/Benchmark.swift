@@ -33,9 +33,28 @@ let benchmarks = { @Sendable in
 
     for (name, benchSource) in benchmarkStrings {
         let byteCount = benchSource.utf8.count
-        Benchmark("Parsing `\(name)` Speed") { benchmark in
+        Benchmark("Function-based Parsing `\(name)` Speed") { benchmark in
             let start = BenchmarkClock.now
-            for token in BenchmarkTestType.lexer(source: benchSource) {
+            for token in BenchmarkFunctionBased.lexer(source: benchSource) {
+                try blackHole(token.get())
+            }
+            let end = BenchmarkClock.now
+
+            benchmark.measurement(
+                .bytesThroughput,
+                Int(
+                    Int64(byteCount) * 1000 // * 10^9 (nanoseconds -> seconds) / 10^6 (bytes -> MB)
+                        / start.duration(to: end).nanoseconds(),
+                ),
+            )
+        }
+    }
+
+    for (name, benchSource) in benchmarkStrings {
+        let byteCount = benchSource.utf8.count
+        Benchmark("State-based Parsing `\(name)` Speed") { benchmark in
+            let start = BenchmarkClock.now
+            for token in BenchmarkStateBased.lexer(source: benchSource) {
                 try blackHole(token.get())
             }
             let end = BenchmarkClock.now

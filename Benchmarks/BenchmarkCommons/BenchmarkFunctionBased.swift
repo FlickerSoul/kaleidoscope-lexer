@@ -1,5 +1,5 @@
 //
-//  Type.swift
+//  BenchmarkFunctionBased.swift
 //  Kaleidoscope
 //
 //  Created by Larry Zeng on 1/13/26.
@@ -8,7 +8,7 @@ import KaleidoscopeLexer
 
 @Kaleidoscope
 @skip(/\t| |\n/)
-public enum BenchmarkTestType: Sendable {
+public enum BenchmarkFunctionBased: Sendable {
     @regex(/[a-zA-Z_$][a-zA-Z0-9_$]*?/)
     case identifier
 

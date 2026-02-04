@@ -25,7 +25,7 @@ public enum BenchmarkTestType: Sendable {
     case protected
 
     @token(#"in"#)
-    case `in` // swiftlint:disable:this identifier_name
+    case `in`
 
     @token(#"instanceof"#)
     case instanceOf

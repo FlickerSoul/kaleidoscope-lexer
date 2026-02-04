@@ -15,9 +15,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "Kaleidoscope"
-               BuildableName = "Kaleidoscope"
-               BlueprintName = "Kaleidoscope"
+               BlueprintIdentifier = "KaleidoscopeLexer"
+               BuildableName = "KaleidoscopeLexer"
+               BlueprintName = "KaleidoscopeLexer"
                ReferencedContainer = "container:">
             </BuildableReference>
          </BuildActionEntry>
@@ -67,19 +67,9 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "KaleidoscopeMacroSupportTest"
-               BuildableName = "KaleidoscopeMacroSupportTest"
-               BlueprintName = "KaleidoscopeMacroSupportTest"
-               ReferencedContainer = "container:">
-            </BuildableReference>
-         </TestableReference>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "KaleidoscopeTests"
-               BuildableName = "KaleidoscopeTests"
-               BlueprintName = "KaleidoscopeTests"
+               BlueprintIdentifier = "BenchmarkTests"
+               BuildableName = "BenchmarkTests"
+               BlueprintName = "BenchmarkTests"
                ReferencedContainer = "container:">
             </BuildableReference>
          </TestableReference>
@@ -100,6 +90,36 @@
                BlueprintIdentifier = "KaleidoscopeMacroTests"
                BuildableName = "KaleidoscopeMacroTests"
                BlueprintName = "KaleidoscopeMacroTests"
+               ReferencedContainer = "container:">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "KaleidoscopeTests"
+               BuildableName = "KaleidoscopeTests"
+               BlueprintName = "KaleidoscopeTests"
+               ReferencedContainer = "container:">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "Performance"
+               BuildableName = "Performance"
+               BlueprintName = "Performance"
+               ReferencedContainer = "container:">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "RegexSupportTests"
+               BuildableName = "RegexSupportTests"
+               BlueprintName = "RegexSupportTests"
                ReferencedContainer = "container:">
             </BuildableReference>
          </TestableReference>

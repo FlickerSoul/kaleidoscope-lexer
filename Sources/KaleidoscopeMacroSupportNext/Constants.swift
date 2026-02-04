@@ -44,7 +44,7 @@ public enum Constants {
     }
 
     public enum Helpers {
-        public static let __convertTupleToEnum: TokenSyntax = .identifier("__convertTupleToEnum")
+        public static let __convertTupleToEnum: TokenSyntax = .identifier("__apply")
     }
 
     public enum MacroConfiguration {

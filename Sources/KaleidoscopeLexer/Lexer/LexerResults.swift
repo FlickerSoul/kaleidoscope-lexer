@@ -21,6 +21,7 @@ public protocol _SkipResultSource<SToken> {
 extension _SkipResult: _SkipResultSource {
     public typealias SToken = Token
 
+    @inlinable
     public func convert() -> _SkipResult<Token> {
         self
     }

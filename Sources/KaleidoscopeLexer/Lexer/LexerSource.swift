@@ -3,29 +3,25 @@ public protocol LexerSource {
 
     var byteCount: Int { get }
 
-    @inlinable // swiftformat:disable:next spaceAroundOperators
+    // swiftformat:disable:next spaceAroundOperators
     func read<let length: Int>(offset: Int) -> InlineArray<length, UInt8>?
-    @inlinable
     func read(offset: Int) -> UInt8?
-    @inlinable
     func slice(range: Range<Int>) -> Slice?
-    @inlinable
     func slice(unchecked: Void, range: Range<Int>) -> Slice
 
-    @inlinable
     func findBoundary(index: Int) -> Int
-    @inlinable
     func isBoundary(index: Int) -> Bool
 }
 
 extension [UInt8]: LexerSource {
     public typealias Slice = ArraySlice<UInt8>
 
+    @inlinable
     public var byteCount: Int {
         count
     }
 
-    // swiftformat:disable:next spaceAroundOperators
+    @inlinable // swiftformat:disable:next spaceAroundOperators
     public func read<let length: Int>(offset: Int) -> InlineArray<length, UInt8>? {
         guard offset >= 0, length >= 0, offset + length <= count else {
             return nil
@@ -38,6 +34,7 @@ extension [UInt8]: LexerSource {
         }
     }
 
+    @inlinable
     public func read(offset: Int) -> UInt8? {
         guard offset >= 0, offset < count else {
             return nil
@@ -45,14 +42,17 @@ extension [UInt8]: LexerSource {
         return self[offset]
     }
 
+    @inlinable
     public func findBoundary(index: Int) -> Int {
         index
     }
 
+    @inlinable
     public func isBoundary(index: Int) -> Bool {
         index <= count
     }
 
+    @inlinable
     public func slice(range: Range<Int>) -> Slice? {
         guard range.startIndex >= 0,
               range.endIndex <= count,
@@ -62,6 +62,7 @@ extension [UInt8]: LexerSource {
         return self[range]
     }
 
+    @inlinable
     public func slice(unchecked _: Void, range: Range<Int>) -> Slice {
         assert(
             range.startIndex >= 0 && range.endIndex <= count,
@@ -74,16 +75,19 @@ extension [UInt8]: LexerSource {
 extension String: LexerSource {
     public typealias Slice = String.SubSequence
 
+    @inlinable
     public var byteCount: Int {
         utf8.count
     }
 
+    @inlinable
     public func slice(range: Range<Int>) -> SubSequence? {
         let slice = utf8[integerRange: range]
         return slice.map(Slice.init)
     }
 
     /// - Complexity: O(1)
+    @inlinable
     public func slice(unchecked _: Void, range: Range<Int>) -> SubSequence {
         assert(
             range.startIndex <= byteCount && range.endIndex <= byteCount,
@@ -93,7 +97,7 @@ extension String: LexerSource {
         return Slice(slice)
     }
 
-    // swiftformat:disable:next spaceAroundOperators
+    @inlinable // swiftformat:disable:next spaceAroundOperators
     public func read<let length: Int>(offset: Int) -> InlineArray<length, UInt8>? {
         guard let utf8View = utf8[integerRange: offset ..< offset + length] else {
             return nil
@@ -106,6 +110,7 @@ extension String: LexerSource {
         }
     }
 
+    @inlinable
     public func read(offset: Int) -> UInt8? {
         let utf8View = utf8
         let index = utf8View.index(utf8.startIndex, offsetBy: offset)
@@ -115,6 +120,7 @@ extension String: LexerSource {
         return utf8View[index]
     }
 
+    @inlinable
     public func findBoundary(index: Int) -> Int {
         let utf8View = utf8
         var index = utf8View.index(utf8View.startIndex, offsetBy: index)
@@ -133,6 +139,7 @@ extension String: LexerSource {
         return utf8View.count
     }
 
+    @inlinable
     public func isBoundary(index: Int) -> Bool {
         let utf8View = utf8
         let utf8Index = utf8View.index(utf8View.startIndex, offsetBy: index)
@@ -143,13 +150,15 @@ extension String: LexerSource {
     }
 }
 
-private extension String.UTF8View {
+extension String.UTF8View {
+    @inlinable
     subscript(unchecked _: Void, integerRange range: Range<Int>) -> String.UTF8View.SubSequence {
         let left = index(startIndex, offsetBy: range.lowerBound)
         let right = index(startIndex, offsetBy: range.upperBound)
         return self[left ..< right]
     }
 
+    @inlinable
     subscript(integerRange range: Range<Int>) -> String.UTF8View.SubSequence? {
         let left = index(startIndex, offsetBy: range.lowerBound, limitedBy: endIndex)
         let right = index(startIndex, offsetBy: range.upperBound, limitedBy: endIndex)

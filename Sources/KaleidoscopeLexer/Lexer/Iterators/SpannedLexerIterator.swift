@@ -9,6 +9,7 @@ public struct SpannedLexerIterator<Token: LexerTokenProtocol>: Sequence, Iterato
         _lexer = consume lexer
     }
 
+    @inlinable
     public mutating func next() -> (Lexer.Output, Lexer.Span)? {
         _lexer.next().map { token in
             (token, _lexer.span)

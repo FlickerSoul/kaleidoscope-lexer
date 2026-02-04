@@ -310,7 +310,7 @@ public struct Generator {
                 #"#error("Associated values require a callback")"#
             case let (.associatedValues(caseName, _), callback?):
                 "let cb = \(callback)"
-                "return \(Constants.Helpers.__convertTupleToEnum)(cb, converter: \(enumType).\(caseName))"
+                "return \(Constants.Helpers.__convertTupleToEnum)(cb, on: \(enumType).\(caseName))"
             }
         }
     }

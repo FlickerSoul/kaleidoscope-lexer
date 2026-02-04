@@ -10,6 +10,7 @@ public protocol LexerTokenProtocol {
 }
 
 public extension LexerTokenProtocol {
+    @inlinable
     static func lexer(source: Source) -> LexerMachine<Self> {
         LexerMachine(source: source)
     }

@@ -280,7 +280,7 @@ public struct Generator {
         try CodeBlockItemListSyntax {
             try generateLeavesDefinition()
             try tokenFunctions()
-            try renderLUT()
+            renderLUT()
         }
     }
 
@@ -299,18 +299,18 @@ public struct Generator {
             case (.skip, nil):
                 "return \(raw: Constants.Types.callbackResult).skip"
             case let (.skip, callback?):
-                "let cb = \(callback) as \(raw: Constants.Types.skipResultSource)"
-                "return cb.convert()"
+                "let cb = \(callback) as any \(raw: Constants.Types.skipResultSource)<\(enumType)>"
+                "return cb.convert().asCallbackResult()"
             case let (.caseOnly(caseName), nil):
                 "return \(raw: Constants.Types.callbackResult).emit(\(enumType).\(caseName))"
             case let (.caseOnly(caseName), callback?):
-                "let cb: Void = \(callback)"
-                "return \(enumType).\(caseName)"
-            case (.associatedValues, nil):
-                #"#error("Associated values require a callback")"#
+                "let _: Void = \(callback)"
+                "return .emit(\(enumType).\(caseName))"
+            case let (.associatedValues(caseName, _), nil):
+                #"#error("Case \#(caseName) has associated values and requires a callback")"#
             case let (.associatedValues(caseName, _), callback?):
                 "let cb = \(callback)"
-                "return \(Constants.Helpers.__convertTupleToEnum)(cb, on: \(enumType).\(caseName))"
+                "return .emit(\(Constants.Helpers.__convertTupleToEnum)(cb, on: \(enumType).\(caseName)))"
             }
         }
     }

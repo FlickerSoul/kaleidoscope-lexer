@@ -47,9 +47,16 @@ public macro token(
 ///
 /// - SeeAlso: ``skip(_:priority:)``
 @attached(peer)
-public macro skip(
-    _ value: Regex<Substring>,
+public macro skip<S>(
+    _ value: Regex<S>,
     priority: UInt? = nil,
+) = #externalMacro(module: "KaleidoscopeMacros", type: "EnumCaseRegistry")
+
+@attached(peer)
+public macro skip<T: LexerTokenProtocol, R: _SkipResultSource<T>, S>(
+    _ value: Regex<S>,
+    priority: UInt? = nil,
+    callback: @escaping Callback<T, R>,
 ) = #externalMacro(module: "KaleidoscopeMacros", type: "EnumCaseRegistry")
 
 /// Mark a string to be skipped by the lexer
@@ -59,4 +66,11 @@ public macro skip(
 public macro skip(
     _ value: String,
     priority: UInt? = nil,
+) = #externalMacro(module: "KaleidoscopeMacros", type: "EnumCaseRegistry")
+
+@attached(peer)
+public macro skip<T: LexerTokenProtocol, R: _SkipResultSource<T>>(
+    _ value: String,
+    priority: UInt? = nil,
+    callback: @escaping Callback<T, R>,
 ) = #externalMacro(module: "KaleidoscopeMacros", type: "EnumCaseRegistry")

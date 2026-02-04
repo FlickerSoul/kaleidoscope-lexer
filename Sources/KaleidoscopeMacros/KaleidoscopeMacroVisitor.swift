@@ -11,7 +11,6 @@ enum MacroInfoError: Error, DiagnosticMessage {
     case regexParsingError(reason: String)
     case onlyOneEnumCaseAllowed
     case fatalError(reason: String)
-    case noSkipInEnumCase
     case noMarkedCasesFound
     case processingIfConfigDecl
     case unknownMacroConfiguration(String?)
@@ -28,8 +27,6 @@ enum MacroInfoError: Error, DiagnosticMessage {
             "Only one enum case is allowed per enum case declaration."
         case let .fatalError(reason: reason):
             "Fatal error during macro expansion: \(reason)"
-        case .noSkipInEnumCase:
-            "`@skip` macro cannot be applied to enum cases."
         case .noMarkedCasesFound:
             "No enum cases marked with @regex or @token found."
         case .processingIfConfigDecl:
@@ -155,7 +152,7 @@ class KaleidoscopeMacroVisitor: SyntaxVisitor {
     override func visit(_ node: EnumCaseDeclSyntax) -> SyntaxVisitorContinueKind {
         let regexOrTokenMacros = getMacroAttributes(
             from: node.attributes,
-            of: [Constants.Macro.regex, Constants.Macro.token],
+            of: [Constants.Macro.regex, Constants.Macro.token, Constants.Macro.skip],
         )
 
         guard regexOrTokenMacros.count <= 1 else {
@@ -218,6 +215,7 @@ class KaleidoscopeMacroVisitor: SyntaxVisitor {
                 pattern: pattern,
                 priority: arguments.priority ?? pattern.hir.complexity(),
                 kind: .skip,
+                callback: arguments.callbackKind,
             )
         }
     }
@@ -227,10 +225,6 @@ class KaleidoscopeMacroVisitor: SyntaxVisitor {
         on caseDecl: EnumCaseDeclSyntax,
         macro: PackageEntity,
     ) -> Result<Leaf, MacroInfoError> {
-        if macro == Constants.Macro.skip {
-            return .failure(.noSkipInEnumCase)
-        }
-
         let arguments = Result { () throws(MacroInfoError) in
             try parseMacroArguments(from: attribute)
         }
@@ -257,7 +251,7 @@ class KaleidoscopeMacroVisitor: SyntaxVisitor {
             }
 
         let enumCaseKind = Result { () throws(MacroInfoError) in
-            return try getEnumCaseKind(caseDecl)
+            return macro == Constants.Macro.skip ? .skip : try getEnumCaseKind(caseDecl)
         }
 
         return arguments.together(with: pattern, enumCaseKind) { arguments, pattern, enumCaseKind in
@@ -304,9 +298,9 @@ class KaleidoscopeMacroVisitor: SyntaxVisitor {
                 }
             case Constants.MacroArgument.callback:
                 if let closure = argument.expression.as(ClosureExprSyntax.self) {
-                    callbackKind = .lambda(closure: closure)
+                    callbackKind = .lambda(closure: closure.trimmed)
                 } else {
-                    callbackKind = .named(callbackName: argument.expression)
+                    callbackKind = .named(callbackName: argument.expression.trimmed)
                 }
             default:
                 throw MacroInfoError.invalidMacroArgument(

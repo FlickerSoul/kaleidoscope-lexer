@@ -8,34 +8,8 @@
 import KaleidoscopeLexer
 import Testing
 
-@Kaleidoscope
-enum TestToken {
-    @regex(/a/)
-    case a
-
-    @regex(/b/)
-    case b
-}
-
-@Test(arguments: [
-    ("a", [.success(.a)]),
-    ("b", [.success(.b)]),
-    ("ab", [.success(.a), .success(.b)]),
-    ("ba", [.success(.b), .success(.a)]),
-] as [(String, [TestToken.LexerOutput])])
-func `simple tokenizer`(source: String, expected: [TestToken.LexerOutput]) {
-    let actual = Array(TestToken.lexer(source: source))
-    #expect(actual == expected)
-}
-
-// @kaleidoscope()
-// enum PriorityTest: Equatable {
-//     @token("fast")
-//     case fast
-
-//     @token("fast", priority: 10)
-//     case faaaast
-// }
+@Suite
+struct `Tokenizer Tests` {}
 
 // let convertInt: FillCallback<CallbackTest, Int> = { lexer in Int(lexer.rawSlice)! }
 

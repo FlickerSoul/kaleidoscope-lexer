@@ -12,17 +12,25 @@ public enum _SkipResult<Token: LexerTokenProtocol> {
     case error(Token.UserError)
 }
 
-public protocol _SkipResultSource<SToken> {
-    associatedtype SToken: LexerTokenProtocol
+public protocol _SkipResultSource<Token> {
+    associatedtype Token: LexerTokenProtocol
 
-    func convert() -> _SkipResult<SToken>
+    func convert() -> _SkipResult<Token>
 }
 
 extension _SkipResult: _SkipResultSource {
-    public typealias SToken = Token
-
     @inlinable
     public func convert() -> _SkipResult<Token> {
         self
+    }
+
+    @inlinable
+    public func asCallbackResult() -> _CallbackResult<Token> {
+        switch self {
+        case .skip:
+            .skip
+        case let .error(error):
+            .error(error)
+        }
     }
 }

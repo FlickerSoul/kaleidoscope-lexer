@@ -63,6 +63,9 @@ let package = Package(
                 .product(name: "CasePaths", package: "swift-case-paths"),
                 .product(name: "CustomDump", package: "swift-custom-dump"),
             ],
+            exclude: [
+                "UTF8Table/LICENSE-UNICODE",
+            ],
         ),
         .target(
             name: "KaleidoscopeMacroSupportNext",

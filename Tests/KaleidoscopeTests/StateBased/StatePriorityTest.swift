@@ -2,7 +2,7 @@ import KaleidoscopeLexer
 import Testing
 
 @Kaleidoscope(useStateMachineCodegen: true)
-private enum FuncPriorityTest: Equatable {
+private enum PriorityTest: Equatable {
     @token("fast")
     case fast
 
@@ -13,7 +13,7 @@ private enum FuncPriorityTest: Equatable {
 extension `State Based Tokenizer Tests` {
     @Test
     func `priority test`() {
-        let actual = Array(FuncPriorityTest.lexer(source: "fast"))
+        let actual = Array(PriorityTest.lexer(source: "fast"))
         #expect(actual == [.success(.faaaast)])
     }
 }

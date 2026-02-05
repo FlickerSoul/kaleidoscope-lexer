@@ -2,7 +2,7 @@ import KaleidoscopeLexer
 import Testing
 
 @Kaleidoscope
-private enum FuncSimpleTest: Equatable {
+private enum SimpleTest: Equatable {
     @regex(/a/)
     case a
 
@@ -18,9 +18,9 @@ extension `Function Based Tokenizer Tests` {
         ("ba", [.success(.b), .success(.a)]),
         ("c", [.failure(.lexerError)]),
         ("acb", [.success(.a), .failure(.lexerError), .success(.b)]),
-    ] as [(String, [FuncSimpleTest.LexerOutput])])
-    private func `simple tokenizer`(source: String, expected: [FuncSimpleTest.LexerOutput]) {
-        let actual = Array(FuncSimpleTest.lexer(source: source))
+    ] as [(String, [SimpleTest.LexerOutput])])
+    private func `simple tokenizer`(source: String, expected: [SimpleTest.LexerOutput]) {
+        let actual = Array(SimpleTest.lexer(source: source))
         #expect(actual == expected)
     }
 }

@@ -11,10 +11,14 @@ import SwiftSyntaxMacros
 import Testing
 
 let macros: [String: Macro.Type] = [
-    "kaleidoscope": KaleidoscopeBuilder.self,
+    "Kaleidoscope": KaleidoscopeBuilderNext.self,
     "token": EnumCaseRegistry.self,
     "regex": EnumCaseRegistry.self,
+    "skip": EnumCaseRegistry.self,
 ]
 
 @Suite(.macros(macros, record: .failed))
-struct KaleidoscopeMacroTests {}
+struct `Function Based Macro Tests` {}
+
+@Suite(.macros(macros, record: .failed))
+struct `State Based Macro Tests` {}

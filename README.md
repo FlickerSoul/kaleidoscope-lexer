@@ -3,51 +3,33 @@
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FFlickerSoul%2Fkaleidoscope-lexer%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/FlickerSoul/kaleidoscope-lexer)
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2FFlickerSoul%2Fkaleidoscope-lexer%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/FlickerSoul/kaleidoscope-lexer)
 
-This is a lexer for Swift inspired by [logos](https://github.com/maciejhirsz/logos). It utilizes swift macros to generate optimized lexer code in compile time. Please see [install section](#install) for installation instructions.
+A high-performance lexer generator for Swift, inspired by [logos](https://github.com/maciejhirsz/logos). Kaleidoscope uses Swift macros to generate optimized lexer code at compile time from strings or regex patterns, turning your token definitions into efficient finite automata. The automata engine is modified from rust's [regex-automata](https://github.com/rust-lang/regex/tree/master/regex-automata).
 
-## Example
+## Features
 
-```swift
-import Kaleidoscope
+- **Declarative token definitions** using Swift macros (`@Kaleidoscope`, `@regex`, `@token`, `@skip`)
+- **Native Swift regex support** with Swift's `Regex` literals
+- **Customizable callbacks** for token transformation and validation
+- **Priority-based conflict resolution** for overlapping patterns
+- **Skip patterns** for ignoring whitespace, comments, etc.
+- **Two codegen strategies**: function-based (default) and state-machine-based
+- **Type-safe** with full Swift 6 concurrency support
 
-let lambda: (inout LexerMachine<Tokens>) -> Substring = { $0.slice }
+## Limitations
 
-@kaleidoscope(skip: " |\t|\n")
-enum Tokens {
-    @token("not")
-    case Not
+Kaleidoscope is experimental and has known limitations:
 
-    @regex("very")
-    case Very
+- **Incomplete Regex translation**: Not all regex features from Swift's `Regex` are supported. Complex patterns involving certain lookahead/lookbehind assertions, backreferences, or some character properties may not compile correctly or at all. Should any unsupported regex features be used, the macro will emit a compile-time error indicating the issue. If you'd like to see support for specific regex features, please open an issue or contribute a PR with the necessary NFA/DFA construction logic.
+- **Possible state machine bugs**: The macro resolves regex patterns into NFA and DFA representations, but there are edge cases where the generated state machine may not correctly handle certain inputs or patterns, leading to incorrect tokenization or infinite loops. Please always test your lexer.
+- Platform version limitations: Requires macOS 26+, iOS 26+, tvOS 26+, watchOS 26+ because of the use of [InlineArray](https://developer.apple.com/documentation/swift/inlinearray). (Benchmark results seem to suggest that `Array` performs similarly to `InlineArray` in time, so maybe we could add support for earlier versions in the future.)
 
-    @token("tokenizer")
-    case Tokenizer
+If you encounter issues, please report them on the [issue tracker](https://github.com/FlickerSoul/kaleidoscope-lexer/issues).
 
-    // you could feed a closure directly to `onMatch` but swift doesn't like it for some reason
-    // seems to be a compiler bug (https://github.com/apple/swift/issues/70322)
-    @regex("[a-zA-Z_][a-zA-Z1-9$_]*?", onMatch: lambda)
-    case Identifier(Substring)
-}
+## Installation
 
+Supported platforms: macOS 26+, iOS 26+, tvOS 26+, watchOS 26+.
 
-for token in Tokens.lexer(source: "not a very fast tokenizer").map({ try! $0.get() }) {
-    print(token)
-}
-```
-
-The output will be
-
-```text
-Not
-Identifier("a")
-Very
-Identifier("fast")
-Tokenizer
-```
-
-## Install
-
-You can install Kaleidoscope via Swift Package Manager. Add the following line to your `Package.swift` file:
+Add Kaleidoscope to your `Package.swift`:
 
 ```swift
 dependencies: [
@@ -55,39 +37,271 @@ dependencies: [
 ]
 ```
 
-and add `"Kaleidoscope"` to the dependencies of your target.
+Then add `KaleidoscopeLexer` to your target's dependencies:
 
 ```swift
-.product(name: "Kaleidoscope", package: "kaleidoscope-lexer")
+.target(
+    name: "YourTarget",
+    dependencies: [
+        .product(name: "KaleidoscopeLexer", package: "kaleidoscope-lexer")
+    ]
+)
 ```
 
-## Project Version
+**Requirements:** Swift 6.2+, macOS 26+ / iOS 26+ / tvOS 26+ / watchOS 26+
 
-Because the Kaleidoscope library is under active development, source-stability is only guaranteed within minor versions (e.g. between 0.0.3 and 0.0.4). If you don't want potentially source-breaking package updates, you can specify your package dependency using .upToNextMinorVersion(from: "0.0.1") instead.
+## Usage
 
-When the package reaches a 1.0.0 release, the public API of the kaleidoscope-lexer package will consist of non-underscored declarations that are marked public. Interfaces that aren't part of the public API may continue to change in any release, including the package’s examples, tests, utilities, and documentation.
+### Basic Example
 
-Future minor versions of the package may introduce changes to these rules as needed.
+Define your tokens as an enum decorated with `@Kaleidoscope`:
+
+```swift
+import KaleidoscopeLexer
+
+@Kaleidoscope
+@skip(/[ \t\n]/)  // Skip whitespace
+enum Token: Equatable {
+    @token("private")
+    case `private`
+
+    @token("public")
+    case `public`
+
+    @regex(/[a-zA-Z_][a-zA-Z0-9_]*?/)
+    case identifier
+
+    @regex(/[0-9]+?/)
+    case number
+
+    @token(".")
+    case dot
+
+    @token("(")
+    case parenOpen
+
+    @token(")")
+    case parenClose
+}
+
+// Tokenize a string
+let source = "private foo(123)"
+for result in Token.lexer(source: source) {
+    switch result {
+    case .success(let token):
+        print(token)
+    case .failure(let error):
+        print("Error: \(error)")
+    }
+}
+// Output: private, identifier, parenOpen, number, parenClose
+```
+
+### Token Definitions
+
+Use `@token` for exact string matching and `@regex` for pattern matching:
+
+```swift
+@Kaleidoscope
+enum Tokens {
+    @token("==")       // Exact match
+    case equals
+
+    @token("===")      // Longer match takes precedence
+    case strictEquals
+
+    @regex(/[0-9]+?/)  // Regex pattern
+    case number
+}
+```
+
+### Callbacks for Token Transformation
+
+Transform matched text into associated values using callbacks:
+
+```swift
+private let parseNumber = { @Sendable (machine: inout LexerMachine<Token>) -> Int in
+    Int(machine.slice())!
+}
+private let printer = { @Sendable (machine: inout LexerMachine<Token>) -> Int in
+    print(machine.slice())
+}
+
+@Kaleidoscope
+@skip(/[ ]/)
+enum Token: Equatable {
+    @regex(/[0-9]+?/, callback: parseNumber) // Cannot be lined closure due to compiler limitations
+    case number(Int)
+
+    @token("hello", callback: printer) // Callback can be used for side effects without returning a value
+    case hello
+}
+
+// "42 hello 123" produces: number(42), hello, number(123)
+```
+
+> Please not that callbacks cannot be inlined closures at the moment due to [Swift compiler limitations](https://github.com/apple/swift/issues/70322).
+
+### Skip Patterns
+
+Use `@skip` to ignore certain patterns (whitespace, comments, etc.):
+
+```swift
+@Kaleidoscope
+@skip(/[ \t\n]/)              // Skip whitespace (enum-level)
+enum Token {
+    @regex(/\/\/.*?/)         // Match comments as tokens
+    case comment
+
+    @skip("/*...*/")          // Skip block comments (case-level)
+    case blockComment
+
+    @token("code")
+    case code
+}
+```
+
+Skip patterns can also have callbacks for side effects:
+
+```swift
+private let logSkip = { @Sendable (machine: inout LexerMachine<Token>) -> _SkipResult<Token> in
+    print("Skipping: \(machine.slice())")
+    return .skip
+}
+
+@Kaleidoscope
+// @skip with callback could be used here but compiler complains about circular resolutions of types, so it's not possible currently
+enum Token {
+    @skip("ignore", callback: logSkip)
+    case ignored
+}
+```
+
+> Note that `@skip` macro with callback cannot be used on enum level since compiler complains about circular resolutions of types. You can only use it on case level for now.
+
+### Priority Resolution
+
+When patterns overlap and their implicit priorities (see below) conflict, use `priority` to resolve conflicts (higher priority wins):
+
+```swift
+@Kaleidoscope
+enum Token {
+    @token("fast")
+    case fast
+
+    @token("fast", priority: 10)  // Higher priority, this wins
+    case faster
+}
+
+// "fast" produces: faster
+```
+
+#### Priority Calculation
+
+Priorities are calculated in the same way as in logos. The rule of thumb is:
+
+- Longer beats shorter.
+- Specific beats generic.
+
+Every consecutive, non-repeating single byte adds 2 to the priority, while every range or regex class adds 1. Loops or optional blocks are ignored, while alternations count the shortest alternative. For example:
+
+- `[a-zA-Z]+` has a priority of 2 (lowest possible), because at minimum it can match a single byte to a class;
+- `foobar` has a priority of 12;
+- and `(foo|hello)(bar)?` has a priority of 6, foo being its shortest possible match.
+
+### Codegen Strategies
+
+Kaleidoscope supports two code generation strategies:
+
+**Function-based (default):** Generates function calls for each token pattern.
+
+```swift
+@Kaleidoscope
+enum Token { ... }
+```
+
+**State-machine-based:** Generates a state machine for potentially better performance with complex grammars.
+
+```swift
+@Kaleidoscope(useStateMachineCodegen: true)
+enum Token { ... }
+```
+
+You can also enable state-machine codegen globally via the `StateMachineCodegen` package trait.
+
+### Working with the Lexer
+
+The lexer conforms to `Sequence` and `IteratorProtocol`:
+
+```swift
+let lexer = Token.lexer(source: "some input")
+
+// Iterate with error handling
+for result in lexer {
+    switch result {
+    case .success(let token):
+        process(token)
+    case .failure(let error):
+        handleError(error)
+    }
+}
+
+// Collect all tokens (throws on error)
+let tokens = try lexer.map { try $0.get() }
+
+// Get tokens with span information
+for (result, span) in lexer.makeSpannedIterator() {
+    print("Token at \(span): \(result)")
+}
+```
+
+### Callback Types
+
+```swift
+// Standard callback - return value becomes associated value
+typealias Callback<T: LexerTokenProtocol, R> = @Sendable (inout LexerMachine<T>) -> R
+
+// Skip callback - can skip or emit error
+typealias SkipCallback<T: LexerTokenProtocol, R: _SkipResultSource<T>> = @Sendable (inout LexerMachine<T>) -> R
+
+// Skip result source - used for skip callbacks to determine whether to skip or emit an error
+public protocol _SkipResultSource<Token> {
+    associatedtype Token: LexerTokenProtocol
+
+    func convert() -> _SkipResult<Token>
+}
+
+enum _SkipResult<Token>: _SkipResultSource<Token> {
+    case skip
+    case error(Token.UserError)
+}
+```
 
 ## Benchmark
 
-To run benchmark, please install `jemalloc`, as instructed by the [package-benchmark](https://github.com/ordo-one/package-benchmark) package.
+To run benchmarks, install `jemalloc` as instructed by [package-benchmark](https://github.com/ordo-one/package-benchmark).
 
-Then run
-
-```
+```bash
 export ENABLE_BENCHMARK=1
 swift package benchmark
 ```
 
-## Idea
+## Version Stability
 
-The project is provides three macros: `@kaleidoscope`, `regex`, and `token`, and they work together to generate conformance to `LexerProtocol` for the decorated  enums. `regex` takes in a regex expression for matching and `token` takes a string for excat matching. In addition, they can take a `onMatch` callback and a `priority` integer. The callback has access to token string slice and can futher transform it to whatever type required by the enum case. The priority are calculated by from the expression by default. However, if two exprssions have the same weight, manual specification is required to resolve the conflict.
+Kaleidoscope is under active development. Source stability is only guaranteed within minor versions. For stable dependencies, use:
 
-Internally, all regex expressions and token strings are converted into a single finite automata. The finite automata consumes one character from the input at a time, until it reaches an token match or an error. This machanism is simple but works slowly. Future improvements can be established on this issue.
+```swift
+.package(url: "...", .upToNextMinorVersion(from: "0.1.0"))
+```
+
+Public API consists of non-underscored `public` declarations. Internal interfaces may change in any release.
 
 ## Roadmap
 
-- [ ] replace string regex argument with builtin swift regex
-- [ ] faster tokenization optimization
-- [ ] improved interface
+- [ ] Formalize callback transformers
+- [ ] Allow user defined error types
+- [ ] Add support for more regex features (flags, etc.)
+
+## How It Works
+
+Kaleidoscope converts all regex patterns and token strings into a unified finite automaton at compile time. The automaton processes input one character at a time until it finds a token match or encounters an error. The macro system generates Swift code that implements this automaton, avoiding runtime regex compilation overhead.

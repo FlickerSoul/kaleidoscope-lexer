@@ -1,0 +1,25 @@
+digraph {
+node[shape=box];
+splines=ortho;
+n0[label="State 0",color=black,shape=box];
+en0n1[label="a",color=black,shape=diamond];
+n0->en0n1;
+en0n1->n1;
+n1[label="State 1",color=black,shape=box];
+en1n2[label="a",color=black,shape=diamond];
+n1->en1n2;
+en1n2->n2;
+n2[label="State 2",color=black,shape=box];
+en2n3[label="a",color=black,shape=diamond];
+n2->en2n3;
+en2n3->n3;
+n3[label="State 3\ncurrent(0)",color=green,shape=box];
+en3n4[label="a",color=black,shape=diamond];
+n3->en3n4;
+en3n4->n4;
+n4[label="State 4\ncurrent(0)",color=green,shape=box];
+en4n5[label="a",color=black,shape=diamond];
+n4->en4n5;
+en4n5->n5;
+n5[label="State 5\ncurrent(0)",color=green,shape=box];
+}

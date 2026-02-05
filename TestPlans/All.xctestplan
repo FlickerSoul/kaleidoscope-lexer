@@ -20,13 +20,6 @@
     {
       "target" : {
         "containerPath" : "container:",
-        "identifier" : "KaleidoscopeMacroSupportTest",
-        "name" : "KaleidoscopeMacroSupportTest"
-      }
-    },
-    {
-      "target" : {
-        "containerPath" : "container:",
         "identifier" : "KaleidoscopeMacroTests",
         "name" : "KaleidoscopeMacroTests"
       }
@@ -34,8 +27,29 @@
     {
       "target" : {
         "containerPath" : "container:",
+        "identifier" : "BenchmarkTests",
+        "name" : "BenchmarkTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:",
         "identifier" : "KaleidoscopeTests",
         "name" : "KaleidoscopeTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "KaleidoscopeMacroSupportNextTests",
+        "name" : "KaleidoscopeMacroSupportNextTests"
+      }
+    },
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "RegexSupportTests",
+        "name" : "RegexSupportTests"
       }
     }
   ],

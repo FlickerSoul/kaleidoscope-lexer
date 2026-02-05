@@ -28,34 +28,43 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
-      - name: Swift Version
-        run: xcrun swift --version
       - name: Install SwiftLint
         run: brew install swiftlint --quiet
       - name: Install swift-format
         run: brew install swiftformat --quiet
       - name: SwiftLint
-        run: swiftlint --strict --config .swiftlint.yml .
+        run: swiftlint --strict .
       - name: Swift Format Check
         run: swiftformat --lint-only --config .swiftformat.conf . --strict
   test:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.runsOn }}
     needs: lint
-    env:
-      DEVELOPER_DIR: "/Applications/${{ matrix.xcode }}.app/Contents/Developer"
     strategy:
       matrix:
         include:
-          - xcode: "Xcode_26.0"
-            runsOn: macOS-26
+          - runsOn: macOS-26
             name: "macOS 26, SPM 6.2.0 Test"
     steps:
       - uses: actions/checkout@v4
+      - name: Install Swiftly And Swift
+        run: |
+          curl -L https://download.swift.org/swiftly/darwin/swiftly.pkg > swiftly.pkg
+          installer -pkg swiftly.pkg -target CurrentUserHomeDirectory
+
+          ~/.swiftly/bin/swiftly init
+
+          . "$HOME/.swiftly/env.sh"
+          hash -r
+
+          swiftly install --use --assume-yes
+          swiftly link --assume-yes
+
+          echo "$HOME/.swiftly/bin" >> $GITHUB_PATH
       - name: Swift Version
-        run: xcrun swift --version
+        run: which swift && swift --version
       - name: Brew install tools
         run: brew install xcbeautify jemalloc --quiet
       - name: Run Tests
         run: |
-          set -o pipefail && xcrun swift test --enable-experimental-prebuilts | xcbeautify --renderer github-actions
+          set -o pipefail && swift test --enable-experimental-prebuilts | xcbeautify --renderer github-actions

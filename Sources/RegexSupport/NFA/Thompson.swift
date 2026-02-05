@@ -610,8 +610,8 @@ struct ThompsonConstruction {
         switch consume hir {
         case .empty:
             try compileEmpty()
-        case let .literal(chars):
-            try compileLiteral(chars)
+        case let .literal(literal):
+            try compileLiteral(literal.scalars)
         case let .class(charClass):
             try compileClass(charClass)
         case let .concat(children):
@@ -644,7 +644,7 @@ extension ThompsonConstruction {
 extension ThompsonConstruction {
     /// Compiles a literal string by encoding each character as UTF-8 bytes
     private mutating func compileLiteral(
-        _ characters: consuming [Character],
+        _ characters: consuming [Char],
     ) throws(NFAConstructionError) -> NFAFragment {
         guard !characters.isEmpty else {
             return try compileEmpty()
@@ -653,7 +653,7 @@ extension ThompsonConstruction {
         do {
             return try compileConcat(
                 characters.reduce(into: [NFAFragment]()) { partialResult, char throws(NFAConstructionError) in
-                    let bytes = Array(char.utf8)
+                    let bytes = char.bytes
                     for byte in bytes {
                         let stateId = try builder.addByteRange(
                             start: byte,
@@ -688,7 +688,7 @@ extension ThompsonConstruction {
 
     /// Compiles an ASCII-only character class (all single-byte)
     private mutating func compileASCIIClass(
-        _ ranges: consuming [ClosedRange<Character>],
+        _ ranges: consuming [ClosedRange<Char>],
     ) throws(NFAConstructionError) -> NFAFragment {
         let end = try builder.addEpsilon()
         var transitions: [Transition] = []
@@ -712,7 +712,7 @@ extension ThompsonConstruction {
 
     /// Compiles a Unicode character class using UTF-8 sequences
     private mutating func compileUnicodeClass(
-        _ classes: consuming [ClosedRange<Character>],
+        _ classes: consuming [ClosedRange<Char>],
     ) throws(NFAConstructionError) -> NFAFragment {
         // Assuming no reverse and assume shrinked
 

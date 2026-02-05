@@ -228,6 +228,12 @@ public struct RangeSet<T: RangeSetBound>: ExpressibleByArrayLiteral, Equatable {
         ranges.removeFirst(drainEnd)
     }
 
+    public mutating func invert(_ flag: Bool) {
+        if flag {
+            invert()
+        }
+    }
+
     /// Returns an inverted copy of this RangeSet
     public func inverting() -> RangeSet<T> {
         var copy = self

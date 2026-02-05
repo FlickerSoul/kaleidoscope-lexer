@@ -1846,3 +1846,58 @@ public enum Age {
         ("🦅", "🦑"),
     ]
 }
+
+public extension Age {
+    /// All Unicode versions in chronological order
+    private static let orderedVersions: [String] = [
+        "V1_1", "V2_0", "V2_1", "V3_0", "V3_1", "V3_2",
+        "V4_0", "V4_1", "V5_0", "V5_1", "V5_2",
+        "V6_0", "V6_1", "V6_2", "V6_3",
+        "V7_0", "V8_0", "V9_0",
+        "V10_0", "V11_0", "V12_0", "V12_1",
+        "V13_0", "V14_0", "V15_0", "V15_1", "V16_0",
+    ]
+
+    /// Returns a CharacterClass containing all characters introduced in or before the given Unicode version
+    static func charactersUpToVersion(_ version: String) -> CharacterClass? {
+        guard BY_NAME.keys.contains(version) else {
+            return nil
+        }
+
+        var ranges: [ClosedRange<Char>] = []
+
+        for v in orderedVersions {
+            let versionRanges = BY_NAME[v]!
+            ranges.append(contentsOf: versionRanges.map { Char($0.0) ... Char($0.1) })
+
+            if v == version {
+                break
+            }
+        }
+
+        return CharacterClass(ranges: ranges)
+    }
+
+    /// Returns a CharacterClass containing all characters introduced after the given Unicode version (exclusive)
+    static func charactersAfter(_ version: String) -> CharacterClass? {
+        guard BY_NAME.keys.contains(version) else {
+            return nil
+        }
+
+        var ranges: [ClosedRange<Char>] = []
+        var found = false
+
+        for v in orderedVersions {
+            if found {
+                let versionRanges = BY_NAME[v]!
+                ranges.append(contentsOf: versionRanges.map { Char($0.0) ... Char($0.1) })
+            }
+
+            if v == version {
+                found = true
+            }
+        }
+
+        return CharacterClass(ranges: ranges)
+    }
+}

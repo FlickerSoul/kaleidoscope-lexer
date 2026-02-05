@@ -19,18 +19,27 @@ public protocol RangeSetBound: Comparable {
     func decrement() -> Self?
 }
 
-/// - SeeAlso: https://github.com/rust-lang/regex/blob/5ea3eb1e95f0338e283f5f0b4681f0891a1cd836/regex-syntax/src/hir/interval.rs#L538
-extension Character: RangeSetBound {
-    public static var min: Character {
+extension Character {
+    static var min: Self {
         "\u{0000}"
     }
 
-    public static var max: Character {
+    static var max: Self {
         "\u{10FFFF}"
     }
+}
 
-    public func increment() -> Character? {
-        guard let scalar = unicodeScalars.first else { return nil }
+/// - SeeAlso: https://github.com/rust-lang/regex/blob/5ea3eb1e95f0338e283f5f0b4681f0891a1cd836/regex-syntax/src/hir/interval.rs#L538
+extension Char: RangeSetBound {
+    public static var min: Char {
+        Char(unchecked: Character.min)
+    }
+
+    public static var max: Char {
+        Char(unchecked: Character.max)
+    }
+
+    public func increment() -> Char? {
         let value = scalar.value
         // Handle surrogate gap: D800-DFFF are not valid scalar values
         let nextValue: UInt32
@@ -42,11 +51,10 @@ extension Character: RangeSetBound {
             nextValue = value + 1
         }
         guard let nextScalar = Unicode.Scalar(nextValue) else { return nil }
-        return Character(nextScalar)
+        return Char(Character(nextScalar))
     }
 
-    public func decrement() -> Character? {
-        guard let scalar = unicodeScalars.first else { return nil }
+    public func decrement() -> Char? {
         let value = scalar.value
         // Handle surrogate gap: D800-DFFF are not valid scalar values
         let prevValue: UInt32
@@ -58,7 +66,7 @@ extension Character: RangeSetBound {
             prevValue = value - 1
         }
         guard let prevScalar = Unicode.Scalar(prevValue) else { return nil }
-        return Character(prevScalar)
+        return Char(Character(prevScalar))
     }
 }
 

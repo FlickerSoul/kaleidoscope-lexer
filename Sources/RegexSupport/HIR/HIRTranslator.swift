@@ -154,7 +154,7 @@ public extension HIRKind {
         case .scalarSequence:
             throw .unavailable("Scalar sequence not supported in atom").toError(with: atom.location)
         case let .property(property):
-            self = try .init(property, location: atom.location)
+            self = try .class(.init(property, location: atom.location))
         case let .escaped(escaped):
             if let escapedHIR = escaped.escapedCharacterHIR {
                 self = escapedHIR
@@ -223,7 +223,9 @@ public extension HIRKind {
     init(_: AST.Trivia) throws(RegexConversionError) {
         self = .empty
     }
+}
 
+extension CharacterClass {
     // swiftlint:disable:next cyclomatic_complexity
     init(
         _ property: AST.Atom.CharacterProperty,
@@ -234,33 +236,37 @@ public extension HIRKind {
         switch property.kind {
         case .any:
             characterClass = .trueAny
+            characterClass.invert(property.isInverted)
         case .assigned:
             // Assigned is the inverse of Unassigned general category
             if let ranges = GeneralCategory.BY_NAME["Unassigned"] {
-                characterClass = CharacterClass(ranges: ranges.map { $0.0 ... $0.1 })
+                characterClass = CharacterClass(ranges: ranges.map { Char($0.0) ... Char($0.1) })
                 characterClass.invert()
+                characterClass.invert(property.isInverted)
             } else {
                 throw .unavailable("Assigned property table not found").toError(with: location)
             }
         case .ascii:
             characterClass = .posixAscii
+            characterClass.invert(property.isInverted)
         case let .generalCategory(category):
             let categoryName = category.rawValue
             // First try to find the category directly
             if let ranges = GeneralCategory.BY_NAME[categoryName] {
-                characterClass = CharacterClass(ranges: ranges.map { $0.0 ... $0.1 })
+                characterClass = CharacterClass(ranges: ranges.map { Char($0.0) ... Char($0.1) })
             } else {
                 // Try to look up via PROPERTY_VALUES for aliases
                 let normalizedName = categoryName.lowercased().replacingOccurrences(of: "_", with: "")
                 if let canonicalName = PROPERTY_VALUES["General_Category"]?[normalizedName],
                    let ranges = GeneralCategory.BY_NAME[canonicalName] {
-                    characterClass = CharacterClass(ranges: ranges.map { $0.0 ... $0.1 })
+                    characterClass = CharacterClass(ranges: ranges.map { Char($0.0) ... Char($0.1) })
                 } else {
                     throw .unavailable("General category '\(categoryName)' not found").toError(
                         with: location,
                     )
                 }
             }
+            characterClass.invert(property.isInverted)
         case let .binary(binaryProp, value):
             let propName = binaryProp.rawValue
             // Look up the canonical name first
@@ -268,7 +274,7 @@ public extension HIRKind {
             let canonicalName = PROPERTY_NAMES
                 .first { $0.0 == normalizedName }?.1 ?? propName
             if let ranges = PropertyBool.BY_NAME[canonicalName] {
-                characterClass = CharacterClass(ranges: ranges.map { $0.0 ... $0.1 })
+                characterClass = CharacterClass(ranges: ranges.map { Char($0.0) ... Char($0.1) })
                 // If value is false, invert the class
                 if !value {
                     characterClass.invert()
@@ -276,45 +282,59 @@ public extension HIRKind {
             } else {
                 throw .unavailable("Binary property '\(propName)' not found").toError(with: location)
             }
+            characterClass.invert(property.isInverted)
         case let .script(script):
             let scriptName = script.rawValue
             if let ranges = ScriptExtension.BY_NAME[scriptName] {
-                characterClass = CharacterClass(ranges: ranges.map { $0.0 ... $0.1 })
+                characterClass = CharacterClass(ranges: ranges.map { Char($0.0) ... Char($0.1) })
             } else {
                 // Try to look up via PROPERTY_VALUES for aliases
                 let normalizedName = scriptName.lowercased().replacingOccurrences(of: "_", with: "")
                 if let canonicalName = PROPERTY_VALUES["Script"]?[normalizedName],
                    let ranges = ScriptExtension.BY_NAME[canonicalName] {
-                    characterClass = CharacterClass(ranges: ranges.map { $0.0 ... $0.1 })
+                    characterClass = CharacterClass(ranges: ranges.map { Char($0.0) ... Char($0.1) })
                 } else {
                     throw .unavailable("Script '\(scriptName)' not found").toError(with: location)
                 }
             }
+            characterClass.invert(property.isInverted)
         case let .scriptExtension(script):
             let scriptName = script.rawValue
             if let ranges = ScriptExtension.BY_NAME[scriptName] {
-                characterClass = CharacterClass(ranges: ranges.map { $0.0 ... $0.1 })
+                characterClass = CharacterClass(ranges: ranges.map { Char($0.0) ... Char($0.1) })
             } else {
                 // Try to look up via PROPERTY_VALUES for aliases
                 let normalizedName = scriptName.lowercased().replacingOccurrences(of: "_", with: "")
                 if let canonicalName = PROPERTY_VALUES["Script"]?[normalizedName],
                    let ranges = ScriptExtension.BY_NAME[canonicalName] {
-                    characterClass = CharacterClass(ranges: ranges.map { $0.0 ... $0.1 })
+                    characterClass = CharacterClass(ranges: ranges.map { Char($0.0) ... Char($0.1) })
                 } else {
                     throw .unavailable("Script extension '\(scriptName)' not found").toError(
                         with: location,
                     )
                 }
             }
+            characterClass.invert(property.isInverted)
         case let .posix(posixProp):
             characterClass = CharacterClass.fromPOSIX(posixProp)
+            characterClass.invert(property.isInverted)
         case let .age(major, minor):
+            // guard unicodeVersionAllowed() else {
+            //     throw .unavailable("System unicode version \(getUnicodeVersion()!.major) is not supported. Current
+            //     supported is \(MAX_UNICODE_MAJOR). Please update the library")
+            //         .toError(with: location)
+            // }
             let versionString = "V\(major)_\(minor)"
-            if let ranges = Age.BY_NAME[versionString] {
-                characterClass = CharacterClass(ranges: ranges.map { $0.0 ... $0.1 })
+            let charClass = if property.isInverted {
+                Age.charactersAfter(versionString)
             } else {
-                throw .unavailable("Age '\(major).\(minor)' not found").toError(with: location)
+                Age.charactersUpToVersion(versionString)
             }
+            guard let charClass else {
+                throw .unavailable("Age property for Unicode version \(major).\(minor) not found")
+                    .toError(with: location)
+            }
+            characterClass = charClass
         case .named:
             throw .unsupportedConstruct("Named character property is not supported").toError(
                 with: location,
@@ -346,11 +366,7 @@ public extension HIRKind {
             throw .invalid("Invalid character property").toError(with: location)
         }
 
-        if property.isInverted {
-            characterClass.invert()
-        }
-
-        self = .class(characterClass)
+        self = characterClass
     }
 }
 
@@ -430,15 +446,7 @@ public extension CharacterClass {
                 ],
             )
         case let .atom(atom):
-            let character = atom.literalCharacterValue
-            guard let character else {
-                throw .invalid("Character class atom is not a single character").toError(
-                    with: atom.location,
-                )
-            }
-            self = .init(
-                ranges: [character ... character],
-            )
+            self = try .init(atom)
         case let .quote(quote):
             self = .init(
                 ranges: quote.literal.map { value in
@@ -463,6 +471,78 @@ public extension CharacterClass {
             self = lhsClasses
         }
     }
+
+    // swiftlint:disable:next cyclomatic_complexity
+    init(_ atom: AST.Atom) throws(RegexConversionError) {
+        switch atom.kind {
+        case let .char(char):
+            self = .init(character: char)
+        case let .scalar(scalar):
+            self = .init(scalar: scalar.value)
+        case .scalarSequence:
+            throw .unavailable("Scalar sequence not supported in atom").toError(with: atom.location)
+        case let .property(property):
+            self = try .init(property, location: atom.location)
+        case let .escaped(escaped):
+            if let escapedCharacterClass = escaped.escapedCharacterClass {
+                self = escapedCharacterClass
+            } else {
+                throw .unavailable("Escaped character \\\(escaped.character) not supported")
+                    .toError(with: atom.location)
+            }
+        case let .keyboardControl(keyboardControl):
+            self = .init(character: keyboardControl)
+        case let .keyboardMeta(keyboardMeta):
+            self = .init(character: keyboardMeta)
+        case let .keyboardMetaControl(keyboardMetaControl):
+            self = .init(character: keyboardMetaControl)
+        case let .namedCharacter(namedCharacter):
+            let wrappedName = "\\N{\(namedCharacter)}"
+            let characterNSString = NSMutableString(string: wrappedName)
+            CFStringTransform(characterNSString, nil, kCFStringTransformToUnicodeName, true)
+            let characterString = characterNSString as String
+
+            guard characterString != wrappedName else {
+                throw .invalid("Failed to parse named character: \(namedCharacter)").toError(
+                    with: atom.location,
+                )
+            }
+
+            guard let char = characterString.first else {
+                throw .invalid(
+                    "Failed to extract character from named character: \(namedCharacter)",
+                ).toError(with: atom.location)
+            }
+
+            self = .init(character: char)
+        case .dot:
+            // FIXME: different kinds of dot based on configurations
+            self = .dot()
+        case .caretAnchor:
+            throw .unavailable("Caret anchor ^ not supported").toError(with: atom.location)
+        case .dollarAnchor:
+            throw .unavailable("Dollar anchor $ not supported").toError(with: atom.location)
+        case let .backreference(reference):
+            throw .unsupportedConstruct("Back reference is not supported").toError(
+                with: reference.innerLoc,
+            )
+        case let .subpattern(subpattern):
+            throw .unavailable("Subpattern not supported").toError(with: subpattern.innerLoc)
+        case .callout:
+            throw .unavailable("Calllout is not supported").toError(with: atom.location)
+        case .backtrackingDirective:
+            throw .unsupportedConstruct("Backtracking directive is not supported").toError(
+                with: atom.location,
+            )
+        case .changeMatchingOptions:
+            // FIXME: support change matching options/flags
+            throw .unavailable("Change matching options is not supported").toError(
+                with: atom.location,
+            )
+        case .invalid:
+            throw .invalid("Encountered invalid atom").toError(with: atom.location)
+        }
+    }
 }
 
 public extension HIRKind {
@@ -477,6 +557,57 @@ public extension HIRKind {
 }
 
 extension AST.Atom.EscapedBuiltin {
+    var escapedCharacterClass: CharacterClass? {
+        switch self {
+        // Literal single characters
+        case .alarm: .init(char: "\u{0007}")
+        case .escape: .init(char: "\u{001B}")
+        case .formfeed: .init(char: "\u{000C}")
+        case .newline: .init(char: "\n")
+        case .carriageReturn: .init(char: "\r")
+        case .tab: .init(char: "\t")
+        case .backspace: .init(char: "\u{0008}")
+        // Character types
+        case .decimalDigit: .decimalDigits
+        case .notDecimalDigit: .decimalDigits.inverting()
+        case .horizontalWhitespace: .horizontalWhiteSpaces
+        case .notHorizontalWhitespace: .horizontalWhiteSpaces.inverting()
+        case .verticalTab: .verticalWhiteSpaces
+        case .notVerticalTab: .verticalWhiteSpaces.inverting()
+        case .whitespace: .whiteSpaces
+        case .notWhitespace: .whiteSpaces.inverting()
+        case .wordCharacter: .wordCharacters
+        case .notWordCharacter: .wordCharacters.inverting()
+        case .notNewline: .newLine.inverting()
+        case .newlineSequence: nil // FIXME: figure out if it's possible to have escaped builtin in properties
+        // .init(ranges: [
+        //     "\n" ... "\n",
+        //     // "\r\n" ... "\r\n", // FIXME: this is technically a sequence, but now we need to do a character
+        //     /class...
+        //     "\r" ... "\r",
+        //     "\u{000B}" ... "\u{000B}",
+        //     "\u{000C}" ... "\u{000C}",
+        //     "\u{0085}" ... "\u{0085}",
+        //     "\u{2028}" ... "\u{2028}",
+        //     "\u{2029}" ... "\u{2029}",
+        // ])
+        case .trueAnychar: .trueAny
+        // Not representable in finite automata
+        case .singleDataUnit: nil
+        case .graphemeCluster: nil
+        // Assertions / anchors (not representable in HIR)
+        case .wordBoundary: nil
+        case .notWordBoundary: nil
+        case .startOfSubject: nil
+        case .endOfSubjectBeforeNewline: nil
+        case .endOfSubject: nil
+        case .firstMatchingPositionInSubject: nil
+        case .resetStartOfMatch: nil
+        case .textSegment: nil
+        case .notTextSegment: nil
+        }
+    }
+
     var escapedCharacterHIR: HIRKind? {
         switch self {
         // Literal single characters
@@ -501,7 +632,7 @@ extension AST.Atom.EscapedBuiltin {
         case .notNewline: .class(.newLine.inverting())
         case .newlineSequence: .alternation([
                 .literal("\n"),
-                .literal("\r\n".map(\.self)),
+                .literal("\r\n"),
                 .literal("\r"),
                 .literal("\u{000B}"),
                 .literal("\u{000C}"),

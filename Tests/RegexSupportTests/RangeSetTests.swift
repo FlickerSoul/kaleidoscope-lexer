@@ -28,13 +28,13 @@ struct RangeSetTests {
             (["x" ... "z", "a" ... "c"], ["a" ... "c", "x" ... "z"]),
             // Multiple overlapping ranges
             (["a" ... "c", "b" ... "e", "d" ... "g"], ["a" ... "g"]),
-        ] as [([ClosedRange<Character>], [ClosedRange<Character>])],
+        ] as [([ClosedRange<Char>], [ClosedRange<Char>])],
     )
     func `normalize merges and sorts ranges`(
-        input: [ClosedRange<Character>],
-        expected: [ClosedRange<Character>],
+        input: [ClosedRange<Char>],
+        expected: [ClosedRange<Char>],
     ) {
-        let rangeSet = RangeSet<Character>(ranges: input)
+        let rangeSet = RangeSet<Char>(ranges: input)
         #expect(rangeSet.ranges == expected)
     }
 
@@ -54,14 +54,14 @@ struct RangeSetTests {
             (["a" ... "c"], ["d" ... "f"], ["a" ... "f"]),
             // Same set union
             (["a" ... "c"], ["a" ... "c"], ["a" ... "c"]),
-        ] as [([ClosedRange<Character>], [ClosedRange<Character>], [ClosedRange<Character>])],
+        ] as [([ClosedRange<Char>], [ClosedRange<Char>], [ClosedRange<Char>])],
     )
     func `union combines ranges`(
-        first: [ClosedRange<Character>],
-        second: [ClosedRange<Character>],
-        expected: [ClosedRange<Character>],
+        first: [ClosedRange<Char>],
+        second: [ClosedRange<Char>],
+        expected: [ClosedRange<Char>],
     ) {
-        var rangeSet = RangeSet<Character>(ranges: first)
+        var rangeSet = RangeSet<Char>(ranges: first)
         rangeSet.union(RangeSet(ranges: second))
         #expect(rangeSet.ranges == expected)
     }
@@ -84,14 +84,14 @@ struct RangeSetTests {
             (["a" ... "c"], ["a" ... "c"], ["a" ... "c"]),
             // Multiple ranges intersection
             (["a" ... "e", "m" ... "q"], ["c" ... "o"], ["c" ... "e", "m" ... "o"]),
-        ] as [([ClosedRange<Character>], [ClosedRange<Character>], [ClosedRange<Character>])],
+        ] as [([ClosedRange<Char>], [ClosedRange<Char>], [ClosedRange<Char>])],
     )
     func `intersection finds common ranges`(
-        first: [ClosedRange<Character>],
-        second: [ClosedRange<Character>],
-        expected: [ClosedRange<Character>],
+        first: [ClosedRange<Char>],
+        second: [ClosedRange<Char>],
+        expected: [ClosedRange<Char>],
     ) {
-        var rangeSet = RangeSet<Character>(ranges: first)
+        var rangeSet = RangeSet<Char>(ranges: first)
         rangeSet.intersection(RangeSet(ranges: second))
         #expect(rangeSet.ranges == expected)
     }
@@ -118,14 +118,14 @@ struct RangeSetTests {
             (["a" ... "g"], ["c" ... "e"], ["a" ... "b", "f" ... "g"]),
             // Multiple subtractions
             (["a" ... "z"], ["c" ... "e", "m" ... "o"], ["a" ... "b", "f" ... "l", "p" ... "z"]),
-        ] as [([ClosedRange<Character>], [ClosedRange<Character>], [ClosedRange<Character>])],
+        ] as [([ClosedRange<Char>], [ClosedRange<Char>], [ClosedRange<Char>])],
     )
     func `subtraction removes ranges`(
-        first: [ClosedRange<Character>],
-        second: [ClosedRange<Character>],
-        expected: [ClosedRange<Character>],
+        first: [ClosedRange<Char>],
+        second: [ClosedRange<Char>],
+        expected: [ClosedRange<Char>],
     ) {
-        var rangeSet = RangeSet<Character>(ranges: first)
+        var rangeSet = RangeSet<Char>(ranges: first)
         rangeSet.subtraction(RangeSet(ranges: second))
         #expect(rangeSet.ranges == expected)
     }
@@ -144,14 +144,14 @@ struct RangeSetTests {
             (["a" ... "c"], ["a" ... "c"], []),
             // Partial overlap
             (["a" ... "e"], ["c" ... "g"], ["a" ... "b", "f" ... "g"]),
-        ] as [([ClosedRange<Character>], [ClosedRange<Character>], [ClosedRange<Character>])],
+        ] as [([ClosedRange<Char>], [ClosedRange<Char>], [ClosedRange<Char>])],
     )
     func `symmetric difference finds exclusive ranges`(
-        first: [ClosedRange<Character>],
-        second: [ClosedRange<Character>],
-        expected: [ClosedRange<Character>],
+        first: [ClosedRange<Char>],
+        second: [ClosedRange<Char>],
+        expected: [ClosedRange<Char>],
     ) {
-        var rangeSet = RangeSet<Character>(ranges: first)
+        var rangeSet = RangeSet<Char>(ranges: first)
         rangeSet.symmetricDifference(RangeSet(ranges: second))
         #expect(rangeSet.ranges == expected)
     }
@@ -160,28 +160,28 @@ struct RangeSetTests {
 
     @Test
     func `invert empty set gives full range`() {
-        var rangeSet = RangeSet<Character>(ranges: [])
+        var rangeSet = RangeSet<Char>(ranges: [])
         rangeSet.invert()
-        #expect(rangeSet.ranges == [Character.min ... Character.max])
+        #expect(rangeSet.ranges == [.min ... .max])
     }
 
     @Test
     func `invert full range gives empty set`() {
-        var rangeSet = RangeSet<Character>(ranges: [Character.min ... Character.max])
+        var rangeSet = RangeSet<Char>(ranges: [.min ... .max])
         rangeSet.invert()
         #expect(rangeSet.ranges == [])
     }
 
     @Test
     func `invert middle range gives two ranges`() {
-        var rangeSet = RangeSet<Character>(ranges: ["m" ... "p"])
+        var rangeSet = RangeSet<Char>(ranges: ["m" ... "p"])
         rangeSet.invert()
-        #expect(rangeSet == .init(ranges: [Character.min ... "l", "q" ... Character.max]))
+        #expect(rangeSet == .init(ranges: [.min ... "l", "q" ... .max]))
     }
 
     @Test
     func `double invert returns original`() {
-        let original = RangeSet<Character>(ranges: ["a" ... "z"])
+        let original = RangeSet<Char>(ranges: ["a" ... "z"])
         var rangeSet = original
         rangeSet.invert()
         rangeSet.invert()
@@ -192,19 +192,19 @@ struct RangeSetTests {
 
     @Test
     func `single character range`() {
-        let rangeSet = RangeSet<Character>(ranges: ["a" ... "a"])
+        let rangeSet = RangeSet<Char>(ranges: ["a" ... "a"])
         #expect(rangeSet.ranges == ["a" ... "a"])
     }
 
     @Test
     func `adjacent single characters merge`() {
-        let rangeSet = RangeSet<Character>(ranges: ["a" ... "a", "b" ... "b", "c" ... "c"])
+        let rangeSet = RangeSet<Char>(ranges: ["a" ... "a", "b" ... "b", "c" ... "c"])
         #expect(rangeSet.ranges == ["a" ... "c"])
     }
 
     @Test
     func `subtract single character from range`() {
-        var rangeSet = RangeSet<Character>(ranges: ["a" ... "e"])
+        var rangeSet = RangeSet<Char>(ranges: ["a" ... "e"])
         rangeSet.subtraction(RangeSet(ranges: ["c" ... "c"]))
         #expect(rangeSet.ranges == ["a" ... "b", "d" ... "e"])
     }

@@ -247,22 +247,14 @@ struct UTF8Sequences: Sequence, IteratorProtocol {
 
 extension UTF8Sequences {
     /// Creates sequences for a single character
-    init(character: Character) {
-        if let scalar = character.unicodeScalars.first {
-            self.init(start: scalar, end: scalar)
-        } else {
-            // Empty character - will produce no sequences
-            self.init(start: Unicode.Scalar(0), end: Unicode.Scalar(0))
-        }
+    init(char: Char) {
+        self.init(start: char.scalar, end: char.scalar)
     }
 
     /// Creates sequences for a character range
-    init(range: ClosedRange<Character>) {
-        if let startScalar = range.lowerBound.unicodeScalars.first,
-           let endScalar = range.upperBound.unicodeScalars.first {
-            self.init(start: startScalar, end: endScalar)
-        } else {
-            self.init(start: Unicode.Scalar(0), end: Unicode.Scalar(0))
-        }
+    init(range: ClosedRange<Char>) {
+        let startScalar = range.lowerBound.scalar
+        let endScalar = range.upperBound.scalar
+        self.init(start: startScalar, end: endScalar)
     }
 }

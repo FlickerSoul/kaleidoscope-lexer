@@ -54,7 +54,7 @@ private func matches(seqs: [UTF8Sequence], bytes: [UInt8]) -> Bool {
 struct UTF8SequencesTests {
     @Test
     func `ASCII character produces single sequence`() {
-        let sequences = Array(UTF8Sequences(character: "a"))
+        let sequences = Array(UTF8Sequences(char: "a"))
 
         #expect(sequences.count == 1)
         #expect(sequences[0].ranges == [.init(start: 0x61, end: 0x61)])
@@ -62,7 +62,20 @@ struct UTF8SequencesTests {
 
     @Test
     func `two-byte character produces single sequence`() {
-        let sequences = Array(UTF8Sequences(character: "é"))
+        let sequences = Array(UTF8Sequences(char: "é"))
+
+        #expect(sequences.count == 1)
+        #expect(
+            sequences[0].ranges == [
+                .init(start: 0xC3, end: 0xC3),
+                .init(start: 0xA9, end: 0xA9),
+            ],
+        )
+    }
+
+    @Test
+    func `range of a single two-byte character produces single sequence`() {
+        let sequences = Array(UTF8Sequences(range: "é" ... "é"))
 
         #expect(sequences.count == 1)
         #expect(

@@ -4,26 +4,54 @@
 //
 //  Created by Larry Zeng on 1/15/26.
 //
+import CasePaths
 
 /// HIR stands for high-level intermediate representation, specifically for regexes.
 ///
 /// This HIR only contains constructs that can be completed using finite automata.
 /// Therefore, constructs and features that require backtracking or CFG will not be represented here.
+@CasePathable
 public indirect enum HIRKind: Hashable, Sendable {
-    public typealias Scalar = Character
+    public typealias Scalar = Char
     public typealias Scalars = [Scalar]
 
     case empty
     case concat([HIRKind])
     case alternation([HIRKind])
     case quantification(Quantification)
-    case literal(Scalars)
+    case literal(Literal)
     case `class`(CharacterClass)
     case group(Group)
 
-    static func literal(_ scalar: Scalar) -> HIRKind {
-        .literal([scalar])
+    @_disfavoredOverload
+    static func literal(_ scalars: Scalars) -> HIRKind {
+        .literal(.init(scalars: scalars))
     }
+
+    @_disfavoredOverload
+    static func literal(_ scalar: Scalar) -> HIRKind {
+        .literal(.init(scalars: [scalar]))
+    }
+
+    static func literal(_ scalars: some Sequence<Character>) -> HIRKind {
+        .literal(.init(scalars: scalars.flatMap { $0.toChars() }))
+    }
+
+    static func literal(_ character: Character) -> HIRKind {
+        .literal(.init(scalars: character.toChars()))
+    }
+}
+
+extension Character {
+    func toChars() -> [Char] {
+        unicodeScalars.map(Char.init(_:))
+    }
+}
+
+// MARK: Literal
+
+public struct Literal: Hashable, Sendable {
+    public let scalars: HIRKind.Scalars
 }
 
 // MARK: Quantification
@@ -56,6 +84,28 @@ public struct Quantification: Hashable, Sendable {
 public typealias CharacterClass = RangeSet<HIRKind.Scalar>
 
 extension CharacterClass {
+    init(character: Character) {
+        let char = Char(character)
+        self.init(ranges: [char ... char])
+    }
+
+    init(char: Char) {
+        self.init(ranges: [char ... char])
+    }
+
+    init(scalar: UnicodeScalar) {
+        let char = Char(scalar)
+        self.init(ranges: [char ... char])
+    }
+
+    init(ranges: some Sequence<ClosedRange<Character>>) {
+        self.ranges = ranges.map { range in
+            Char(range.lowerBound) ... Char(range.upperBound)
+        }
+    }
+}
+
+extension CharacterClass {
     func isAllAscii() -> Bool {
         ranges.last.flatMap { range in
             range.upperBound <= "\u{7F}"
@@ -66,11 +116,11 @@ extension CharacterClass {
 extension CharacterClass {
     // FIXME: more cases of unicode representation of `.`
     static func dot() -> CharacterClass {
-        [Character.min ... Character.max]
+        [.min ... .max]
     }
 
     static var trueAny: CharacterClass {
-        [Character.min ... Character.max]
+        [.min ... .max]
     }
 
     static var decimalDigits: CharacterClass {
@@ -166,7 +216,7 @@ extension CharacterClass {
 
     /// POSIX [:ascii:] - [\x00-\x7F]
     static var posixAscii: CharacterClass {
-        .init(ranges: [Character.min ... "\u{7F}"])
+        .init(ranges: [.min ... "\u{7F}"])
     }
 
     /// POSIX [:blank:] - [ \t]
@@ -180,7 +230,7 @@ extension CharacterClass {
     /// POSIX [:cntrl:] - [\x00-\x1f\x7f]
     static var posixCntrl: CharacterClass {
         .init(ranges: [
-            Character.min ... "\u{1F}",
+            .min ... "\u{1F}",
             "\u{7F}" ... "\u{7F}",
         ])
     }
@@ -268,8 +318,8 @@ public extension HIRKind {
             alternates.map { $0.complexity() }.min() ?? 0
         case let .quantification(repetition):
             Int(repetition.min) * repetition.child.complexity()
-        case let .literal(scalars):
-            scalars.count * 2
+        case let .literal(literal):
+            literal.scalars.count * 2
         case .class:
             2
         case let .group(group):

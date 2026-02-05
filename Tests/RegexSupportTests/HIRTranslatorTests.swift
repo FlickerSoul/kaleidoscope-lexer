@@ -910,6 +910,262 @@ struct HIRTranslatorTests {
         #expect(result == expected)
     }
 
+    // MARK: - Character Property Tests
+
+    @Test(arguments: [
+        // POSIX character classes
+        (#"[[:alnum:]]"#, HIRKind.class(.posixAlnum)),
+        (#"[[:blank:]]"#, HIRKind.class(.posixBlank)),
+        (#"[[:graph:]]"#, HIRKind.class(.posixGraph)),
+        (#"[[:print:]]"#, HIRKind.class(.posixPrint)),
+        (#"[[:word:]]"#, HIRKind.class(.posixWord)),
+        (#"[[:xdigit:]]"#, HIRKind.class(.posixXdigit)),
+    ])
+    func `POSIX character classes`(pattern: String, expected: HIRKind) throws {
+        let result = try parseToHIR(pattern)
+        #expect(result == expected)
+    }
+
+    @Test(arguments: [
+        // Inverted POSIX character classes
+        (#"[[:^alnum:]]"#, HIRKind.class(.posixAlnum.inverting())),
+        (#"[[:^blank:]]"#, HIRKind.class(.posixBlank.inverting())),
+        (#"[[:^graph:]]"#, HIRKind.class(.posixGraph.inverting())),
+        (#"[[:^print:]]"#, HIRKind.class(.posixPrint.inverting())),
+        (#"[[:^word:]]"#, HIRKind.class(.posixWord.inverting())),
+        (#"[[:^xdigit:]]"#, HIRKind.class(.posixXdigit.inverting())),
+    ])
+    func `inverted POSIX character classes`(pattern: String, expected: HIRKind) throws {
+        let result = try parseToHIR(pattern)
+        #expect(result == expected)
+    }
+
+    @Test
+    func `general category lowercase letter`() throws {
+        let result = try parseToHIR(#"\p{Ll}"#)
+        let charClass = try #require(result[case: \.class])
+        #expect(charClass.ranges.count > 0)
+        // Lowercase 'a' should be in the class
+        #expect(charClass.ranges.contains { $0.contains("a") })
+        // Uppercase 'A' should NOT be in the class
+        #expect(!charClass.ranges.contains { $0.contains("A") })
+    }
+
+    @Test
+    func `general category uppercase letter`() throws {
+        let result = try parseToHIR(#"\p{Lu}"#)
+        let charClass = try #require(result[case: \.class])
+        #expect(charClass.ranges.count > 0)
+        // Uppercase 'A' should be in the class
+        #expect(charClass.ranges.contains { $0.contains("A") })
+        // Lowercase 'a' should NOT be in the class
+        #expect(!charClass.ranges.contains { $0.contains("a") })
+    }
+
+    @Test
+    func `general category letter`() throws {
+        let result = try parseToHIR(#"\p{L}"#)
+        let charClass = try #require(result[case: \.class])
+        #expect(charClass.ranges.count > 0)
+        // Both 'a' and 'A' should be in the class
+        #expect(charClass.ranges.contains { $0.contains("a") })
+        #expect(charClass.ranges.contains { $0.contains("A") })
+        // Digit '0' should NOT be in the class
+        #expect(!charClass.ranges.contains { $0.contains("0") })
+    }
+
+    @Test
+    func `general category number`() throws {
+        let result = try parseToHIR(#"\p{N}"#)
+        let charClass = try #require(result[case: \.class])
+        #expect(charClass.ranges.count > 0)
+        // Digit '0' should be in the class
+        #expect(charClass.ranges.contains { $0.contains("0") })
+        // Letter 'a' should NOT be in the class
+        #expect(!charClass.ranges.contains { $0.contains("a") })
+    }
+
+    @Test
+    func `inverted general category`() throws {
+        let result = try parseToHIR(#"\P{Lu}"#)
+        let charClass = try #require(result[case: \.class])
+        // Lowercase 'a' should be in the inverted class
+        #expect(charClass.ranges.contains { $0.contains("a") })
+        // Uppercase 'A' should NOT be in the inverted class
+        #expect(!charClass.ranges.contains { $0.contains("A") })
+    }
+
+    @Test
+    func `script Latin`() throws {
+        let result = try parseToHIR(#"\p{Latin}"#)
+        let charClass = try #require(result[case: \.class])
+        #expect(charClass.ranges.count > 0)
+        // ASCII letters should be in Latin script
+        #expect(charClass.ranges.contains { $0.contains("a") })
+        #expect(charClass.ranges.contains { $0.contains("A") })
+    }
+
+    @Test
+    func `script Greek`() throws {
+        let result = try parseToHIR(#"\p{Greek}"#)
+        let charClass = try #require(result[case: \.class])
+        #expect(charClass.ranges.count > 0)
+        // Greek alpha should be in the class
+        #expect(charClass.ranges.contains { $0.contains("α") })
+        // ASCII 'a' should NOT be in Greek script
+        #expect(!charClass.ranges.contains { $0.contains("a") })
+    }
+
+    @Test
+    func `binary property Alphabetic`() throws {
+        let result = try parseToHIR(#"\p{Alphabetic}"#)
+        let charClass = try #require(result[case: \.class])
+        #expect(charClass.ranges.count > 0)
+        // Letters should be alphabetic
+        #expect(charClass.ranges.contains { $0.contains("a") })
+    }
+
+    @Test
+    func `binary property Whitespace`() throws {
+        let result = try parseToHIR(#"\p{Whitespace}"#)
+        let charClass = try #require(result[case: \.class])
+        #expect(charClass.ranges.count > 0)
+        // Space should be whitespace
+        #expect(charClass.ranges.contains { $0.contains(" ") })
+        // 'a' should NOT be whitespace
+        #expect(!charClass.ranges.contains { $0.contains("a") })
+    }
+
+    @Test
+    func `ascii property`() throws {
+        let result = try parseToHIR(#"\p{ascii}"#)
+        let charClass = try #require(result[case: \.class])
+        #expect(charClass.ranges == [
+            .min ... "\u{7F}",
+        ])
+    }
+
+    @Test
+    func `any property`() throws {
+        let result = try parseToHIR(#"\p{any}"#)
+        let charClass = try #require(result[case: \.class])
+        #expect(charClass == .trueAny)
+    }
+
+    @Test
+    func `character property in character class`() throws {
+        // Combining property with other elements in a character class
+        let result = try parseToHIR(#"[\p{Lu}0-9]"#)
+        let charClass = try #require(result[case: \.class])
+        // Should contain uppercase letters and digits
+        #expect(charClass.ranges.contains { $0.contains("A") })
+        #expect(charClass.ranges.contains { $0.contains("0") })
+    }
+
+    @Test
+    func `character property with quantifier`() throws {
+        let result = try parseToHIR(#"\p{L}+"#)
+        let quant = try #require(result[case: \.quantification])
+        #expect(quant.min == 1)
+        #expect(quant.max == nil)
+        #expect(quant.isEager == true)
+        _ = try #require(quant.child[case: \.class])
+    }
+
+    @Test
+    func `assigned property`() throws {
+        let result = try parseToHIR(#"\p{Assigned}"#)
+        let charClass = try #require(result[case: \.class])
+        #expect(charClass.ranges.count > 0)
+        // ASCII letters should be assigned
+        #expect(charClass.ranges.contains { $0.contains("a") })
+        #expect(charClass.ranges.contains { $0.contains("A") })
+        // Common characters should be assigned
+        #expect(charClass.ranges.contains { $0.contains("0") })
+        #expect(charClass.ranges.contains { $0.contains(" ") })
+    }
+
+    @Test
+    func `inverted assigned property`() throws {
+        let result = try parseToHIR(#"\P{Assigned}"#)
+        let charClass = try #require(result[case: \.class])
+        // Assigned characters should NOT be in inverted class
+        #expect(!charClass.ranges.contains { $0.contains("a") })
+        #expect(!charClass.ranges.contains { $0.contains("0") })
+    }
+
+    @Test
+    func `script extension Latin`() throws {
+        let result = try parseToHIR(#"\p{scx=Latin}"#)
+        let charClass = try #require(result[case: \.class])
+        #expect(charClass.ranges.count > 0)
+        // ASCII letters should be in Latin script extension
+        #expect(charClass.ranges.contains { $0.contains("a") })
+        #expect(charClass.ranges.contains { $0.contains("A") })
+    }
+
+    @Test
+    func `script extension Greek`() throws {
+        let result = try parseToHIR(#"\p{scx=Greek}"#)
+        let charClass = try #require(result[case: \.class])
+        #expect(charClass.ranges.count > 0)
+        // Greek alpha should be in the class
+        #expect(charClass.ranges.contains { $0.contains("α") })
+        // ASCII 'a' should NOT be in Greek script extension
+        #expect(!charClass.ranges.contains { $0.contains("a") })
+    }
+
+    @Test
+    func `script extension with full name`() throws {
+        let result = try parseToHIR(#"\p{Script_Extensions=Cyrillic}"#)
+        let charClass = try #require(result[case: \.class])
+        #expect(charClass.ranges.count > 0)
+        // Cyrillic 'а' (U+0430) should be in the class
+        #expect(charClass.ranges.contains { $0.contains("а") })
+        // ASCII 'a' should NOT be in Cyrillic script extension
+        #expect(!charClass.ranges.contains { $0.contains("a") })
+    }
+
+    @Test
+    func `age property`() throws {
+        let result = try parseToHIR(#"\p{age=10.0}"#)
+        let charClass = try #require(result[case: \.class])
+        #expect(charClass.ranges.count > 0)
+        // Basic ASCII characters have been assigned since Unicode 1.1
+        #expect(charClass.ranges.contains { $0.contains("a") })
+        // emoji were added in Unicode 10.0
+        #expect(charClass.ranges.contains { $0.contains("🤟") })
+        // character newer than Unicode 10.0
+        #expect(!charClass.ranges.contains { $0.contains("🥳") })
+    }
+
+    @Test
+    func `inverted age property`() throws {
+        let result = try parseToHIR(#"\P{age=10.0}"#)
+        let charClass = try #require(result[case: \.class])
+        #expect(charClass.ranges.count > 0)
+        // Basic ASCII characters have been assigned since Unicode 1.1
+        #expect(!charClass.ranges.contains { $0.contains("a") })
+        // emoji were added in Unicode 10.0
+        #expect(!charClass.ranges.contains { $0.contains("🤟") })
+        // character newer than Unicode 10.0
+        #expect(charClass.ranges.contains { $0.contains("🥳") })
+        #expect(charClass.ranges.contains { $0.contains("🫩") })
+    }
+
+    @Test
+    func `age property older version`() throws {
+        let result = try parseToHIR(#"\p{age=1.1}"#)
+        let charClass = try #require(result[case: \.class])
+        #expect(charClass.ranges.count > 0)
+        // Basic ASCII should be in Unicode 1.1
+        #expect(charClass.ranges.contains { $0.contains("a") })
+        // Arabic question mark '؟' (U+061F) should be in Unicode 1.1
+        #expect(charClass.ranges.contains { $0.contains("؟") })
+        // Korean added in Unicode 2.0
+        #expect(!charClass.ranges.contains { $0.contains("가") })
+    }
+
     // TODO: Implement the following features and test them
     /*
      1. Anchors not supported in Swift implementation:

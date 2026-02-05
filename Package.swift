@@ -9,7 +9,7 @@ private let enableBenchmark = ProcessInfo.processInfo.environment["ENABLE_BENCHM
 
 let package = Package(
     name: "kaleidoscope-lexer",
-    platforms: [.macOS(.v26), .iOS(.v26), .tvOS(.v26), .watchOS(.v26), .macCatalyst(.v26)],
+    platforms: [.macOS(.v26), .iOS(.v26), .tvOS(.v26), .watchOS(.v26), .macCatalyst(.v26), .visionOS(.v26)],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(

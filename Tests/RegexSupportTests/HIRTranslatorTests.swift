@@ -1178,21 +1178,6 @@ struct HIRTranslatorTests {
      - ignore_whitespace - (?x) extended mode
      - Parts of empty with flags - (?i), (?x)
 
-     3. Unicode properties not supported:
-     - class_perl_unicode - \d, \s, \w (Unicode mode)
-     - class_unicode_gencat - \pZ, \p{Separator}
-     - class_unicode_script - \p{Greek}
-     - class_unicode_age - \p{age:3.0}
-     - class_unicode_any_empty - \P{any}
-
-     4. ASCII POSIX classes not implemented:
-     - class_ascii - [[:alnum:]], [[:alpha:]], [[:digit:]], etc.
-     - class_ascii_multiple - [[:alnum:][:^ascii:]]
-     - class_perl_ascii - (?-u)\d, (?-u)\s, (?-u)\w
-
-     5. Byte mode not applicable (Swift uses Unicode):
-     - t_bytes() tests throughout
-
      6. Analysis/properties not implemented:
      - analysis_is_utf8
      - analysis_captures_len

@@ -113,7 +113,7 @@ let package = Package(
             ],
         ),
         // example
-        .executableTarget(name: "KaleidoscopeClient", dependencies: ["KaleidoscopeLexer"]),
+        .executableTarget(name: "Examples", dependencies: ["KaleidoscopeLexer"]),
         // benchmark support
         .target(
             name: "BenchmarkCommons",

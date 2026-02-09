@@ -35,7 +35,7 @@ jobs:
       - name: SwiftLint
         run: swiftlint --strict .
       - name: Swift Format Check
-        run: swiftformat --lint-only --config .swiftformat.conf . --strict
+        run: swiftformat --lint-only --base-config .swiftformat.conf . --strict
   test:
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.runsOn }}

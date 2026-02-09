@@ -4,17 +4,28 @@ private let parseNumber = { @Sendable (machine: inout LexerMachine<Token>) -> In
     Int(machine.slice())!
 }
 
+private let parseIdentifier = { @Sendable (machine: inout LexerMachine<Token>) -> String in
+    String(machine.slice())
+}
+
+private let printer = { @Sendable (machine: inout LexerMachine<Token>) in
+    print(machine.slice())
+}
+
 @Kaleidoscope
 @skip(/[ \t\n]/) // Skip whitespace
 enum Token: Equatable {
+    @token("invalid", callback: printer)
+    case invalid
+
     @token("private")
     case `private`
 
     @token("public")
     case `public`
 
-    @regex(/[a-zA-Z_][a-zA-Z0-9_]*?/)
-    case identifier
+    @regex(/[a-zA-Z_][a-zA-Z0-9_]*?/, callback: parseIdentifier)
+    case identifier(String)
 
     @regex(/[0-9]+?/, callback: parseNumber)
     case number(Int)

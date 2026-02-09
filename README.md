@@ -9,6 +9,7 @@ A high-performance lexer generator for Swift, inspired by [logos](https://github
 
 - **Declarative token definitions** using Swift macros (`@Kaleidoscope`, `@regex`, `@token`, `@skip`)
 - **Native Swift regex support** with Swift's `Regex` literals
+- **UTF8 support** for Unicode tokenization
 - **Customizable callbacks** for token transformation and validation
 - **Priority-based conflict resolution** for overlapping patterns
 - **Skip patterns** for ignoring whitespace, comments, etc.
@@ -21,7 +22,7 @@ Kaleidoscope is experimental and has known limitations:
 
 - **Incomplete Regex translation**: Not all regex features from Swift's `Regex` are supported. Complex patterns involving certain lookahead/lookbehind assertions, backreferences, or some character properties may not compile correctly or at all. Should any unsupported regex features be used, the macro will emit a compile-time error indicating the issue. If you'd like to see support for specific regex features, please open an issue or contribute a PR with the necessary NFA/DFA construction logic.
 - **Possible state machine bugs**: The macro resolves regex patterns into NFA and DFA representations, but there are edge cases where the generated state machine may not correctly handle certain inputs or patterns, leading to incorrect tokenization or infinite loops. Please always test your lexer.
-- Platform version limitations: Requires macOS 26+, iOS 26+, tvOS 26+, watchOS 26+ because of the use of [InlineArray](https://developer.apple.com/documentation/swift/inlinearray). (Benchmark results seem to suggest that `Array` performs similarly to `InlineArray` in time, so maybe we could add support for earlier versions in the future.)
+- **Platform version limitations**: Requires macOS 26+, iOS 26+, tvOS 26+, watchOS 26+ because of the use of [InlineArray](https://developer.apple.com/documentation/swift/inlinearray). (Benchmark results seem to suggest that `Array` performs similarly to `InlineArray` in time, so maybe we could add support for earlier versions in the future.)
 
 If you encounter issues, please report them on the [issue tracker](https://github.com/FlickerSoul/kaleidoscope-lexer/issues).
 

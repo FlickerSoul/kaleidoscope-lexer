@@ -1,5 +1,5 @@
 {
-  "originHash" : "95e67067e72eda1e7972e3620b489467785ea0eded0dc9c535ecee59d06bd4c4",
+  "originHash" : "07ef1efe99644959548b22b2ce0e757f9d92169e49de76086f5347951187cc30",
   "pins" : [
     {
       "identity" : "swift-argument-parser",
@@ -31,7 +31,7 @@
     {
       "identity" : "swift-custom-dump",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/pointfreeco/swift-custom-dump.git",
+      "location" : "https://github.com/pointfreeco/swift-custom-dump",
       "state" : {
         "revision" : "2a2a938798236b8fa0bc57c453ee9de9f9ec3ab0",
         "version" : "1.4.1"
@@ -53,15 +53,6 @@
       "state" : {
         "revision" : "b45d1f2ed151d057b54504d653e0da5552844e34",
         "version" : "1.0.0"
-      }
-    },
-    {
-      "identity" : "swift-experimental-string-processing",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/swiftlang/swift-experimental-string-processing",
-      "state" : {
-        "branch" : "swift-6.1.1-RELEASE",
-        "revision" : "3a06996805db6dc60c78e1f09738df6f44131805"
       }
     },
     {

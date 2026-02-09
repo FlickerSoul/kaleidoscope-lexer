@@ -5,6 +5,7 @@ disabled_rules:
 excluded:
   - .build/
   - .swiftpm/
+  - Dependencies
 nesting:
   type_level: 2
 line_length:

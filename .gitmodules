@@ -1,0 +1,3 @@
+[submodule "Dependencies/swift-experimental-string-processing"]
+	path = Dependencies/swift-experimental-string-processing
+	url = https://github.com/swiftlang/swift-experimental-string-processing.git

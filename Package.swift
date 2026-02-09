@@ -24,7 +24,10 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-collections.git", from: "1.0.5"),
         .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.3.0"),
         .package(url: "https://github.com/stackotter/swift-macro-toolkit.git", from: "0.8.0"),
-        .package(path: "Dependencies/swift-experimental-string-processing"),
+        .package(
+            url: "https://github.com/swiftlang/swift-experimental-string-processing",
+            revision: "swift-6.1.1-RELEASE",
+        ),
         .package(url: "https://github.com/pointfreeco/swift-macro-testing.git", from: "0.6.4"),
         .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.12.0"),
         .package(url: "https://github.com/pointfreeco/swift-case-paths.git", from: "1.7.2"),

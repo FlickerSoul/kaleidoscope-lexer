@@ -33,8 +33,10 @@ Supported platforms: macOS 26+, iOS 26+, tvOS 26+, watchOS 26+.
 Add Kaleidoscope to your `Package.swift`:
 
 ```swift
+// IMPORTANT: use `revision` below, because otherwise Swift package manager complains about unstable version dependency.
+// See also: https://github.com/FlickerSoul/kaleidoscope-lexer/issues/5
 dependencies: [
-    .package(url: "https://github.com/FlickerSoul/kaleidoscope-lexer", from: "0.1.0")
+    .package(url: "https://github.com/FlickerSoul/kaleidoscope-lexer", revision: "0.1.2")
 ]
 ```
 

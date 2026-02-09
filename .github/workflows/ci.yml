@@ -46,7 +46,9 @@ jobs:
           - runsOn: macOS-26
             name: "macOS 26, SPM 6.2.0 Test"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
+        with:
+          submodules: recursive
       - name: Install Swiftly And Swift
         run: |
           curl -L https://download.swift.org/swiftly/darwin/swiftly.pkg > swiftly.pkg

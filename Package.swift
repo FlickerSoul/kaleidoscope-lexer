@@ -11,7 +11,6 @@ let package = Package(
     name: "kaleidoscope-lexer",
     platforms: [.macOS(.v26), .iOS(.v26), .tvOS(.v26), .watchOS(.v26), .macCatalyst(.v26), .visionOS(.v26)],
     products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "KaleidoscopeLexer",
             targets: ["KaleidoscopeLexer"],
@@ -21,24 +20,17 @@ let package = Package(
         .trait(name: "StateMachineCodegen"),
     ],
     dependencies: [
-        // Depend on the Swift 5.9 release of SwiftSyntax
         .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0"),
         .package(url: "https://github.com/apple/swift-collections.git", from: "1.0.5"),
         .package(url: "https://github.com/swiftlang/swift-docc-plugin", from: "1.3.0"),
         .package(url: "https://github.com/stackotter/swift-macro-toolkit.git", from: "0.8.0"),
-        .package(
-            url: "https://github.com/swiftlang/swift-experimental-string-processing",
-            revision: "swift-6.1.1-RELEASE",
-        ),
+        .package(path: "Dependencies/swift-experimental-string-processing"),
         .package(url: "https://github.com/pointfreeco/swift-macro-testing.git", from: "0.6.4"),
         .package(url: "https://github.com/pointfreeco/swift-snapshot-testing", from: "1.12.0"),
         .package(url: "https://github.com/pointfreeco/swift-case-paths.git", from: "1.7.2"),
         .package(url: "https://github.com/pointfreeco/swift-custom-dump.git", from: "1.3.4"),
     ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
-        // Macro implementation that performs the source transformation of a macro.
         .macro(
             name: "KaleidoscopeMacros",
             dependencies: [
